@@ -19,7 +19,16 @@
     <property name="timeType" value="time(6)" dbms="postgresql"/>
 
     <include file="config/liquibase/changelog/00000000000000_initial_schema.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20250804120903_added_entity_Merchant.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20250804120904_added_entity_Client.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20250804120905_added_entity_ClientCard.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20250804120906_added_entity_PaymentTransaction.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20250804120907_added_entity_AuditLog.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-changelog - JHipster will add liquibase changelogs here -->
+    <include file="config/liquibase/changelog/20250804120904_added_entity_constraints_Client.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20250804120905_added_entity_constraints_ClientCard.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20250804120906_added_entity_constraints_PaymentTransaction.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20250804120907_added_entity_constraints_AuditLog.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-constraints-changelog - JHipster will add liquibase constraints changelogs here -->
     <!-- jhipster-needle-liquibase-add-incremental-changelog - JHipster will add incremental liquibase changelogs here -->
 </databaseChangeLog>

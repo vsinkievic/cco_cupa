@@ -1,0 +1,107 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2 id="jhi-client-card-heading" data-cy="ClientCardCreateUpdateHeading">Create or edit a Client Card</h2>
+
+      <div>
+        <jhi-alert-error />
+
+        @if (editForm.controls.id.value !== null) {
+          <div class="mb-3">
+            <label class="form-label" for="field_id">ID</label>
+            <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+          </div>
+        }
+
+        @let maskedPanRef = editForm.get('maskedPan')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_maskedPan">Masked Pan</label>
+          <input type="text" class="form-control" name="maskedPan" id="field_maskedPan" data-cy="maskedPan" formControlName="maskedPan" />
+          @if (maskedPanRef.invalid && (maskedPanRef.dirty || maskedPanRef.touched)) {
+            <div>
+              @if (editForm.get('maskedPan')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_expiryDate">Expiry Date</label>
+          <input
+            type="text"
+            class="form-control"
+            name="expiryDate"
+            id="field_expiryDate"
+            data-cy="expiryDate"
+            formControlName="expiryDate"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_cardholderName">Cardholder Name</label>
+          <input
+            type="text"
+            class="form-control"
+            name="cardholderName"
+            id="field_cardholderName"
+            data-cy="cardholderName"
+            formControlName="cardholderName"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_isDefault">Is Default</label>
+          <input type="checkbox" class="form-check" name="isDefault" id="field_isDefault" data-cy="isDefault" formControlName="isDefault" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_isValid">Is Valid</label>
+          <input type="checkbox" class="form-check" name="isValid" id="field_isValid" data-cy="isValid" formControlName="isValid" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_client">Client</label>
+          <select
+            class="form-control"
+            id="field_client"
+            data-cy="client"
+            name="client"
+            formControlName="client"
+            [compareWith]="compareClient"
+          >
+            @if (editForm.get(['client'])!.value === null) {
+              <option [ngValue]="null" selected></option>
+            }
+            @for (clientOption of clientsSharedCollection; track $index) {
+              <option [ngValue]="clientOption">{{ clientOption.merchantClientId }}</option>
+            }
+          </select>
+        </div>
+        @if (editForm.get(['client'])!.invalid && (editForm.get(['client'])!.dirty || editForm.get(['client'])!.touched)) {
+          <div>
+            @if (editForm.get(['client'])?.errors?.required) {
+              <small class="form-text text-danger">This field is required.</small>
+            }
+          </div>
+        }
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span>Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span>Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,103 @@
+import { Injectable } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+
+import { IClient, NewClient } from '../client.model';
+
+/**
+ * A partial Type with required key is used as form input.
+ */
+type PartialWithRequiredKeyOf<T extends { id: unknown }> = Partial<Omit<T, 'id'>> & { id: T['id'] };
+
+/**
+ * Type for createFormGroup and resetForm argument.
+ * It accepts IClient for edit and NewClientFormGroupInput for create.
+ */
+type ClientFormGroupInput = IClient | PartialWithRequiredKeyOf<NewClient>;
+
+type ClientFormDefaults = Pick<NewClient, 'id' | 'valid' | 'isBlacklisted' | 'isCorrelatedBlacklisted'>;
+
+type ClientFormGroupContent = {
+  id: FormControl<IClient['id'] | NewClient['id']>;
+  merchantClientId: FormControl<IClient['merchantClientId']>;
+  name: FormControl<IClient['name']>;
+  emailAddress: FormControl<IClient['emailAddress']>;
+  mobileNumber: FormControl<IClient['mobileNumber']>;
+  clientPhone: FormControl<IClient['clientPhone']>;
+  valid: FormControl<IClient['valid']>;
+  streetNumber: FormControl<IClient['streetNumber']>;
+  streetName: FormControl<IClient['streetName']>;
+  streetSuffix: FormControl<IClient['streetSuffix']>;
+  city: FormControl<IClient['city']>;
+  state: FormControl<IClient['state']>;
+  postCode: FormControl<IClient['postCode']>;
+  country: FormControl<IClient['country']>;
+  isBlacklisted: FormControl<IClient['isBlacklisted']>;
+  isCorrelatedBlacklisted: FormControl<IClient['isCorrelatedBlacklisted']>;
+  merchant: FormControl<IClient['merchant']>;
+};
+
+export type ClientFormGroup = FormGroup<ClientFormGroupContent>;
+
+@Injectable({ providedIn: 'root' })
+export class ClientFormService {
+  createClientFormGroup(client: ClientFormGroupInput = { id: null }): ClientFormGroup {
+    const clientRawValue = {
+      ...this.getFormDefaults(),
+      ...client,
+    };
+    return new FormGroup<ClientFormGroupContent>({
+      id: new FormControl(
+        { value: clientRawValue.id, disabled: true },
+        {
+          nonNullable: true,
+          validators: [Validators.required],
+        },
+      ),
+      merchantClientId: new FormControl(clientRawValue.merchantClientId, {
+        validators: [Validators.required],
+      }),
+      name: new FormControl(clientRawValue.name),
+      emailAddress: new FormControl(clientRawValue.emailAddress, {
+        validators: [Validators.pattern('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')],
+      }),
+      mobileNumber: new FormControl(clientRawValue.mobileNumber),
+      clientPhone: new FormControl(clientRawValue.clientPhone),
+      valid: new FormControl(clientRawValue.valid),
+      streetNumber: new FormControl(clientRawValue.streetNumber),
+      streetName: new FormControl(clientRawValue.streetName),
+      streetSuffix: new FormControl(clientRawValue.streetSuffix),
+      city: new FormControl(clientRawValue.city),
+      state: new FormControl(clientRawValue.state),
+      postCode: new FormControl(clientRawValue.postCode),
+      country: new FormControl(clientRawValue.country),
+      isBlacklisted: new FormControl(clientRawValue.isBlacklisted),
+      isCorrelatedBlacklisted: new FormControl(clientRawValue.isCorrelatedBlacklisted),
+      merchant: new FormControl(clientRawValue.merchant, {
+        validators: [Validators.required],
+      }),
+    });
+  }
+
+  getClient(form: ClientFormGroup): IClient | NewClient {
+    return form.getRawValue() as IClient | NewClient;
+  }
+
+  resetForm(form: ClientFormGroup, client: ClientFormGroupInput): void {
+    const clientRawValue = { ...this.getFormDefaults(), ...client };
+    form.reset(
+      {
+        ...clientRawValue,
+        id: { value: clientRawValue.id, disabled: true },
+      } as any /* cast to workaround https://github.com/angular/angular/issues/46458 */,
+    );
+  }
+
+  private getFormDefaults(): ClientFormDefaults {
+    return {
+      id: null,
+      valid: false,
+      isBlacklisted: false,
+      isCorrelatedBlacklisted: false,
+    };
+  }
+}

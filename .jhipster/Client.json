@@ -1,0 +1,95 @@
+{
+  "annotations": {
+    "changelogDate": "20250804120904"
+  },
+  "applications": "*",
+  "documentation": "Represents the end-user (customer) of a merchant.\\nThis entity is based on the Client object described in the\\n\"My Gateway Product Services Guide\".",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "merchantClientId",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "name",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "emailAddress",
+      "fieldType": "String",
+      "fieldValidateRules": ["pattern"],
+      "fieldValidateRulesPattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+    },
+    {
+      "fieldName": "mobileNumber",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "clientPhone",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "valid",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "streetNumber",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "streetName",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "streetSuffix",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "city",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "state",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "postCode",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "country",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "isBlacklisted",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "isCorrelatedBlacklisted",
+      "fieldType": "Boolean"
+    }
+  ],
+  "name": "Client",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "clientCard",
+      "otherEntityRelationshipName": "client",
+      "relationshipName": "card",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityField": "name",
+      "otherEntityName": "merchant",
+      "otherEntityRelationshipName": "client",
+      "relationshipName": "merchant",
+      "relationshipSide": "right",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

@@ -1,0 +1,208 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2 id="jhi-merchant-heading" data-cy="MerchantCreateUpdateHeading">Create or edit a Merchant</h2>
+
+      <div>
+        <jhi-alert-error />
+
+        @if (editForm.controls.id.value !== null) {
+          <div class="mb-3">
+            <label class="form-label" for="field_id">ID</label>
+            <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+          </div>
+        }
+
+        @let nameRef = editForm.get('name')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_name">Name</label>
+          <input type="text" class="form-control" name="name" id="field_name" data-cy="name" formControlName="name" />
+          @if (nameRef.invalid && (nameRef.dirty || nameRef.touched)) {
+            <div>
+              @if (editForm.get('name')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        @let modeRef = editForm.get('mode')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_mode">Mode</label>
+          <select class="form-control" name="mode" formControlName="mode" id="field_mode" data-cy="mode">
+            <option [ngValue]="null"></option>
+            @for (merchantMode of merchantModeValues; track $index) {
+              <option [value]="merchantMode">{{ { null: '', TEST: 'TEST', LIVE: 'LIVE' }[merchantMode] }}</option>
+            }
+          </select>
+          @if (modeRef.invalid && (modeRef.dirty || modeRef.touched)) {
+            <div>
+              @if (editForm.get('mode')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        @let statusRef = editForm.get('status')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_status">Status</label>
+          <select class="form-control" name="status" formControlName="status" id="field_status" data-cy="status">
+            <option [ngValue]="null"></option>
+            @for (merchantStatus of merchantStatusValues; track $index) {
+              <option [value]="merchantStatus">{{ { null: '', ACTIVE: 'ACTIVE', INACTIVE: 'INACTIVE' }[merchantStatus] }}</option>
+            }
+          </select>
+          @if (statusRef.invalid && (statusRef.dirty || statusRef.touched)) {
+            <div>
+              @if (editForm.get('status')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_balance">Balance</label>
+          <input type="number" class="form-control" name="balance" id="field_balance" data-cy="balance" formControlName="balance" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_cupaTestApiKey">Cupa Test Api Key</label>
+          <input
+            type="text"
+            class="form-control"
+            name="cupaTestApiKey"
+            id="field_cupaTestApiKey"
+            data-cy="cupaTestApiKey"
+            formControlName="cupaTestApiKey"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_cupaProdApiKey">Cupa Prod Api Key</label>
+          <input
+            type="text"
+            class="form-control"
+            name="cupaProdApiKey"
+            id="field_cupaProdApiKey"
+            data-cy="cupaProdApiKey"
+            formControlName="cupaProdApiKey"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_remoteTestUrl">Remote Test Url</label>
+          <input
+            type="text"
+            class="form-control"
+            name="remoteTestUrl"
+            id="field_remoteTestUrl"
+            data-cy="remoteTestUrl"
+            formControlName="remoteTestUrl"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_remoteTestMerchantId">Remote Test Merchant Id</label>
+          <input
+            type="text"
+            class="form-control"
+            name="remoteTestMerchantId"
+            id="field_remoteTestMerchantId"
+            data-cy="remoteTestMerchantId"
+            formControlName="remoteTestMerchantId"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_remoteTestMerchantKey">Remote Test Merchant Key</label>
+          <input
+            type="text"
+            class="form-control"
+            name="remoteTestMerchantKey"
+            id="field_remoteTestMerchantKey"
+            data-cy="remoteTestMerchantKey"
+            formControlName="remoteTestMerchantKey"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_remoteTestApiKey">Remote Test Api Key</label>
+          <input
+            type="text"
+            class="form-control"
+            name="remoteTestApiKey"
+            id="field_remoteTestApiKey"
+            data-cy="remoteTestApiKey"
+            formControlName="remoteTestApiKey"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_remoteProdUrl">Remote Prod Url</label>
+          <input
+            type="text"
+            class="form-control"
+            name="remoteProdUrl"
+            id="field_remoteProdUrl"
+            data-cy="remoteProdUrl"
+            formControlName="remoteProdUrl"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_remoteProdMerchantId">Remote Prod Merchant Id</label>
+          <input
+            type="text"
+            class="form-control"
+            name="remoteProdMerchantId"
+            id="field_remoteProdMerchantId"
+            data-cy="remoteProdMerchantId"
+            formControlName="remoteProdMerchantId"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_remoteProdMerchantKey">Remote Prod Merchant Key</label>
+          <input
+            type="text"
+            class="form-control"
+            name="remoteProdMerchantKey"
+            id="field_remoteProdMerchantKey"
+            data-cy="remoteProdMerchantKey"
+            formControlName="remoteProdMerchantKey"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_remoteProdApiKey">Remote Prod Api Key</label>
+          <input
+            type="text"
+            class="form-control"
+            name="remoteProdApiKey"
+            id="field_remoteProdApiKey"
+            data-cy="remoteProdApiKey"
+            formControlName="remoteProdApiKey"
+          />
+        </div>
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span>Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span>Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

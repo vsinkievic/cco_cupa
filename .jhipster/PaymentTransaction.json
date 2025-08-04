@@ -1,0 +1,129 @@
+{
+  "annotations": {
+    "changelogDate": "20250804120906"
+  },
+  "applications": "*",
+  "documentation": "Represents a single payment transaction from start to finish.\\nThis entity acts as a comprehensive audit log, storing the request,\\nresponse, and status at each step of the process.",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "orderId",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "cupaTransactionId",
+      "fieldType": "UUID",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "gatewayTransactionId",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "TransactionStatus",
+      "fieldTypeDocumentation": "Enum for the status of a payment transaction lifecycle.\\nThis helps in tracking the state of each payment.",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "RECEIVED,SENT_TO_GATEWAY,AWAITING_CALLBACK,SUCCESS,FAILED,CANCELLED,REFUNDED,QUERY_SUCCESS"
+    },
+    {
+      "fieldName": "statusDescription",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "paymentBrand",
+      "fieldType": "PaymentBrand",
+      "fieldTypeDocumentation": "Enum for the payment brand being used.\\nBased on the 'cardType' in the documentation.",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "UNIONPAY,ALIPAY,WECHAT_PAY"
+    },
+    {
+      "fieldName": "amount",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "balance",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "currency",
+      "fieldType": "Currency",
+      "fieldTypeDocumentation": "Enum for supported transaction currencies.\\nBased on the list in the demo files.",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "AUD,USD,HKD,CAD,CHF,CNY,EUR,GBP,JPY,KRW,MOP,RUB,SGD,TWD"
+    },
+    {
+      "fieldName": "replyUrl",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "backofficeUrl",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "echo",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "sendEmail",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "signature",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "signatureVersion",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "requestTimestamp",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "requestData",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "initialResponseData",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "callbackTimestamp",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "callbackData",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "lastQueryData",
+      "fieldType": "TextBlob"
+    }
+  ],
+  "name": "PaymentTransaction",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityField": "merchantClientId",
+      "otherEntityName": "client",
+      "relationshipName": "client",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityField": "name",
+      "otherEntityName": "merchant",
+      "otherEntityRelationshipName": "transaction",
+      "relationshipName": "merchant",
+      "relationshipSide": "right",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

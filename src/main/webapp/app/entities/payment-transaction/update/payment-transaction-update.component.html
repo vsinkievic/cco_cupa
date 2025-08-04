@@ -1,0 +1,372 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2 id="jhi-payment-transaction-heading" data-cy="PaymentTransactionCreateUpdateHeading">Create or edit a Payment Transaction</h2>
+
+      <div>
+        <jhi-alert-error />
+
+        @if (editForm.controls.id.value !== null) {
+          <div class="mb-3">
+            <label class="form-label" for="field_id">ID</label>
+            <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+          </div>
+        }
+
+        @let orderIdRef = editForm.get('orderId')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_orderId">Order Id</label>
+          <input type="text" class="form-control" name="orderId" id="field_orderId" data-cy="orderId" formControlName="orderId" />
+          @if (orderIdRef.invalid && (orderIdRef.dirty || orderIdRef.touched)) {
+            <div>
+              @if (editForm.get('orderId')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        @let cupaTransactionIdRef = editForm.get('cupaTransactionId')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_cupaTransactionId">Cupa Transaction Id</label>
+          <input
+            type="text"
+            class="form-control"
+            name="cupaTransactionId"
+            id="field_cupaTransactionId"
+            data-cy="cupaTransactionId"
+            formControlName="cupaTransactionId"
+          />
+          @if (cupaTransactionIdRef.invalid && (cupaTransactionIdRef.dirty || cupaTransactionIdRef.touched)) {
+            <div>
+              @if (editForm.get('cupaTransactionId')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_gatewayTransactionId">Gateway Transaction Id</label>
+          <input
+            type="text"
+            class="form-control"
+            name="gatewayTransactionId"
+            id="field_gatewayTransactionId"
+            data-cy="gatewayTransactionId"
+            formControlName="gatewayTransactionId"
+          />
+        </div>
+
+        @let statusRef = editForm.get('status')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_status">Status</label>
+          <select class="form-control" name="status" formControlName="status" id="field_status" data-cy="status">
+            <option [ngValue]="null"></option>
+            @for (transactionStatus of transactionStatusValues; track $index) {
+              <option [value]="transactionStatus">
+                {{
+                  {
+                    null: '',
+                    RECEIVED: 'RECEIVED',
+                    SENT_TO_GATEWAY: 'SENT_TO_GATEWAY',
+                    AWAITING_CALLBACK: 'AWAITING_CALLBACK',
+                    SUCCESS: 'SUCCESS',
+                    FAILED: 'FAILED',
+                    CANCELLED: 'CANCELLED',
+                    REFUNDED: 'REFUNDED',
+                    QUERY_SUCCESS: 'QUERY_SUCCESS',
+                  }[transactionStatus]
+                }}
+              </option>
+            }
+          </select>
+          @if (statusRef.invalid && (statusRef.dirty || statusRef.touched)) {
+            <div>
+              @if (editForm.get('status')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_statusDescription">Status Description</label>
+          <input
+            type="text"
+            class="form-control"
+            name="statusDescription"
+            id="field_statusDescription"
+            data-cy="statusDescription"
+            formControlName="statusDescription"
+          />
+        </div>
+
+        @let paymentBrandRef = editForm.get('paymentBrand')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_paymentBrand">Payment Brand</label>
+          <select class="form-control" name="paymentBrand" formControlName="paymentBrand" id="field_paymentBrand" data-cy="paymentBrand">
+            <option [ngValue]="null"></option>
+            @for (paymentBrand of paymentBrandValues; track $index) {
+              <option [value]="paymentBrand">
+                {{ { null: '', UNIONPAY: 'UNIONPAY', ALIPAY: 'ALIPAY', WECHAT_PAY: 'WECHAT_PAY' }[paymentBrand] }}
+              </option>
+            }
+          </select>
+          @if (paymentBrandRef.invalid && (paymentBrandRef.dirty || paymentBrandRef.touched)) {
+            <div>
+              @if (editForm.get('paymentBrand')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        @let amountRef = editForm.get('amount')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_amount">Amount</label>
+          <input type="number" class="form-control" name="amount" id="field_amount" data-cy="amount" formControlName="amount" />
+          @if (amountRef.invalid && (amountRef.dirty || amountRef.touched)) {
+            <div>
+              @if (editForm.get('amount')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+              <small class="form-text text-danger" [hidden]="!editForm.get('amount')?.errors?.number">This field should be a number.</small>
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_balance">Balance</label>
+          <input type="number" class="form-control" name="balance" id="field_balance" data-cy="balance" formControlName="balance" />
+        </div>
+
+        @let currencyRef = editForm.get('currency')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_currency">Currency</label>
+          <select class="form-control" name="currency" formControlName="currency" id="field_currency" data-cy="currency">
+            <option [ngValue]="null"></option>
+            @for (currency of currencyValues; track $index) {
+              <option [value]="currency">
+                {{
+                  {
+                    null: '',
+                    AUD: 'AUD',
+                    USD: 'USD',
+                    HKD: 'HKD',
+                    CAD: 'CAD',
+                    CHF: 'CHF',
+                    CNY: 'CNY',
+                    EUR: 'EUR',
+                    GBP: 'GBP',
+                    JPY: 'JPY',
+                    KRW: 'KRW',
+                    MOP: 'MOP',
+                    RUB: 'RUB',
+                    SGD: 'SGD',
+                    TWD: 'TWD',
+                  }[currency]
+                }}
+              </option>
+            }
+          </select>
+          @if (currencyRef.invalid && (currencyRef.dirty || currencyRef.touched)) {
+            <div>
+              @if (editForm.get('currency')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_replyUrl">Reply Url</label>
+          <input type="text" class="form-control" name="replyUrl" id="field_replyUrl" data-cy="replyUrl" formControlName="replyUrl" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_backofficeUrl">Backoffice Url</label>
+          <input
+            type="text"
+            class="form-control"
+            name="backofficeUrl"
+            id="field_backofficeUrl"
+            data-cy="backofficeUrl"
+            formControlName="backofficeUrl"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_echo">Echo</label>
+          <input type="text" class="form-control" name="echo" id="field_echo" data-cy="echo" formControlName="echo" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_sendEmail">Send Email</label>
+          <input type="checkbox" class="form-check" name="sendEmail" id="field_sendEmail" data-cy="sendEmail" formControlName="sendEmail" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_signature">Signature</label>
+          <input type="text" class="form-control" name="signature" id="field_signature" data-cy="signature" formControlName="signature" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_signatureVersion">Signature Version</label>
+          <input
+            type="text"
+            class="form-control"
+            name="signatureVersion"
+            id="field_signatureVersion"
+            data-cy="signatureVersion"
+            formControlName="signatureVersion"
+          />
+        </div>
+
+        @let requestTimestampRef = editForm.get('requestTimestamp')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_requestTimestamp">Request Timestamp</label>
+          <div class="d-flex">
+            <input
+              id="field_requestTimestamp"
+              data-cy="requestTimestamp"
+              type="datetime-local"
+              class="form-control"
+              name="requestTimestamp"
+              formControlName="requestTimestamp"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+          @if (requestTimestampRef.invalid && (requestTimestampRef.dirty || requestTimestampRef.touched)) {
+            <div>
+              @if (editForm.get('requestTimestamp')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+              <small class="form-text text-danger" [hidden]="!editForm.get('requestTimestamp')?.errors?.datetimelocal"
+                >This field should be a date and time.</small
+              >
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_requestData">Request Data</label>
+          <textarea
+            class="form-control"
+            name="requestData"
+            id="field_requestData"
+            data-cy="requestData"
+            formControlName="requestData"
+          ></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_initialResponseData">Initial Response Data</label>
+          <textarea
+            class="form-control"
+            name="initialResponseData"
+            id="field_initialResponseData"
+            data-cy="initialResponseData"
+            formControlName="initialResponseData"
+          ></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_callbackTimestamp">Callback Timestamp</label>
+          <div class="d-flex">
+            <input
+              id="field_callbackTimestamp"
+              data-cy="callbackTimestamp"
+              type="datetime-local"
+              class="form-control"
+              name="callbackTimestamp"
+              formControlName="callbackTimestamp"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_callbackData">Callback Data</label>
+          <textarea
+            class="form-control"
+            name="callbackData"
+            id="field_callbackData"
+            data-cy="callbackData"
+            formControlName="callbackData"
+          ></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_lastQueryData">Last Query Data</label>
+          <textarea
+            class="form-control"
+            name="lastQueryData"
+            id="field_lastQueryData"
+            data-cy="lastQueryData"
+            formControlName="lastQueryData"
+          ></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_client">Client</label>
+          <select
+            class="form-control"
+            id="field_client"
+            data-cy="client"
+            name="client"
+            formControlName="client"
+            [compareWith]="compareClient"
+          >
+            <option [ngValue]="null"></option>
+            @for (clientOption of clientsSharedCollection; track $index) {
+              <option [ngValue]="clientOption">{{ clientOption.merchantClientId }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_merchant">Merchant</label>
+          <select
+            class="form-control"
+            id="field_merchant"
+            data-cy="merchant"
+            name="merchant"
+            formControlName="merchant"
+            [compareWith]="compareMerchant"
+          >
+            @if (editForm.get(['merchant'])!.value === null) {
+              <option [ngValue]="null" selected></option>
+            }
+            @for (merchantOption of merchantsSharedCollection; track $index) {
+              <option [ngValue]="merchantOption">{{ merchantOption.name }}</option>
+            }
+          </select>
+        </div>
+        @if (editForm.get(['merchant'])!.invalid && (editForm.get(['merchant'])!.dirty || editForm.get(['merchant'])!.touched)) {
+          <div>
+            @if (editForm.get(['merchant'])?.errors?.required) {
+              <small class="form-text text-danger">This field is required.</small>
+            }
+          </div>
+        }
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span>Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span>Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

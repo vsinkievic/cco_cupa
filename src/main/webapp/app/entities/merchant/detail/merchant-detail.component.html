@@ -1,0 +1,86 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (merchant(); as merchantRef) {
+      <div>
+        <h2 data-cy="merchantDetailsHeading"><span>Merchant</span></h2>
+
+        <hr />
+
+        <jhi-alert-error />
+
+        <jhi-alert />
+
+        <dl class="row-md jh-entity-details">
+          <dt><span>ID</span></dt>
+          <dd>
+            <span>{{ merchantRef.id }}</span>
+          </dd>
+          <dt><span>Name</span></dt>
+          <dd>
+            <span>{{ merchantRef.name }}</span>
+          </dd>
+          <dt><span>Mode</span></dt>
+          <dd>
+            <span>{{ { null: '', TEST: 'TEST', LIVE: 'LIVE' }[merchantRef.mode ?? 'null'] }}</span>
+          </dd>
+          <dt><span>Status</span></dt>
+          <dd>
+            <span>{{ { null: '', ACTIVE: 'ACTIVE', INACTIVE: 'INACTIVE' }[merchantRef.status ?? 'null'] }}</span>
+          </dd>
+          <dt><span>Balance</span></dt>
+          <dd>
+            <span>{{ merchantRef.balance }}</span>
+          </dd>
+          <dt><span>Cupa Test Api Key</span></dt>
+          <dd>
+            <span>{{ merchantRef.cupaTestApiKey }}</span>
+          </dd>
+          <dt><span>Cupa Prod Api Key</span></dt>
+          <dd>
+            <span>{{ merchantRef.cupaProdApiKey }}</span>
+          </dd>
+          <dt><span>Remote Test Url</span></dt>
+          <dd>
+            <span>{{ merchantRef.remoteTestUrl }}</span>
+          </dd>
+          <dt><span>Remote Test Merchant Id</span></dt>
+          <dd>
+            <span>{{ merchantRef.remoteTestMerchantId }}</span>
+          </dd>
+          <dt><span>Remote Test Merchant Key</span></dt>
+          <dd>
+            <span>{{ merchantRef.remoteTestMerchantKey }}</span>
+          </dd>
+          <dt><span>Remote Test Api Key</span></dt>
+          <dd>
+            <span>{{ merchantRef.remoteTestApiKey }}</span>
+          </dd>
+          <dt><span>Remote Prod Url</span></dt>
+          <dd>
+            <span>{{ merchantRef.remoteProdUrl }}</span>
+          </dd>
+          <dt><span>Remote Prod Merchant Id</span></dt>
+          <dd>
+            <span>{{ merchantRef.remoteProdMerchantId }}</span>
+          </dd>
+          <dt><span>Remote Prod Merchant Key</span></dt>
+          <dd>
+            <span>{{ merchantRef.remoteProdMerchantKey }}</span>
+          </dd>
+          <dt><span>Remote Prod Api Key</span></dt>
+          <dd>
+            <span>{{ merchantRef.remoteProdApiKey }}</span>
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/merchant', merchantRef.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

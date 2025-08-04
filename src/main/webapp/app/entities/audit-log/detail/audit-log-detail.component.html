@@ -1,0 +1,82 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (auditLog(); as auditLogRef) {
+      <div>
+        <h2 data-cy="auditLogDetailsHeading"><span>Audit Log</span></h2>
+
+        <hr />
+
+        <jhi-alert-error />
+
+        <jhi-alert />
+
+        <dl class="row-md jh-entity-details">
+          <dt><span>ID</span></dt>
+          <dd>
+            <span>{{ auditLogRef.id }}</span>
+          </dd>
+          <dt><span>Request Timestamp</span></dt>
+          <dd>
+            <span>{{ auditLogRef.requestTimestamp | formatMediumDatetime }}</span>
+          </dd>
+          <dt><span>Api Endpoint</span></dt>
+          <dd>
+            <span>{{ auditLogRef.apiEndpoint }}</span>
+          </dd>
+          <dt><span>Http Method</span></dt>
+          <dd>
+            <span>{{ auditLogRef.httpMethod }}</span>
+          </dd>
+          <dt><span>Http Status Code</span></dt>
+          <dd>
+            <span>{{ auditLogRef.httpStatusCode }}</span>
+          </dd>
+          <dt><span>Order Id</span></dt>
+          <dd>
+            <span>{{ auditLogRef.orderId }}</span>
+          </dd>
+          <dt><span>Response Description</span></dt>
+          <dd>
+            <span>{{ auditLogRef.responseDescription }}</span>
+          </dd>
+          <dt><span>Cupa Api Key</span></dt>
+          <dd>
+            <span>{{ auditLogRef.cupaApiKey }}</span>
+          </dd>
+          <dt><span>Environment</span></dt>
+          <dd>
+            <span>{{ auditLogRef.environment }}</span>
+          </dd>
+          <dt><span>Request Data</span></dt>
+          <dd>
+            <span>{{ auditLogRef.requestData }}</span>
+          </dd>
+          <dt><span>Response Data</span></dt>
+          <dd>
+            <span>{{ auditLogRef.responseData }}</span>
+          </dd>
+          <dt><span>Requester Ip Address</span></dt>
+          <dd>
+            <span>{{ auditLogRef.requesterIpAddress }}</span>
+          </dd>
+          <dt><span>Merchant</span></dt>
+          <dd>
+            @if (auditLog()!.merchant) {
+              <div>
+                <a [routerLink]="['/merchant', auditLog()!.merchant?.id, 'view']">{{ auditLogRef.merchant?.name }}</a>
+              </div>
+            }
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/audit-log', auditLogRef.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

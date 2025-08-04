@@ -1,0 +1,196 @@
+<div>
+  <h2 id="page-heading" data-cy="AuditLogHeading">
+    <span>Audit Logs</span>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2" (click)="load()" [disabled]="isLoading">
+        <fa-icon icon="sync" [animation]="isLoading ? 'spin' : undefined"></fa-icon>
+        <span>Refresh list</span>
+      </button>
+
+      <button
+        id="jh-create-entity"
+        data-cy="entityCreateButton"
+        class="btn btn-primary jh-create-entity create-audit-log"
+        [routerLink]="['/audit-log/new']"
+      >
+        <fa-icon icon="plus"></fa-icon>
+        <span>Create a new Audit Log</span>
+      </button>
+    </div>
+  </h2>
+
+  <jhi-alert-error />
+
+  <jhi-alert />
+
+  @if (auditLogs().length === 0) {
+    <div class="alert alert-warning" id="no-result">
+      <span>No Audit Logs found</span>
+    </div>
+  } @else {
+    <div class="table-responsive table-entities" id="entities">
+      <table class="table table-striped" aria-describedby="page-heading">
+        <thead>
+          <tr jhiSort [(sortState)]="sortState" (sortChange)="navigateToWithComponentValues($event)">
+            <th scope="col" jhiSortBy="id">
+              <div class="d-flex">
+                <span>ID</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="requestTimestamp">
+              <div class="d-flex">
+                <span>Request Timestamp</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="apiEndpoint">
+              <div class="d-flex">
+                <span>Api Endpoint</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="httpMethod">
+              <div class="d-flex">
+                <span>Http Method</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="httpStatusCode">
+              <div class="d-flex">
+                <span>Http Status Code</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="orderId">
+              <div class="d-flex">
+                <span>Order Id</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="responseDescription">
+              <div class="d-flex">
+                <span>Response Description</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="cupaApiKey">
+              <div class="d-flex">
+                <span>Cupa Api Key</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="environment">
+              <div class="d-flex">
+                <span>Environment</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="requestData">
+              <div class="d-flex">
+                <span>Request Data</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="responseData">
+              <div class="d-flex">
+                <span>Response Data</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="requesterIpAddress">
+              <div class="d-flex">
+                <span>Requester Ip Address</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="merchant.name">
+              <div class="d-flex">
+                <span>Merchant</span>
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (auditLog of auditLogs(); track trackId(auditLog)) {
+            <tr data-cy="entityTable">
+              <td>
+                <a [routerLink]="['/audit-log', auditLog.id, 'view']">{{ auditLog.id }}</a>
+              </td>
+              <td>{{ auditLog.requestTimestamp | formatMediumDatetime }}</td>
+              <td>{{ auditLog.apiEndpoint }}</td>
+              <td>{{ auditLog.httpMethod }}</td>
+              <td>{{ auditLog.httpStatusCode }}</td>
+              <td>{{ auditLog.orderId }}</td>
+              <td>{{ auditLog.responseDescription }}</td>
+              <td>{{ auditLog.cupaApiKey }}</td>
+              <td>{{ auditLog.environment }}</td>
+              <td>{{ auditLog.requestData }}</td>
+              <td>{{ auditLog.responseData }}</td>
+              <td>{{ auditLog.requesterIpAddress }}</td>
+              <td>
+                @if (auditLog.merchant) {
+                  <div>
+                    <a [routerLink]="['/merchant', auditLog.merchant.id, 'view']">{{ auditLog.merchant.name }}</a>
+                  </div>
+                }
+              </td>
+              <td class="text-end">
+                <div class="btn-group">
+                  <a [routerLink]="['/audit-log', auditLog.id, 'view']" class="btn btn-info btn-sm" data-cy="entityDetailsButton">
+                    <fa-icon icon="eye"></fa-icon>
+                    <span class="d-none d-md-inline">View</span>
+                  </a>
+
+                  <a [routerLink]="['/audit-log', auditLog.id, 'edit']" class="btn btn-primary btn-sm" data-cy="entityEditButton">
+                    <fa-icon icon="pencil-alt"></fa-icon>
+                    <span class="d-none d-md-inline">Edit</span>
+                  </a>
+
+                  <button type="submit" (click)="delete(auditLog)" class="btn btn-danger btn-sm" data-cy="entityDeleteButton">
+                    <fa-icon icon="times"></fa-icon>
+                    <span class="d-none d-md-inline">Delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  @if (auditLogs().length > 0) {
+    <div>
+      <div class="d-flex justify-content-center">
+        <jhi-item-count [params]="{ page, totalItems, itemsPerPage }" />
+      </div>
+
+      <div class="d-flex justify-content-center">
+        <ngb-pagination
+          [collectionSize]="totalItems"
+          [page]="page"
+          [pageSize]="itemsPerPage"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="navigateToPage($event)"
+        ></ngb-pagination>
+      </div>
+    </div>
+  }
+</div>

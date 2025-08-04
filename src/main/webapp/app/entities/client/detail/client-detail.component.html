@@ -1,0 +1,98 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (client(); as clientRef) {
+      <div>
+        <h2 data-cy="clientDetailsHeading"><span>Client</span></h2>
+
+        <hr />
+
+        <jhi-alert-error />
+
+        <jhi-alert />
+
+        <dl class="row-md jh-entity-details">
+          <dt><span>ID</span></dt>
+          <dd>
+            <span>{{ clientRef.id }}</span>
+          </dd>
+          <dt><span>Merchant Client Id</span></dt>
+          <dd>
+            <span>{{ clientRef.merchantClientId }}</span>
+          </dd>
+          <dt><span>Name</span></dt>
+          <dd>
+            <span>{{ clientRef.name }}</span>
+          </dd>
+          <dt><span>Email Address</span></dt>
+          <dd>
+            <span>{{ clientRef.emailAddress }}</span>
+          </dd>
+          <dt><span>Mobile Number</span></dt>
+          <dd>
+            <span>{{ clientRef.mobileNumber }}</span>
+          </dd>
+          <dt><span>Client Phone</span></dt>
+          <dd>
+            <span>{{ clientRef.clientPhone }}</span>
+          </dd>
+          <dt><span>Valid</span></dt>
+          <dd>
+            <span>{{ clientRef.valid }}</span>
+          </dd>
+          <dt><span>Street Number</span></dt>
+          <dd>
+            <span>{{ clientRef.streetNumber }}</span>
+          </dd>
+          <dt><span>Street Name</span></dt>
+          <dd>
+            <span>{{ clientRef.streetName }}</span>
+          </dd>
+          <dt><span>Street Suffix</span></dt>
+          <dd>
+            <span>{{ clientRef.streetSuffix }}</span>
+          </dd>
+          <dt><span>City</span></dt>
+          <dd>
+            <span>{{ clientRef.city }}</span>
+          </dd>
+          <dt><span>State</span></dt>
+          <dd>
+            <span>{{ clientRef.state }}</span>
+          </dd>
+          <dt><span>Post Code</span></dt>
+          <dd>
+            <span>{{ clientRef.postCode }}</span>
+          </dd>
+          <dt><span>Country</span></dt>
+          <dd>
+            <span>{{ clientRef.country }}</span>
+          </dd>
+          <dt><span>Is Blacklisted</span></dt>
+          <dd>
+            <span>{{ clientRef.isBlacklisted }}</span>
+          </dd>
+          <dt><span>Is Correlated Blacklisted</span></dt>
+          <dd>
+            <span>{{ clientRef.isCorrelatedBlacklisted }}</span>
+          </dd>
+          <dt><span>Merchant</span></dt>
+          <dd>
+            @if (client()!.merchant) {
+              <div>
+                <a [routerLink]="['/merchant', client()!.merchant?.id, 'view']">{{ clientRef.merchant?.name }}</a>
+              </div>
+            }
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/client', clientRef.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

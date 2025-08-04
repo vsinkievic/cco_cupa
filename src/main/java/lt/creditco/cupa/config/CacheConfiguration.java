@@ -50,6 +50,15 @@ public class CacheConfiguration {
             createCache(cm, lt.creditco.cupa.domain.User.class.getName());
             createCache(cm, lt.creditco.cupa.domain.Authority.class.getName());
             createCache(cm, lt.creditco.cupa.domain.User.class.getName() + ".authorities");
+            createCache(cm, lt.creditco.cupa.domain.Merchant.class.getName());
+            createCache(cm, lt.creditco.cupa.domain.Merchant.class.getName() + ".clients");
+            createCache(cm, lt.creditco.cupa.domain.Merchant.class.getName() + ".transactions");
+            createCache(cm, lt.creditco.cupa.domain.Merchant.class.getName() + ".auditLogs");
+            createCache(cm, lt.creditco.cupa.domain.Client.class.getName());
+            createCache(cm, lt.creditco.cupa.domain.Client.class.getName() + ".cards");
+            createCache(cm, lt.creditco.cupa.domain.ClientCard.class.getName());
+            createCache(cm, lt.creditco.cupa.domain.PaymentTransaction.class.getName());
+            createCache(cm, lt.creditco.cupa.domain.AuditLog.class.getName());
             // jhipster-needle-ehcache-add-entry
         };
     }
