@@ -25,6 +25,7 @@
     "nativeLanguage": "en",
     "packageFolder": "lt/creditco/cupa",
     "packageName": "lt.creditco.cupa",
+    "pkType": "UUID",
     "prodDatabaseType": "postgresql",
     "searchEngine": false,
     "serverPort": 8080,
