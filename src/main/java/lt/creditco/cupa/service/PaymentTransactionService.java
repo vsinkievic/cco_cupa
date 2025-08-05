@@ -43,6 +43,10 @@ public class PaymentTransactionService {
     public PaymentTransactionDTO save(PaymentTransactionDTO paymentTransactionDTO) {
         LOG.debug("Request to save PaymentTransaction : {}", paymentTransactionDTO);
         PaymentTransaction paymentTransaction = paymentTransactionMapper.toEntity(paymentTransactionDTO);
+
+        if (paymentTransaction.getId() == null) {
+            paymentTransaction.setId(UUID.randomUUID().toString());
+        }
         paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
         return paymentTransactionMapper.toDto(paymentTransaction);
     }
