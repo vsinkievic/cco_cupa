@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.MerchantDTO;
@@ -78,7 +79,7 @@ public class MerchantResource {
      */
     @PutMapping("/{id}")
     public ResponseEntity<MerchantDTO> updateMerchant(
-        @PathVariable(value = "id", required = false) final Long id,
+        @PathVariable(value = "id", required = false) final String id,
         @Valid @RequestBody MerchantDTO merchantDTO
     ) throws URISyntaxException {
         LOG.debug("REST request to update Merchant : {}, {}", id, merchantDTO);
@@ -112,7 +113,7 @@ public class MerchantResource {
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<MerchantDTO> partialUpdateMerchant(
-        @PathVariable(value = "id", required = false) final Long id,
+        @PathVariable(value = "id", required = false) final String id,
         @NotNull @RequestBody MerchantDTO merchantDTO
     ) throws URISyntaxException {
         LOG.debug("REST request to partial update Merchant partially : {}, {}", id, merchantDTO);
@@ -156,7 +157,7 @@ public class MerchantResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the merchantDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<MerchantDTO> getMerchant(@PathVariable("id") Long id) {
+    public ResponseEntity<MerchantDTO> getMerchant(@PathVariable("id") String id) {
         LOG.debug("REST request to get Merchant : {}", id);
         Optional<MerchantDTO> merchantDTO = merchantService.findOne(id);
         return ResponseUtil.wrapOrNotFound(merchantDTO);
@@ -169,7 +170,7 @@ public class MerchantResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMerchant(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> deleteMerchant(@PathVariable("id") String id) {
         LOG.debug("REST request to delete Merchant : {}", id);
         merchantService.delete(id);
         return ResponseEntity.noContent()

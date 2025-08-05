@@ -29,11 +29,11 @@ class PaymentTransactionTest {
         PaymentTransaction paymentTransaction = getPaymentTransactionRandomSampleGenerator();
         Client clientBack = getClientRandomSampleGenerator();
 
-        paymentTransaction.setClient(clientBack);
-        assertThat(paymentTransaction.getClient()).isEqualTo(clientBack);
+        paymentTransaction.setClientId(clientBack.getId());
+        assertThat(paymentTransaction.getClientId()).isEqualTo(clientBack.getId());
 
-        paymentTransaction.client(null);
-        assertThat(paymentTransaction.getClient()).isNull();
+        paymentTransaction.setClientId(null);
+        assertThat(paymentTransaction.getClientId()).isNull();
     }
 
     @Test
@@ -41,10 +41,10 @@ class PaymentTransactionTest {
         PaymentTransaction paymentTransaction = getPaymentTransactionRandomSampleGenerator();
         Merchant merchantBack = getMerchantRandomSampleGenerator();
 
-        paymentTransaction.setMerchant(merchantBack);
-        assertThat(paymentTransaction.getMerchant()).isEqualTo(merchantBack);
+        paymentTransaction.setMerchantId(merchantBack.getId());
+        assertThat(paymentTransaction.getMerchantId()).isEqualTo(merchantBack.getId());
 
-        paymentTransaction.merchant(null);
-        assertThat(paymentTransaction.getMerchant()).isNull();
+        paymentTransaction.setMerchantId(null);
+        assertThat(paymentTransaction.getMerchantId()).isNull();
     }
 }

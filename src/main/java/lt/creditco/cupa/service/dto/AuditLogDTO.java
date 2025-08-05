@@ -6,6 +6,7 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * A DTO for the {@link lt.creditco.cupa.domain.AuditLog} entity.
@@ -35,15 +36,23 @@ public class AuditLogDTO implements Serializable {
 
     private String environment;
 
-    @Lob
     private String requestData;
 
-    @Lob
     private String responseData;
 
     private String requesterIpAddress;
 
-    private MerchantDTO merchant;
+    private String merchantId;
+
+    private String createdBy;
+
+    private Instant createdDate;
+
+    private String lastModifiedBy;
+
+    private Instant lastModifiedDate;
+
+    private Long version;
 
     public Long getId() {
         return id;
@@ -141,12 +150,52 @@ public class AuditLogDTO implements Serializable {
         this.requesterIpAddress = requesterIpAddress;
     }
 
-    public MerchantDTO getMerchant() {
-        return merchant;
+    public String getMerchantId() {
+        return merchantId;
     }
 
-    public void setMerchant(MerchantDTO merchant) {
-        this.merchant = merchant;
+    public void setMerchantId(String merchantId) {
+        this.merchantId = merchantId;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Instant getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Instant createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public String getLastModifiedBy() {
+        return lastModifiedBy;
+    }
+
+    public void setLastModifiedBy(String lastModifiedBy) {
+        this.lastModifiedBy = lastModifiedBy;
+    }
+
+    public Instant getLastModifiedDate() {
+        return lastModifiedDate;
+    }
+
+    public void setLastModifiedDate(Instant lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     @Override
@@ -180,13 +229,13 @@ public class AuditLogDTO implements Serializable {
             ", httpMethod='" + getHttpMethod() + "'" +
             ", httpStatusCode=" + getHttpStatusCode() +
             ", orderId='" + getOrderId() + "'" +
+            ", merchantId=" + getMerchantId() +
             ", responseDescription='" + getResponseDescription() + "'" +
             ", cupaApiKey='" + getCupaApiKey() + "'" +
             ", environment='" + getEnvironment() + "'" +
             ", requestData='" + getRequestData() + "'" +
             ", responseData='" + getResponseData() + "'" +
             ", requesterIpAddress='" + getRequesterIpAddress() + "'" +
-            ", merchant=" + getMerchant() +
             "}";
     }
 }

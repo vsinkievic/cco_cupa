@@ -10,17 +10,17 @@
         Added the entity ClientCard.
     -->
     <changeSet id="20250804120905-1" author="jhipster">
-        <createTable tableName="client_card" remarks="Represents a client&apos;s stored payment card.\nBased on the &apos;cards&apos; object in the documentation.\nPAN is stored masked for security.">
-            <column name="id" type="bigint">
+        <createTable tableName="client_card" remarks="Represents a client's stored payment card.\nBased on the 'cards' object in the documentation.\nPAN is stored masked for security.">
+            <column name="id" type="varchar(50)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="masked_pan" type="varchar(255)">
+            <column name="masked_pan" type="varchar(50)">
                 <constraints nullable="false" />
             </column>
-            <column name="expiry_date" type="varchar(255)">
+            <column name="expiry_date" type="varchar(10)">
                 <constraints nullable="true" />
             </column>
-            <column name="cardholder_name" type="varchar(255)">
+            <column name="cardholder_name" type="varchar(100)">
                 <constraints nullable="true" />
             </column>
             <column name="is_default" type="boolean">
@@ -29,8 +29,23 @@
             <column name="is_valid" type="boolean">
                 <constraints nullable="true" />
             </column>
-            <column name="client_id" type="bigint">
+            <column name="client_id" type="varchar(50)">
                 <constraints nullable="false" />
+            </column>
+            <column name="version" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_by" type="varchar(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="last_modified_by" type="varchar(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="last_modified_date" type="${datetimeType}">
+                <constraints nullable="true" />
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
@@ -52,13 +67,18 @@
                   separator=";"
                   tableName="client_card"
                   usePreparedStatements="true">
-            <column name="id" type="numeric"/>
+            <column name="id" type="string"/>
             <column name="masked_pan" type="string"/>
             <column name="expiry_date" type="string"/>
             <column name="cardholder_name" type="string"/>
             <column name="is_default" type="boolean"/>
             <column name="is_valid" type="boolean"/>
-            <column name="client_id" type="numeric"/>
+            <column name="client_id" type="string"/>
+            <column name="version" type="bigint"/>
+            <column name="created_by" type="string"/>
+            <column name="created_date" type="${datetimeType}"/>
+            <column name="last_modified_by" type="string"/>
+            <column name="last_modified_date" type="${datetimeType}"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

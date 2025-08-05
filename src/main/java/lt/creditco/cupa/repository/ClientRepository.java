@@ -13,8 +13,8 @@ import org.springframework.stereotype.Repository;
  * Spring Data JPA repository for the Client entity.
  */
 @Repository
-public interface ClientRepository extends JpaRepository<Client, Long> {
-    default Optional<Client> findOneWithEagerRelationships(Long id) {
+public interface ClientRepository extends JpaRepository<Client, String> {
+    default Optional<Client> findOneWithEagerRelationships(String id) {
         return this.findOneWithToOneRelationships(id);
     }
 
@@ -26,15 +26,12 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
         return this.findAllWithToOneRelationships(pageable);
     }
 
-    @Query(
-        value = "select client from Client client left join fetch client.merchant",
-        countQuery = "select count(client) from Client client"
-    )
+    @Query(value = "select client from Client client", countQuery = "select count(client) from Client client")
     Page<Client> findAllWithToOneRelationships(Pageable pageable);
 
-    @Query("select client from Client client left join fetch client.merchant")
+    @Query("select client from Client client")
     List<Client> findAllWithToOneRelationships();
 
-    @Query("select client from Client client left join fetch client.merchant where client.id =:id")
-    Optional<Client> findOneWithToOneRelationships(@Param("id") Long id);
+    @Query("select client from Client client where client.id =:id")
+    Optional<Client> findOneWithToOneRelationships(@Param("id") String id);
 }

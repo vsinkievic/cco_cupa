@@ -2,6 +2,7 @@ package lt.creditco.cupa.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import lt.creditco.cupa.domain.ClientCard;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,8 +14,8 @@ import org.springframework.stereotype.Repository;
  * Spring Data JPA repository for the ClientCard entity.
  */
 @Repository
-public interface ClientCardRepository extends JpaRepository<ClientCard, Long> {
-    default Optional<ClientCard> findOneWithEagerRelationships(Long id) {
+public interface ClientCardRepository extends JpaRepository<ClientCard, String> {
+    default Optional<ClientCard> findOneWithEagerRelationships(String id) {
         return this.findOneWithToOneRelationships(id);
     }
 
@@ -36,5 +37,5 @@ public interface ClientCardRepository extends JpaRepository<ClientCard, Long> {
     List<ClientCard> findAllWithToOneRelationships();
 
     @Query("select clientCard from ClientCard clientCard left join fetch clientCard.client where clientCard.id =:id")
-    Optional<ClientCard> findOneWithToOneRelationships(@Param("id") Long id);
+    Optional<ClientCard> findOneWithToOneRelationships(@Param("id") String id);
 }

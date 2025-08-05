@@ -1,6 +1,7 @@
 package lt.creditco.cupa.service;
 
 import java.util.Optional;
+import java.util.UUID;
 import lt.creditco.cupa.domain.ClientCard;
 import lt.creditco.cupa.repository.ClientCardRepository;
 import lt.creditco.cupa.service.dto.ClientCardDTO;
@@ -104,7 +105,7 @@ public class ClientCardService {
      * @return the entity.
      */
     @Transactional(readOnly = true)
-    public Optional<ClientCardDTO> findOne(Long id) {
+    public Optional<ClientCardDTO> findOne(String id) {
         LOG.debug("Request to get ClientCard : {}", id);
         return clientCardRepository.findOneWithEagerRelationships(id).map(clientCardMapper::toDto);
     }
@@ -114,7 +115,7 @@ public class ClientCardService {
      *
      * @param id the id of the entity.
      */
-    public void delete(Long id) {
+    public void delete(String id) {
         LOG.debug("Request to delete ClientCard : {}", id);
         clientCardRepository.deleteById(id);
     }

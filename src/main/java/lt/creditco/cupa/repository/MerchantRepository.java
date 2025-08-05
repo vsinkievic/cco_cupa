@@ -1,5 +1,6 @@
 package lt.creditco.cupa.repository;
 
+import java.util.UUID;
 import lt.creditco.cupa.domain.Merchant;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
@@ -9,4 +10,4 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface MerchantRepository extends JpaRepository<Merchant, Long> {}
+public interface MerchantRepository extends JpaRepository<Merchant, String> {}

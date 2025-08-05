@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import lt.creditco.cupa.repository.ClientRepository;
 import lt.creditco.cupa.service.ClientService;
 import lt.creditco.cupa.service.dto.ClientDTO;
@@ -78,7 +79,7 @@ public class ClientResource {
      */
     @PutMapping("/{id}")
     public ResponseEntity<ClientDTO> updateClient(
-        @PathVariable(value = "id", required = false) final Long id,
+        @PathVariable(value = "id", required = false) final String id,
         @Valid @RequestBody ClientDTO clientDTO
     ) throws URISyntaxException {
         LOG.debug("REST request to update Client : {}, {}", id, clientDTO);
@@ -112,7 +113,7 @@ public class ClientResource {
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<ClientDTO> partialUpdateClient(
-        @PathVariable(value = "id", required = false) final Long id,
+        @PathVariable(value = "id", required = false) final String id,
         @NotNull @RequestBody ClientDTO clientDTO
     ) throws URISyntaxException {
         LOG.debug("REST request to partial update Client partially : {}, {}", id, clientDTO);
@@ -165,7 +166,7 @@ public class ClientResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the clientDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ClientDTO> getClient(@PathVariable("id") Long id) {
+    public ResponseEntity<ClientDTO> getClient(@PathVariable("id") String id) {
         LOG.debug("REST request to get Client : {}", id);
         Optional<ClientDTO> clientDTO = clientService.findOne(id);
         return ResponseUtil.wrapOrNotFound(clientDTO);
@@ -178,7 +179,7 @@ public class ClientResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteClient(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> deleteClient(@PathVariable("id") String id) {
         LOG.debug("REST request to delete Client : {}", id);
         clientService.delete(id);
         return ResponseEntity.noContent()

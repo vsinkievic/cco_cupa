@@ -1,18 +1,12 @@
 package lt.creditco.cupa.domain;
 
-import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class ClientTestSamples {
 
-    private static final Random random = new Random();
-    private static final AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
-
     public static Client getClientSample1() {
         return new Client()
-            .id(1L)
-            .merchantClientId("merchantClientId1")
+            .id("11111111-1111-1111-1111-111111111111")
             .name("name1")
             .emailAddress("emailAddress1")
             .mobileNumber("mobileNumber1")
@@ -28,8 +22,7 @@ public class ClientTestSamples {
 
     public static Client getClientSample2() {
         return new Client()
-            .id(2L)
-            .merchantClientId("merchantClientId2")
+            .id("22222222-2222-2222-2222-222222222222")
             .name("name2")
             .emailAddress("emailAddress2")
             .mobileNumber("mobileNumber2")
@@ -45,8 +38,7 @@ public class ClientTestSamples {
 
     public static Client getClientRandomSampleGenerator() {
         return new Client()
-            .id(longCount.incrementAndGet())
-            .merchantClientId(UUID.randomUUID().toString())
+            .id(UUID.randomUUID().toString())
             .name(UUID.randomUUID().toString())
             .emailAddress(UUID.randomUUID().toString())
             .mobileNumber(UUID.randomUUID().toString())

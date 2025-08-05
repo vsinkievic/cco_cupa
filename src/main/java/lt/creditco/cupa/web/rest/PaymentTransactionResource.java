@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import lt.creditco.cupa.repository.PaymentTransactionRepository;
 import lt.creditco.cupa.service.PaymentTransactionService;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
@@ -82,7 +83,7 @@ public class PaymentTransactionResource {
      */
     @PutMapping("/{id}")
     public ResponseEntity<PaymentTransactionDTO> updatePaymentTransaction(
-        @PathVariable(value = "id", required = false) final Long id,
+        @PathVariable(value = "id", required = false) final String id,
         @Valid @RequestBody PaymentTransactionDTO paymentTransactionDTO
     ) throws URISyntaxException {
         LOG.debug("REST request to update PaymentTransaction : {}, {}", id, paymentTransactionDTO);
@@ -116,7 +117,7 @@ public class PaymentTransactionResource {
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<PaymentTransactionDTO> partialUpdatePaymentTransaction(
-        @PathVariable(value = "id", required = false) final Long id,
+        @PathVariable(value = "id", required = false) final String id,
         @NotNull @RequestBody PaymentTransactionDTO paymentTransactionDTO
     ) throws URISyntaxException {
         LOG.debug("REST request to partial update PaymentTransaction partially : {}, {}", id, paymentTransactionDTO);
@@ -169,7 +170,7 @@ public class PaymentTransactionResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the paymentTransactionDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<PaymentTransactionDTO> getPaymentTransaction(@PathVariable("id") Long id) {
+    public ResponseEntity<PaymentTransactionDTO> getPaymentTransaction(@PathVariable("id") String id) {
         LOG.debug("REST request to get PaymentTransaction : {}", id);
         Optional<PaymentTransactionDTO> paymentTransactionDTO = paymentTransactionService.findOne(id);
         return ResponseUtil.wrapOrNotFound(paymentTransactionDTO);
@@ -182,7 +183,7 @@ public class PaymentTransactionResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePaymentTransaction(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> deletePaymentTransaction(@PathVariable("id") String id) {
         LOG.debug("REST request to delete PaymentTransaction : {}", id);
         paymentTransactionService.delete(id);
         return ResponseEntity.noContent()

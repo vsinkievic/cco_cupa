@@ -1,9 +1,9 @@
 package lt.creditco.cupa.domain;
 
 import static lt.creditco.cupa.domain.AuditLogTestSamples.*;
-import static lt.creditco.cupa.domain.MerchantTestSamples.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
 import lt.creditco.cupa.web.rest.TestUtil;
 import org.junit.jupiter.api.Test;
 
@@ -26,12 +26,12 @@ class AuditLogTest {
     @Test
     void merchantTest() {
         AuditLog auditLog = getAuditLogRandomSampleGenerator();
-        Merchant merchantBack = getMerchantRandomSampleGenerator();
+        String merchantBackId = UUID.randomUUID().toString();
 
-        auditLog.setMerchant(merchantBack);
-        assertThat(auditLog.getMerchant()).isEqualTo(merchantBack);
+        auditLog.setMerchantId(merchantBackId);
+        assertThat(auditLog.getMerchantId()).isEqualTo(merchantBackId);
 
-        auditLog.merchant(null);
-        assertThat(auditLog.getMerchant()).isNull();
+        auditLog.setMerchantId(null);
+        assertThat(auditLog.getMerchantId()).isNull();
     }
 }

@@ -11,9 +11,9 @@ public class PaymentTransactionTestSamples {
 
     public static PaymentTransaction getPaymentTransactionSample1() {
         return new PaymentTransaction()
-            .id(1L)
-            .orderId("orderId1")
-            .cupaTransactionId(UUID.fromString("23d8dc04-a48b-45d9-a01d-4b728f0ad4aa"))
+            .id("11111111-1111-1111-1111-111111111111")
+            .merchantId("23d8dc04-a48b-45d9-a01d-4b728f0ad4aa")
+            .clientId("clientId1")
             .gatewayTransactionId("gatewayTransactionId1")
             .statusDescription("statusDescription1")
             .replyUrl("replyUrl1")
@@ -25,9 +25,9 @@ public class PaymentTransactionTestSamples {
 
     public static PaymentTransaction getPaymentTransactionSample2() {
         return new PaymentTransaction()
-            .id(2L)
-            .orderId("orderId2")
-            .cupaTransactionId(UUID.fromString("ad79f240-3727-46c3-b89f-2cf6ebd74367"))
+            .id("22222222-2222-2222-2222-222222222222")
+            .merchantId("merchantId2")
+            .clientId("clientId2")
             .gatewayTransactionId("gatewayTransactionId2")
             .statusDescription("statusDescription2")
             .replyUrl("replyUrl2")
@@ -39,9 +39,9 @@ public class PaymentTransactionTestSamples {
 
     public static PaymentTransaction getPaymentTransactionRandomSampleGenerator() {
         return new PaymentTransaction()
-            .id(longCount.incrementAndGet())
-            .orderId(UUID.randomUUID().toString())
-            .cupaTransactionId(UUID.randomUUID())
+            .id(UUID.randomUUID().toString())
+            .merchantId(UUID.randomUUID().toString())
+            .clientId(UUID.randomUUID().toString())
             .gatewayTransactionId(UUID.randomUUID().toString())
             .statusDescription(UUID.randomUUID().toString())
             .replyUrl(UUID.randomUUID().toString())

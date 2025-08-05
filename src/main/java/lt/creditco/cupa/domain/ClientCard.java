@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
+import java.util.UUID;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -16,15 +17,13 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Table(name = "client_card")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class ClientCard implements Serializable {
+public class ClientCard extends AbstractAuditingEntity<String> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
-    @SequenceGenerator(name = "sequenceGenerator")
     @Column(name = "id")
-    private Long id;
+    private String id;
 
     @NotNull
     @Column(name = "masked_pan", nullable = false)
@@ -47,18 +46,35 @@ public class ClientCard implements Serializable {
     @JsonIgnoreProperties(value = { "cards", "merchant" }, allowSetters = true)
     private Client client;
 
+    @Version
+    private Long version;
+
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
-    public Long getId() {
+    public String getId() {
         return this.id;
     }
 
-    public ClientCard id(Long id) {
+    public ClientCard id(UUID id) {
         this.setId(id);
         return this;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Id cannot be null");
+        }
+        this.id = id.toString();
+    }
+
+    public void setId(String id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Id cannot be null");
+        }
+        this.id = id;
+    }
+
+    public void id(String id) {
         this.id = id;
     }
 
@@ -138,6 +154,14 @@ public class ClientCard implements Serializable {
     public ClientCard client(Client client) {
         this.setClient(client);
         return this;
+    }
+
+    public Long getVersion() {
+        return this.version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

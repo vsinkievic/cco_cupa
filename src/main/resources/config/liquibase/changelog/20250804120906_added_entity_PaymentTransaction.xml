@@ -11,25 +11,19 @@
     -->
     <changeSet id="20250804120906-1" author="jhipster">
         <createTable tableName="payment_transaction" remarks="Represents a single payment transaction from start to finish.\nThis entity acts as a comprehensive audit log, storing the request,\nresponse, and status at each step of the process.">
-            <column name="id" type="bigint">
+            <column name="id" type="varchar(50)">
                 <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="order_id" type="varchar(255)">
-                <constraints nullable="false" />
-            </column>
-            <column name="cupa_transaction_id" type="${uuidType}">
-                <constraints nullable="false" />
             </column>
             <column name="gateway_transaction_id" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="status" type="varchar(255)">
+            <column name="status" type="varchar(50)">
                 <constraints nullable="false" />
             </column>
             <column name="status_description" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="payment_brand" type="varchar(255)">
+            <column name="payment_brand" type="varchar(50)">
                 <constraints nullable="false" />
             </column>
             <column name="amount" type="decimal(21,2)">
@@ -38,7 +32,7 @@
             <column name="balance" type="decimal(21,2)">
                 <constraints nullable="true" />
             </column>
-            <column name="currency" type="varchar(255)">
+            <column name="currency" type="varchar(3)">
                 <constraints nullable="false" />
             </column>
             <column name="reply_url" type="varchar(255)">
@@ -56,7 +50,7 @@
             <column name="signature" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="signature_version" type="varchar(255)">
+            <column name="signature_version" type="varchar(50)">
                 <constraints nullable="true" />
             </column>
             <column name="request_timestamp" type="${datetimeType}">
@@ -77,11 +71,26 @@
             <column name="last_query_data" type="${clobType}">
                 <constraints nullable="true" />
             </column>
-            <column name="client_id" type="bigint">
+            <column name="client_id" type="varchar(50)">
                 <constraints nullable="true" />
             </column>
-            <column name="merchant_id" type="bigint">
+            <column name="merchant_id" type="varchar(50)">
                 <constraints nullable="false" />
+            </column>
+            <column name="version" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_by" type="varchar(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="last_modified_by" type="varchar(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="last_modified_date" type="${datetimeType}">
+                <constraints nullable="true" />
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
@@ -105,9 +114,7 @@
                   separator=";"
                   tableName="payment_transaction"
                   usePreparedStatements="true">
-            <column name="id" type="numeric"/>
-            <column name="order_id" type="string"/>
-            <column name="cupa_transaction_id" type="${uuidType}"/>
+            <column name="id" type="string"/>
             <column name="gateway_transaction_id" type="string"/>
             <column name="status" type="string"/>
             <column name="status_description" type="string"/>
@@ -121,13 +128,19 @@
             <column name="send_email" type="boolean"/>
             <column name="signature" type="string"/>
             <column name="signature_version" type="string"/>
-            <column name="request_timestamp" type="date"/>
-            <column name="request_data" type="clob"/>
-            <column name="initial_response_data" type="clob"/>
-            <column name="callback_timestamp" type="date"/>
-            <column name="callback_data" type="clob"/>
-            <column name="last_query_data" type="clob"/>
-            <column name="merchant_id" type="numeric"/>
+            <column name="request_timestamp" type="timestamp with time zone"/>
+            <column name="request_data" type="string"/>
+            <column name="initial_response_data" type="string"/>
+            <column name="callback_timestamp" type="timestamp with time zone"/>
+            <column name="callback_data" type="string"/>
+            <column name="last_query_data" type="string"/>
+            <column name="client_id" type="string"/>
+            <column name="merchant_id" type="string"/>
+            <column name="version" type="bigint" />
+            <column name="created_by" type="string"/>
+            <column name="created_date" type="timestamp with time zone"/>
+            <column name="last_modified_by" type="string"/>
+            <column name="last_modified_date" type="timestamp with time zone"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

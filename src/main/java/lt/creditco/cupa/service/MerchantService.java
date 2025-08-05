@@ -1,6 +1,7 @@
 package lt.creditco.cupa.service;
 
 import java.util.Optional;
+import java.util.UUID;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.service.dto.MerchantDTO;
@@ -95,7 +96,7 @@ public class MerchantService {
      * @return the entity.
      */
     @Transactional(readOnly = true)
-    public Optional<MerchantDTO> findOne(Long id) {
+    public Optional<MerchantDTO> findOne(String id) {
         LOG.debug("Request to get Merchant : {}", id);
         return merchantRepository.findById(id).map(merchantMapper::toDto);
     }
@@ -105,7 +106,7 @@ public class MerchantService {
      *
      * @param id the id of the entity.
      */
-    public void delete(Long id) {
+    public void delete(String id) {
         LOG.debug("Request to delete Merchant : {}", id);
         merchantRepository.deleteById(id);
     }

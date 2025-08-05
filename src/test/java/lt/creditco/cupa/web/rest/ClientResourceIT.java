@@ -8,11 +8,15 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import lt.creditco.cupa.IntegrationTest;
 import lt.creditco.cupa.domain.Client;
 import lt.creditco.cupa.domain.Merchant;
@@ -29,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -46,6 +51,9 @@ class ClientResourceIT {
 
     private static final String DEFAULT_MERCHANT_CLIENT_ID = "AAAAAAAAAA";
     private static final String UPDATED_MERCHANT_CLIENT_ID = "BBBBBBBBBB";
+
+    private static final String DEFAULT_MERCHANT_ID = "AAAAAAAAAA";
+    private static final String UPDATED_MERCHANT_ID = "BBBBBBBBBB";
 
     private static final String DEFAULT_NAME = "AAAAAAAAAA";
     private static final String UPDATED_NAME = "BBBBBBBBBB";
@@ -128,7 +136,8 @@ class ClientResourceIT {
      */
     public static Client createEntity(EntityManager em) {
         Client client = new Client()
-            .merchantClientId(DEFAULT_MERCHANT_CLIENT_ID)
+            .id(DEFAULT_MERCHANT_CLIENT_ID)
+            .merchantId(DEFAULT_MERCHANT_ID)
             .name(DEFAULT_NAME)
             .emailAddress(DEFAULT_EMAIL_ADDRESS)
             .mobileNumber(DEFAULT_MOBILE_NUMBER)
@@ -143,16 +152,7 @@ class ClientResourceIT {
             .country(DEFAULT_COUNTRY)
             .isBlacklisted(DEFAULT_IS_BLACKLISTED)
             .isCorrelatedBlacklisted(DEFAULT_IS_CORRELATED_BLACKLISTED);
-        // Add required entity
-        Merchant merchant;
-        if (TestUtil.findAll(em, Merchant.class).isEmpty()) {
-            merchant = MerchantResourceIT.createEntity();
-            em.persist(merchant);
-            em.flush();
-        } else {
-            merchant = TestUtil.findAll(em, Merchant.class).get(0);
-        }
-        client.setMerchant(merchant);
+
         return client;
     }
 
@@ -164,7 +164,8 @@ class ClientResourceIT {
      */
     public static Client createUpdatedEntity(EntityManager em) {
         Client updatedClient = new Client()
-            .merchantClientId(UPDATED_MERCHANT_CLIENT_ID)
+            .id(DEFAULT_MERCHANT_CLIENT_ID)
+            .merchantId(DEFAULT_MERCHANT_ID)
             .name(UPDATED_NAME)
             .emailAddress(UPDATED_EMAIL_ADDRESS)
             .mobileNumber(UPDATED_MOBILE_NUMBER)
@@ -179,21 +180,12 @@ class ClientResourceIT {
             .country(UPDATED_COUNTRY)
             .isBlacklisted(UPDATED_IS_BLACKLISTED)
             .isCorrelatedBlacklisted(UPDATED_IS_CORRELATED_BLACKLISTED);
-        // Add required entity
-        Merchant merchant;
-        if (TestUtil.findAll(em, Merchant.class).isEmpty()) {
-            merchant = MerchantResourceIT.createUpdatedEntity();
-            em.persist(merchant);
-            em.flush();
-        } else {
-            merchant = TestUtil.findAll(em, Merchant.class).get(0);
-        }
-        updatedClient.setMerchant(merchant);
+
         return updatedClient;
     }
 
     @BeforeEach
-    void initTest() {
+    public void initTest() {
         client = createEntity(em);
     }
 
@@ -233,7 +225,7 @@ class ClientResourceIT {
     @Transactional
     void createClientWithExistingId() throws Exception {
         // Create the Client with an existing ID
-        client.setId(1L);
+        client.setId(UUID.randomUUID().toString());
         ClientDTO clientDTO = clientMapper.toDto(client);
 
         long databaseSizeBeforeCreate = getRepositoryCount();
@@ -249,23 +241,6 @@ class ClientResourceIT {
 
     @Test
     @Transactional
-    void checkMerchantClientIdIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
-        client.setMerchantClientId(null);
-
-        // Create the Client, which fails.
-        ClientDTO clientDTO = clientMapper.toDto(client);
-
-        restClientMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(clientDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
     void getAllClients() throws Exception {
         // Initialize the database
         insertedClient = clientRepository.saveAndFlush(client);
@@ -275,8 +250,8 @@ class ClientResourceIT {
             .perform(get(ENTITY_API_URL + "?sort=id,desc"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(client.getId().intValue())))
-            .andExpect(jsonPath("$.[*].merchantClientId").value(hasItem(DEFAULT_MERCHANT_CLIENT_ID)))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(client.getId().toString())))
+            .andExpect(jsonPath("$.[*].merchantId").value(hasItem(DEFAULT_MERCHANT_ID)))
             .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
             .andExpect(jsonPath("$.[*].emailAddress").value(hasItem(DEFAULT_EMAIL_ADDRESS)))
             .andExpect(jsonPath("$.[*].mobileNumber").value(hasItem(DEFAULT_MOBILE_NUMBER)))
@@ -321,8 +296,8 @@ class ClientResourceIT {
             .perform(get(ENTITY_API_URL_ID, client.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.id").value(client.getId().intValue()))
-            .andExpect(jsonPath("$.merchantClientId").value(DEFAULT_MERCHANT_CLIENT_ID))
+            .andExpect(jsonPath("$.id").value(client.getId().toString()))
+            .andExpect(jsonPath("$.merchantId").value(DEFAULT_MERCHANT_ID))
             .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
             .andExpect(jsonPath("$.emailAddress").value(DEFAULT_EMAIL_ADDRESS))
             .andExpect(jsonPath("$.mobileNumber").value(DEFAULT_MOBILE_NUMBER))
@@ -359,7 +334,7 @@ class ClientResourceIT {
         // Disconnect from session so that the updates on updatedClient are not directly saved in db
         em.detach(updatedClient);
         updatedClient
-            .merchantClientId(UPDATED_MERCHANT_CLIENT_ID)
+            .merchantId(DEFAULT_MERCHANT_ID)
             .name(UPDATED_NAME)
             .emailAddress(UPDATED_EMAIL_ADDRESS)
             .mobileNumber(UPDATED_MOBILE_NUMBER)
@@ -378,7 +353,9 @@ class ClientResourceIT {
 
         restClientMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, clientDTO.getId()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(clientDTO))
+                put(ENTITY_API_URL_ID, insertedClient.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(om.writeValueAsBytes(clientDTO))
             )
             .andExpect(status().isOk());
 
@@ -391,7 +368,7 @@ class ClientResourceIT {
     @Transactional
     void putNonExistingClient() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        client.setId(longCount.incrementAndGet());
+        client.setId(UUID.randomUUID().toString());
 
         // Create the Client
         ClientDTO clientDTO = clientMapper.toDto(client);
@@ -399,7 +376,7 @@ class ClientResourceIT {
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restClientMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, clientDTO.getId()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(clientDTO))
+                put(ENTITY_API_URL_ID, client.getId()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(clientDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -411,7 +388,7 @@ class ClientResourceIT {
     @Transactional
     void putWithIdMismatchClient() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        client.setId(longCount.incrementAndGet());
+        client.setId(UUID.randomUUID().toString());
 
         // Create the Client
         ClientDTO clientDTO = clientMapper.toDto(client);
@@ -419,9 +396,7 @@ class ClientResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restClientMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, longCount.incrementAndGet())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(clientDTO))
+                put(ENTITY_API_URL_ID, UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(clientDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -433,7 +408,7 @@ class ClientResourceIT {
     @Transactional
     void putWithMissingIdPathParamClient() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        client.setId(longCount.incrementAndGet());
+        client.setId(UUID.randomUUID().toString());
 
         // Create the Client
         ClientDTO clientDTO = clientMapper.toDto(client);
@@ -460,7 +435,7 @@ class ClientResourceIT {
         partialUpdatedClient.setId(client.getId());
 
         partialUpdatedClient
-            .merchantClientId(UPDATED_MERCHANT_CLIENT_ID)
+            .merchantId(DEFAULT_MERCHANT_ID)
             .name(UPDATED_NAME)
             .mobileNumber(UPDATED_MOBILE_NUMBER)
             .valid(UPDATED_VALID)
@@ -481,7 +456,7 @@ class ClientResourceIT {
         // Validate the Client in the database
 
         assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertClientUpdatableFieldsEquals(createUpdateProxyForBean(partialUpdatedClient, client), getPersistedClient(client));
+        assertClientUpdatableFieldsEquals(createUpdateProxyForBean(partialUpdatedClient, client), getPersistedClient(partialUpdatedClient));
     }
 
     @Test
@@ -497,7 +472,7 @@ class ClientResourceIT {
         partialUpdatedClient.setId(client.getId());
 
         partialUpdatedClient
-            .merchantClientId(UPDATED_MERCHANT_CLIENT_ID)
+            .merchantId(DEFAULT_MERCHANT_ID)
             .name(UPDATED_NAME)
             .emailAddress(UPDATED_EMAIL_ADDRESS)
             .mobileNumber(UPDATED_MOBILE_NUMBER)
@@ -524,14 +499,14 @@ class ClientResourceIT {
         // Validate the Client in the database
 
         assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertClientUpdatableFieldsEquals(partialUpdatedClient, getPersistedClient(partialUpdatedClient));
+        assertClientUpdatableFieldsEquals(createUpdatedEntity(em), getPersistedClient(partialUpdatedClient));
     }
 
     @Test
     @Transactional
     void patchNonExistingClient() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        client.setId(longCount.incrementAndGet());
+        client.setId(UUID.randomUUID().toString());
 
         // Create the Client
         ClientDTO clientDTO = clientMapper.toDto(client);
@@ -553,7 +528,7 @@ class ClientResourceIT {
     @Transactional
     void patchWithIdMismatchClient() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        client.setId(longCount.incrementAndGet());
+        client.setId(UUID.randomUUID().toString());
 
         // Create the Client
         ClientDTO clientDTO = clientMapper.toDto(client);
@@ -561,7 +536,7 @@ class ClientResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restClientMockMvc
             .perform(
-                patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
+                patch(ENTITY_API_URL_ID, UUID.randomUUID())
                     .contentType("application/merge-patch+json")
                     .content(om.writeValueAsBytes(clientDTO))
             )
@@ -575,7 +550,7 @@ class ClientResourceIT {
     @Transactional
     void patchWithMissingIdPathParamClient() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        client.setId(longCount.incrementAndGet());
+        client.setId(UUID.randomUUID().toString());
 
         // Create the Client
         ClientDTO clientDTO = clientMapper.toDto(client);

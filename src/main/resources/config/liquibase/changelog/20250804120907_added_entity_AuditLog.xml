@@ -20,13 +20,13 @@
             <column name="api_endpoint" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
-            <column name="http_method" type="varchar(255)">
+            <column name="http_method" type="varchar(10)">
                 <constraints nullable="false" />
             </column>
             <column name="http_status_code" type="integer">
                 <constraints nullable="true" />
             </column>
-            <column name="order_id" type="varchar(255)">
+            <column name="order_id" type="varchar(50)">
                 <constraints nullable="true" />
             </column>
             <column name="response_description" type="varchar(255)">
@@ -47,7 +47,22 @@
             <column name="requester_ip_address" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="merchant_id" type="bigint">
+            <column name="merchant_id" type="varchar(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="version" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_by" type="varchar(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="last_modified_by" type="varchar(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="last_modified_date" type="${datetimeType}">
                 <constraints nullable="true" />
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
@@ -72,7 +87,7 @@
                   tableName="audit_log"
                   usePreparedStatements="true">
             <column name="id" type="numeric"/>
-            <column name="request_timestamp" type="date"/>
+            <column name="request_timestamp" type="timestamp with time zone"/>
             <column name="api_endpoint" type="string"/>
             <column name="http_method" type="string"/>
             <column name="http_status_code" type="numeric"/>
@@ -80,9 +95,15 @@
             <column name="response_description" type="string"/>
             <column name="cupa_api_key" type="string"/>
             <column name="environment" type="string"/>
-            <column name="request_data" type="clob"/>
-            <column name="response_data" type="clob"/>
+            <column name="request_data" type="string"/>
+            <column name="response_data" type="string"/>
             <column name="requester_ip_address" type="string"/>
+            <column name="merchant_id" type="string"/>
+            <column name="version" type="bigint" />
+            <column name="created_by" type="string"/>
+            <column name="created_date" type="timestamp with time zone"/>
+            <column name="last_modified_by" type="string"/>
+            <column name="last_modified_date" type="timestamp with time zone"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

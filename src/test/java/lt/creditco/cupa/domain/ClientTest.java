@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import lt.creditco.cupa.web.rest.TestUtil;
 import org.junit.jupiter.api.Test;
 
@@ -51,12 +52,12 @@ class ClientTest {
     @Test
     void merchantTest() {
         Client client = getClientRandomSampleGenerator();
-        Merchant merchantBack = getMerchantRandomSampleGenerator();
+        String merchantBackId = UUID.randomUUID().toString();
 
-        client.setMerchant(merchantBack);
-        assertThat(client.getMerchant()).isEqualTo(merchantBack);
+        client.setMerchantId(merchantBackId);
+        assertThat(client.getMerchantId()).isEqualTo(merchantBackId);
 
-        client.merchant(null);
-        assertThat(client.getMerchant()).isNull();
+        client.setMerchantId(null);
+        assertThat(client.getMerchantId()).isNull();
     }
 }

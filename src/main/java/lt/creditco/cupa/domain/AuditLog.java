@@ -1,6 +1,5 @@
 package lt.creditco.cupa.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
@@ -15,7 +14,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Table(name = "audit_log")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class AuditLog implements Serializable {
+public class AuditLog extends AbstractAuditingEntity<Long> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -63,9 +62,11 @@ public class AuditLog implements Serializable {
     @Column(name = "requester_ip_address")
     private String requesterIpAddress;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "clients", "transactions", "auditLogs" }, allowSetters = true)
-    private Merchant merchant;
+    @Column(name = "merchant_id")
+    private String merchantId;
+
+    @Version
+    private Long version;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -225,17 +226,25 @@ public class AuditLog implements Serializable {
         this.requesterIpAddress = requesterIpAddress;
     }
 
-    public Merchant getMerchant() {
-        return this.merchant;
+    public String getMerchantId() {
+        return this.merchantId;
     }
 
-    public void setMerchant(Merchant merchant) {
-        this.merchant = merchant;
-    }
-
-    public AuditLog merchant(Merchant merchant) {
-        this.setMerchant(merchant);
+    public AuditLog merchantId(String merchantId) {
+        this.setMerchantId(merchantId);
         return this;
+    }
+
+    public void setMerchantId(String merchantId) {
+        this.merchantId = merchantId;
+    }
+
+    public Long getVersion() {
+        return this.version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
@@ -266,6 +275,7 @@ public class AuditLog implements Serializable {
             ", apiEndpoint='" + getApiEndpoint() + "'" +
             ", httpMethod='" + getHttpMethod() + "'" +
             ", httpStatusCode=" + getHttpStatusCode() +
+            ", merchantId='" + getMerchantId() + "'" +
             ", orderId='" + getOrderId() + "'" +
             ", responseDescription='" + getResponseDescription() + "'" +
             ", cupaApiKey='" + getCupaApiKey() + "'" +

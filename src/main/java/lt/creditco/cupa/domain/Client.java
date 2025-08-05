@@ -8,29 +8,25 @@ import java.util.HashSet;
 import java.util.Set;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.NaturalId;
 
 /**
  * Represents the end-user (customer) of a merchant.
  * This entity is based on the Client object described in the
- * \"My Gateway Product Services Guide\".
+ * "My Gateway Product Services Guide".
  */
 @Entity
 @Table(name = "client")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class Client implements Serializable {
+public class Client extends AbstractAuditingEntity<String> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
-    @SequenceGenerator(name = "sequenceGenerator")
+    @NaturalId
     @Column(name = "id")
-    private Long id;
-
-    @NotNull
-    @Column(name = "merchant_client_id", nullable = false)
-    private String merchantClientId;
+    private String id;
 
     @Column(name = "name")
     private String name;
@@ -80,37 +76,25 @@ public class Client implements Serializable {
     @JsonIgnoreProperties(value = { "client" }, allowSetters = true)
     private Set<ClientCard> cards = new HashSet<>();
 
-    @ManyToOne(optional = false)
-    @NotNull
-    @JsonIgnoreProperties(value = { "clients", "transactions", "auditLogs" }, allowSetters = true)
-    private Merchant merchant;
+    @Column(name = "merchant_id")
+    private String merchantId;
+
+    @Version
+    private Long version;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
-    public Long getId() {
+    public String getId() {
         return this.id;
     }
 
-    public Client id(Long id) {
-        this.setId(id);
-        return this;
-    }
-
-    public void setId(Long id) {
+    public Client id(String id) {
         this.id = id;
-    }
-
-    public String getMerchantClientId() {
-        return this.merchantClientId;
-    }
-
-    public Client merchantClientId(String merchantClientId) {
-        this.setMerchantClientId(merchantClientId);
         return this;
     }
 
-    public void setMerchantClientId(String merchantClientId) {
-        this.merchantClientId = merchantClientId;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -326,17 +310,25 @@ public class Client implements Serializable {
         return this;
     }
 
-    public Merchant getMerchant() {
-        return this.merchant;
+    public String getMerchantId() {
+        return this.merchantId;
     }
 
-    public void setMerchant(Merchant merchant) {
-        this.merchant = merchant;
+    public void setMerchantId(String merchantId) {
+        this.merchantId = merchantId;
     }
 
-    public Client merchant(Merchant merchant) {
-        this.setMerchant(merchant);
+    public Client merchantId(String merchantId) {
+        this.setMerchantId(merchantId);
         return this;
+    }
+
+    public Long getVersion() {
+        return this.version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
@@ -363,7 +355,6 @@ public class Client implements Serializable {
     public String toString() {
         return "Client{" +
             "id=" + getId() +
-            ", merchantClientId='" + getMerchantClientId() + "'" +
             ", name='" + getName() + "'" +
             ", emailAddress='" + getEmailAddress() + "'" +
             ", mobileNumber='" + getMobileNumber() + "'" +

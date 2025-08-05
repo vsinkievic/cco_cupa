@@ -1,11 +1,11 @@
-id;masked_pan;expiry_date;cardholder_name;is_default;is_valid;client_id
-1;wisely ha hm;consequently drat for;alert quash retention;true;true;1
-2;boulevard even dirty;wearily;ack regularly yuck;true;false;2
-3;mechanically vainly;among bathrobe gloom;why joyful debut;false;true;3
-4;woot against;malfunction who;buttery besides;false;true;4
-5;elliptical;through;like gosh;false;false;5
-6;premeditation;seldom simple;ice-cream definitive;true;false;6
-7;loudly;coop lamp;oh;true;true;7
-8;onto haircut hmph;which when;nicely inscribe;false;false;8
-9;selfishly;tenant;sheepishly oof hmph;false;false;9
-10;chunder license;phew;arrogantly important;true;false;10
+id;masked_pan;expiry_date;cardholder_name;is_default;is_valid;client_id;version;created_by;created_date;last_modified_by;last_modified_date
+CARD001;************1234;12/25;John Smith;true;true;CLIENT001;1;system;2024-01-01T10:00:00Z;system;2024-01-01T10:00:00Z
+CARD002;************5678;06/26;Jane Doe;true;true;CLIENT002;1;system;2024-01-01T11:00:00Z;system;2024-01-01T11:00:00Z
+CARD003;************9012;09/27;Bob Johnson;true;true;CLIENT003;1;system;2024-01-01T12:00:00Z;system;2024-01-01T12:00:00Z
+CARD004;************3456;03/28;Alice Brown;true;true;CLIENT004;1;system;2024-01-01T13:00:00Z;system;2024-01-01T13:00:00Z
+CARD005;************7890;07/29;Charlie Wilson;true;true;CLIENT005;1;system;2024-01-01T14:00:00Z;system;2024-01-01T14:00:00Z
+CARD006;************2345;11/30;Diana Davis;true;true;CLIENT006;1;system;2024-01-01T15:00:00Z;system;2024-01-01T15:00:00Z
+CARD007;************6789;02/31;Edward Miller;true;true;CLIENT007;1;system;2024-01-01T16:00:00Z;system;2024-01-01T16:00:00Z
+CARD008;************0123;05/32;Fiona Garcia;true;true;CLIENT008;1;system;2024-01-01T17:00:00Z;system;2024-01-01T17:00:00Z
+CARD009;************4567;08/33;George Martinez;true;true;CLIENT009;1;system;2024-01-01T18:00:00Z;system;2024-01-01T18:00:00Z
+CARD010;************8901;01/34;Helen Rodriguez;true;true;CLIENT010;1;system;2024-01-01T19:00:00Z;system;2024-01-01T19:00:00Z

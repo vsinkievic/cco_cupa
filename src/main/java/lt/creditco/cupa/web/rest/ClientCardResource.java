@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import lt.creditco.cupa.repository.ClientCardRepository;
 import lt.creditco.cupa.service.ClientCardService;
 import lt.creditco.cupa.service.dto.ClientCardDTO;
@@ -78,7 +79,7 @@ public class ClientCardResource {
      */
     @PutMapping("/{id}")
     public ResponseEntity<ClientCardDTO> updateClientCard(
-        @PathVariable(value = "id", required = false) final Long id,
+        @PathVariable(value = "id", required = false) final String id,
         @Valid @RequestBody ClientCardDTO clientCardDTO
     ) throws URISyntaxException {
         LOG.debug("REST request to update ClientCard : {}, {}", id, clientCardDTO);
@@ -112,7 +113,7 @@ public class ClientCardResource {
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<ClientCardDTO> partialUpdateClientCard(
-        @PathVariable(value = "id", required = false) final Long id,
+        @PathVariable(value = "id", required = false) final String id,
         @NotNull @RequestBody ClientCardDTO clientCardDTO
     ) throws URISyntaxException {
         LOG.debug("REST request to partial update ClientCard partially : {}, {}", id, clientCardDTO);
@@ -165,7 +166,7 @@ public class ClientCardResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the clientCardDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ClientCardDTO> getClientCard(@PathVariable("id") Long id) {
+    public ResponseEntity<ClientCardDTO> getClientCard(@PathVariable("id") String id) {
         LOG.debug("REST request to get ClientCard : {}", id);
         Optional<ClientCardDTO> clientCardDTO = clientCardService.findOne(id);
         return ResponseUtil.wrapOrNotFound(clientCardDTO);
@@ -178,7 +179,7 @@ public class ClientCardResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteClientCard(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> deleteClientCard(@PathVariable("id") String id) {
         LOG.debug("REST request to delete ClientCard : {}", id);
         clientCardService.delete(id);
         return ResponseEntity.noContent()

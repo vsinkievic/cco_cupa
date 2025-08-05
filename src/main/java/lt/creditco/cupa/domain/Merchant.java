@@ -7,10 +7,12 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.NaturalId;
 
 /**
  * Represents a merchant using the CUPA system.
@@ -21,15 +23,14 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Table(name = "merchant")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class Merchant implements Serializable {
+public class Merchant extends AbstractAuditingEntity<String> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
-    @SequenceGenerator(name = "sequenceGenerator")
+    @NaturalId
     @Column(name = "id")
-    private Long id;
+    private String id;
 
     @NotNull
     @Column(name = "name", nullable = false)
@@ -78,33 +79,21 @@ public class Merchant implements Serializable {
     @Column(name = "remote_prod_api_key")
     private String remoteProdApiKey;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-    @JsonIgnoreProperties(value = { "cards", "merchant" }, allowSetters = true)
-    private Set<Client> clients = new HashSet<>();
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-    @JsonIgnoreProperties(value = { "client", "merchant" }, allowSetters = true)
-    private Set<PaymentTransaction> transactions = new HashSet<>();
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-    @JsonIgnoreProperties(value = { "merchant" }, allowSetters = true)
-    private Set<AuditLog> auditLogs = new HashSet<>();
+    @Version
+    private Long version;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
-    public Long getId() {
+    public String getId() {
         return this.id;
     }
 
-    public Merchant id(Long id) {
+    public Merchant id(String id) {
         this.setId(id);
         return this;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -290,97 +279,12 @@ public class Merchant implements Serializable {
         this.remoteProdApiKey = remoteProdApiKey;
     }
 
-    public Set<Client> getClients() {
-        return this.clients;
+    public Long getVersion() {
+        return this.version;
     }
 
-    public void setClients(Set<Client> clients) {
-        if (this.clients != null) {
-            this.clients.forEach(i -> i.setMerchant(null));
-        }
-        if (clients != null) {
-            clients.forEach(i -> i.setMerchant(this));
-        }
-        this.clients = clients;
-    }
-
-    public Merchant clients(Set<Client> clients) {
-        this.setClients(clients);
-        return this;
-    }
-
-    public Merchant addClient(Client client) {
-        this.clients.add(client);
-        client.setMerchant(this);
-        return this;
-    }
-
-    public Merchant removeClient(Client client) {
-        this.clients.remove(client);
-        client.setMerchant(null);
-        return this;
-    }
-
-    public Set<PaymentTransaction> getTransactions() {
-        return this.transactions;
-    }
-
-    public void setTransactions(Set<PaymentTransaction> paymentTransactions) {
-        if (this.transactions != null) {
-            this.transactions.forEach(i -> i.setMerchant(null));
-        }
-        if (paymentTransactions != null) {
-            paymentTransactions.forEach(i -> i.setMerchant(this));
-        }
-        this.transactions = paymentTransactions;
-    }
-
-    public Merchant transactions(Set<PaymentTransaction> paymentTransactions) {
-        this.setTransactions(paymentTransactions);
-        return this;
-    }
-
-    public Merchant addTransaction(PaymentTransaction paymentTransaction) {
-        this.transactions.add(paymentTransaction);
-        paymentTransaction.setMerchant(this);
-        return this;
-    }
-
-    public Merchant removeTransaction(PaymentTransaction paymentTransaction) {
-        this.transactions.remove(paymentTransaction);
-        paymentTransaction.setMerchant(null);
-        return this;
-    }
-
-    public Set<AuditLog> getAuditLogs() {
-        return this.auditLogs;
-    }
-
-    public void setAuditLogs(Set<AuditLog> auditLogs) {
-        if (this.auditLogs != null) {
-            this.auditLogs.forEach(i -> i.setMerchant(null));
-        }
-        if (auditLogs != null) {
-            auditLogs.forEach(i -> i.setMerchant(this));
-        }
-        this.auditLogs = auditLogs;
-    }
-
-    public Merchant auditLogs(Set<AuditLog> auditLogs) {
-        this.setAuditLogs(auditLogs);
-        return this;
-    }
-
-    public Merchant addAuditLog(AuditLog auditLog) {
-        this.auditLogs.add(auditLog);
-        auditLog.setMerchant(this);
-        return this;
-    }
-
-    public Merchant removeAuditLog(AuditLog auditLog) {
-        this.auditLogs.remove(auditLog);
-        auditLog.setMerchant(null);
-        return this;
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

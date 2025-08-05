@@ -11,8 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.UUID;
+import java.util.function.Consumer;
 import lt.creditco.cupa.IntegrationTest;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
@@ -82,9 +82,6 @@ class MerchantResourceIT {
 
     private static final String ENTITY_API_URL = "/api/merchants";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
-
-    private static Random random = new Random();
-    private static AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
 
     @Autowired
     private ObjectMapper om;
@@ -194,7 +191,7 @@ class MerchantResourceIT {
     @Transactional
     void createMerchantWithExistingId() throws Exception {
         // Create the Merchant with an existing ID
-        merchant.setId(1L);
+        merchant.setId(UUID.randomUUID().toString());
         MerchantDTO merchantDTO = merchantMapper.toDto(merchant);
 
         long databaseSizeBeforeCreate = getRepositoryCount();
@@ -270,7 +267,7 @@ class MerchantResourceIT {
             .perform(get(ENTITY_API_URL + "?sort=id,desc"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(merchant.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(insertedMerchant.getId().toString())))
             .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
             .andExpect(jsonPath("$.[*].mode").value(hasItem(DEFAULT_MODE.toString())))
             .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
@@ -298,7 +295,7 @@ class MerchantResourceIT {
             .perform(get(ENTITY_API_URL_ID, merchant.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.id").value(merchant.getId().intValue()))
+            .andExpect(jsonPath("$.id").value(insertedMerchant.getId().toString()))
             .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
             .andExpect(jsonPath("$.mode").value(DEFAULT_MODE.toString()))
             .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()))
@@ -319,7 +316,7 @@ class MerchantResourceIT {
     @Transactional
     void getNonExistingMerchant() throws Exception {
         // Get the merchant
-        restMerchantMockMvc.perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE)).andExpect(status().isNotFound());
+        restMerchantMockMvc.perform(get(ENTITY_API_URL_ID, UUID.randomUUID().toString())).andExpect(status().isNotFound());
     }
 
     @Test
@@ -331,7 +328,7 @@ class MerchantResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
 
         // Update the merchant
-        Merchant updatedMerchant = merchantRepository.findById(merchant.getId()).orElseThrow();
+        Merchant updatedMerchant = merchantRepository.findById(insertedMerchant.getId()).orElseThrow();
         // Disconnect from session so that the updates on updatedMerchant are not directly saved in db
         em.detach(updatedMerchant);
         updatedMerchant
@@ -353,7 +350,7 @@ class MerchantResourceIT {
 
         restMerchantMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, merchantDTO.getId())
+                put(ENTITY_API_URL_ID, insertedMerchant.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(om.writeValueAsBytes(merchantDTO))
             )
@@ -368,7 +365,7 @@ class MerchantResourceIT {
     @Transactional
     void putNonExistingMerchant() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        merchant.setId(longCount.incrementAndGet());
+        merchant.setId(UUID.randomUUID().toString());
 
         // Create the Merchant
         MerchantDTO merchantDTO = merchantMapper.toDto(merchant);
@@ -376,9 +373,7 @@ class MerchantResourceIT {
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restMerchantMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, merchantDTO.getId())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(merchantDTO))
+                put(ENTITY_API_URL_ID, merchant.getId()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(merchantDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -390,7 +385,7 @@ class MerchantResourceIT {
     @Transactional
     void putWithIdMismatchMerchant() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        merchant.setId(longCount.incrementAndGet());
+        merchant.setId(UUID.randomUUID().toString());
 
         // Create the Merchant
         MerchantDTO merchantDTO = merchantMapper.toDto(merchant);
@@ -398,9 +393,7 @@ class MerchantResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restMerchantMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, longCount.incrementAndGet())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(merchantDTO))
+                put(ENTITY_API_URL_ID, UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(merchantDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -412,7 +405,7 @@ class MerchantResourceIT {
     @Transactional
     void putWithMissingIdPathParamMerchant() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        merchant.setId(longCount.incrementAndGet());
+        merchant.setId(UUID.randomUUID().toString());
 
         // Create the Merchant
         MerchantDTO merchantDTO = merchantMapper.toDto(merchant);
@@ -455,9 +448,8 @@ class MerchantResourceIT {
             .andExpect(status().isOk());
 
         // Validate the Merchant in the database
-
         assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertMerchantUpdatableFieldsEquals(createUpdateProxyForBean(partialUpdatedMerchant, merchant), getPersistedMerchant(merchant));
+        assertMerchantUpdatableFieldsEquals(createUpdatedEntity(), getPersistedMerchant(insertedMerchant));
     }
 
     @Test
@@ -499,14 +491,14 @@ class MerchantResourceIT {
         // Validate the Merchant in the database
 
         assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertMerchantUpdatableFieldsEquals(partialUpdatedMerchant, getPersistedMerchant(partialUpdatedMerchant));
+        assertMerchantUpdatableFieldsEquals(createUpdatedEntity(), getPersistedMerchant(insertedMerchant));
     }
 
     @Test
     @Transactional
     void patchNonExistingMerchant() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        merchant.setId(longCount.incrementAndGet());
+        merchant.setId(UUID.randomUUID().toString());
 
         // Create the Merchant
         MerchantDTO merchantDTO = merchantMapper.toDto(merchant);
@@ -528,7 +520,7 @@ class MerchantResourceIT {
     @Transactional
     void patchWithIdMismatchMerchant() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        merchant.setId(longCount.incrementAndGet());
+        merchant.setId(UUID.randomUUID().toString());
 
         // Create the Merchant
         MerchantDTO merchantDTO = merchantMapper.toDto(merchant);
@@ -536,7 +528,7 @@ class MerchantResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restMerchantMockMvc
             .perform(
-                patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
+                patch(ENTITY_API_URL_ID, UUID.randomUUID())
                     .contentType("application/merge-patch+json")
                     .content(om.writeValueAsBytes(merchantDTO))
             )
@@ -550,7 +542,7 @@ class MerchantResourceIT {
     @Transactional
     void patchWithMissingIdPathParamMerchant() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        merchant.setId(longCount.incrementAndGet());
+        merchant.setId(UUID.randomUUID().toString());
 
         // Create the Merchant
         MerchantDTO merchantDTO = merchantMapper.toDto(merchant);
@@ -574,7 +566,7 @@ class MerchantResourceIT {
 
         // Delete the merchant
         restMerchantMockMvc
-            .perform(delete(ENTITY_API_URL_ID, merchant.getId()).accept(MediaType.APPLICATION_JSON))
+            .perform(delete(ENTITY_API_URL_ID, insertedMerchant.getId()).accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
@@ -607,5 +599,18 @@ class MerchantResourceIT {
 
     protected void assertPersistedMerchantToMatchUpdatableProperties(Merchant expectedMerchant) {
         assertMerchantAllUpdatablePropertiesEquals(expectedMerchant, getPersistedMerchant(expectedMerchant));
+    }
+
+    protected void partialUpdateMerchantWithPatch(Merchant existingMerchant, Consumer<Merchant> patch) throws Exception {
+        Merchant partialUpdatedMerchant = createUpdateProxyForBean(existingMerchant, existingMerchant);
+        patch.accept(partialUpdatedMerchant);
+
+        restMerchantMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedMerchant.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(om.writeValueAsBytes(partialUpdatedMerchant))
+            )
+            .andExpect(status().isOk());
     }
 }

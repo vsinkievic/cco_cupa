@@ -48,8 +48,6 @@ public class PaymentTransactionAsserts {
     public static void assertPaymentTransactionUpdatableFieldsEquals(PaymentTransaction expected, PaymentTransaction actual) {
         assertThat(actual)
             .as("Verify PaymentTransaction relevant properties")
-            .satisfies(a -> assertThat(a.getOrderId()).as("check orderId").isEqualTo(expected.getOrderId()))
-            .satisfies(a -> assertThat(a.getCupaTransactionId()).as("check cupaTransactionId").isEqualTo(expected.getCupaTransactionId()))
             .satisfies(a ->
                 assertThat(a.getGatewayTransactionId()).as("check gatewayTransactionId").isEqualTo(expected.getGatewayTransactionId())
             )
@@ -76,7 +74,9 @@ public class PaymentTransactionAsserts {
             )
             .satisfies(a -> assertThat(a.getCallbackTimestamp()).as("check callbackTimestamp").isEqualTo(expected.getCallbackTimestamp()))
             .satisfies(a -> assertThat(a.getCallbackData()).as("check callbackData").isEqualTo(expected.getCallbackData()))
-            .satisfies(a -> assertThat(a.getLastQueryData()).as("check lastQueryData").isEqualTo(expected.getLastQueryData()));
+            .satisfies(a -> assertThat(a.getLastQueryData()).as("check lastQueryData").isEqualTo(expected.getLastQueryData()))
+            .satisfies(a -> assertThat(a.getClientId()).as("check clientId").isEqualTo(expected.getClientId()))
+            .satisfies(a -> assertThat(a.getMerchantId()).as("check merchantId").isEqualTo(expected.getMerchantId()));
     }
 
     /**
@@ -86,9 +86,7 @@ public class PaymentTransactionAsserts {
      * @param actual the actual entity
      */
     public static void assertPaymentTransactionUpdatableRelationshipsEquals(PaymentTransaction expected, PaymentTransaction actual) {
-        assertThat(actual)
-            .as("Verify PaymentTransaction relationships")
-            .satisfies(a -> assertThat(a.getClient()).as("check client").isEqualTo(expected.getClient()))
-            .satisfies(a -> assertThat(a.getMerchant()).as("check merchant").isEqualTo(expected.getMerchant()));
+        // No relationships to check since the entity now uses ID fields instead of relationships
+        // The clientId and merchantId fields are checked in the updatable fields method above
     }
 }

@@ -72,6 +72,6 @@ public class AuditLogAsserts {
     public static void assertAuditLogUpdatableRelationshipsEquals(AuditLog expected, AuditLog actual) {
         assertThat(actual)
             .as("Verify AuditLog relationships")
-            .satisfies(a -> assertThat(a.getMerchant()).as("check merchant").isEqualTo(expected.getMerchant()));
+            .satisfies(a -> assertThat(a.getMerchantId()).as("check merchantId").isEqualTo(expected.getMerchantId()));
     }
 }

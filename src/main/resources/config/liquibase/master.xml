@@ -6,7 +6,7 @@
     <property name="now" value="now()" dbms="h2"/>
     <property name="floatType" value="float4" dbms="h2"/>
     <property name="uuidType" value="uuid" dbms="h2"/>
-    <property name="datetimeType" value="datetime(6)" dbms="h2"/>
+    <property name="datetimeType" value="timestamp with time zone" dbms="h2"/>
     <property name="timeType" value="time(6)" dbms="h2"/>
     <property name="clobType" value="longvarchar" dbms="h2"/>
     <property name="blobType" value="blob" dbms="h2"/>
@@ -15,7 +15,7 @@
     <property name="clobType" value="clob" dbms="postgresql"/>
     <property name="blobType" value="blob" dbms="postgresql"/>
     <property name="uuidType" value="uuid" dbms="postgresql"/>
-    <property name="datetimeType" value="datetime" dbms="postgresql"/>
+    <property name="datetimeType" value="timestamp with time zone" dbms="postgresql"/>
     <property name="timeType" value="time(6)" dbms="postgresql"/>
 
     <include file="config/liquibase/changelog/00000000000000_initial_schema.xml" relativeToChangelogFile="false"/>

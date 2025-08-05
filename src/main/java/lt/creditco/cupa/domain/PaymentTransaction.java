@@ -12,6 +12,7 @@ import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.NaturalId;
 
 /**
  * Represents a single payment transaction from start to finish.
@@ -22,23 +23,14 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Table(name = "payment_transaction")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class PaymentTransaction implements Serializable {
+public class PaymentTransaction extends AbstractAuditingEntity<String> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
-    @SequenceGenerator(name = "sequenceGenerator")
+    @NaturalId
     @Column(name = "id")
-    private Long id;
-
-    @NotNull
-    @Column(name = "order_id", nullable = false)
-    private String orderId;
-
-    @NotNull
-    @Column(name = "cupa_transaction_id", nullable = false)
-    private UUID cupaTransactionId;
+    private String id;
 
     @Column(name = "gateway_transaction_id")
     private String gatewayTransactionId;
@@ -109,54 +101,28 @@ public class PaymentTransaction implements Serializable {
     @Column(name = "last_query_data")
     private String lastQueryData;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "cards", "merchant" }, allowSetters = true)
-    private Client client;
+    @Column(name = "client_id")
+    private String clientId;
 
-    @ManyToOne(optional = false)
-    @NotNull
-    @JsonIgnoreProperties(value = { "clients", "transactions", "auditLogs" }, allowSetters = true)
-    private Merchant merchant;
+    @Column(name = "merchant_id")
+    private String merchantId;
+
+    @Version
+    private Long version;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
-    public Long getId() {
+    public String getId() {
         return this.id;
     }
 
-    public PaymentTransaction id(Long id) {
+    public PaymentTransaction id(String id) {
         this.setId(id);
         return this;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
-    }
-
-    public String getOrderId() {
-        return this.orderId;
-    }
-
-    public PaymentTransaction orderId(String orderId) {
-        this.setOrderId(orderId);
-        return this;
-    }
-
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
-    }
-
-    public UUID getCupaTransactionId() {
-        return this.cupaTransactionId;
-    }
-
-    public PaymentTransaction cupaTransactionId(UUID cupaTransactionId) {
-        this.setCupaTransactionId(cupaTransactionId);
-        return this;
-    }
-
-    public void setCupaTransactionId(UUID cupaTransactionId) {
-        this.cupaTransactionId = cupaTransactionId;
     }
 
     public String getGatewayTransactionId() {
@@ -406,30 +372,38 @@ public class PaymentTransaction implements Serializable {
         this.lastQueryData = lastQueryData;
     }
 
-    public Client getClient() {
-        return this.client;
+    public String getClientId() {
+        return this.clientId;
     }
 
-    public void setClient(Client client) {
-        this.client = client;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
-    public PaymentTransaction client(Client client) {
-        this.setClient(client);
+    public PaymentTransaction clientId(String clientId) {
+        this.setClientId(clientId);
         return this;
     }
 
-    public Merchant getMerchant() {
-        return this.merchant;
+    public String getMerchantId() {
+        return this.merchantId;
     }
 
-    public void setMerchant(Merchant merchant) {
-        this.merchant = merchant;
+    public void setMerchantId(String merchantId) {
+        this.merchantId = merchantId;
     }
 
-    public PaymentTransaction merchant(Merchant merchant) {
-        this.setMerchant(merchant);
+    public PaymentTransaction merchantId(String merchantId) {
+        this.setMerchantId(merchantId);
         return this;
+    }
+
+    public Long getVersion() {
+        return this.version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
@@ -456,8 +430,8 @@ public class PaymentTransaction implements Serializable {
     public String toString() {
         return "PaymentTransaction{" +
             "id=" + getId() +
-            ", orderId='" + getOrderId() + "'" +
-            ", cupaTransactionId='" + getCupaTransactionId() + "'" +
+            ", clientId='" + getClientId() + "'" +
+            ", merchantId='" + getMerchantId() + "'" +
             ", gatewayTransactionId='" + getGatewayTransactionId() + "'" +
             ", status='" + getStatus() + "'" +
             ", statusDescription='" + getStatusDescription() + "'" +

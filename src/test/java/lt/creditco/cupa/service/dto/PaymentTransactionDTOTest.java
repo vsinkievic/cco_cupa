@@ -11,12 +11,12 @@ class PaymentTransactionDTOTest {
     void dtoEqualsVerifier() throws Exception {
         TestUtil.equalsVerifier(PaymentTransactionDTO.class);
         PaymentTransactionDTO paymentTransactionDTO1 = new PaymentTransactionDTO();
-        paymentTransactionDTO1.setId(1L);
+        paymentTransactionDTO1.setId("11111111-1111-1111-1111-111111111111");
         PaymentTransactionDTO paymentTransactionDTO2 = new PaymentTransactionDTO();
         assertThat(paymentTransactionDTO1).isNotEqualTo(paymentTransactionDTO2);
         paymentTransactionDTO2.setId(paymentTransactionDTO1.getId());
         assertThat(paymentTransactionDTO1).isEqualTo(paymentTransactionDTO2);
-        paymentTransactionDTO2.setId(2L);
+        paymentTransactionDTO2.setId("22222222-2222-2222-2222-222222222222");
         assertThat(paymentTransactionDTO1).isNotEqualTo(paymentTransactionDTO2);
         paymentTransactionDTO1.setId(null);
         assertThat(paymentTransactionDTO1).isNotEqualTo(paymentTransactionDTO2);

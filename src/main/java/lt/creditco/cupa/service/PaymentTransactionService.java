@@ -1,6 +1,7 @@
 package lt.creditco.cupa.service;
 
 import java.util.Optional;
+import java.util.UUID;
 import lt.creditco.cupa.domain.PaymentTransaction;
 import lt.creditco.cupa.repository.PaymentTransactionRepository;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
@@ -107,7 +108,7 @@ public class PaymentTransactionService {
      * @return the entity.
      */
     @Transactional(readOnly = true)
-    public Optional<PaymentTransactionDTO> findOne(Long id) {
+    public Optional<PaymentTransactionDTO> findOne(String id) {
         LOG.debug("Request to get PaymentTransaction : {}", id);
         return paymentTransactionRepository.findOneWithEagerRelationships(id).map(paymentTransactionMapper::toDto);
     }
@@ -117,7 +118,7 @@ public class PaymentTransactionService {
      *
      * @param id the id of the entity.
      */
-    public void delete(Long id) {
+    public void delete(String id) {
         LOG.debug("Request to delete PaymentTransaction : {}", id);
         paymentTransactionRepository.deleteById(id);
     }

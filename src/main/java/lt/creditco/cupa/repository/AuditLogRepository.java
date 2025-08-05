@@ -26,15 +26,12 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
         return this.findAllWithToOneRelationships(pageable);
     }
 
-    @Query(
-        value = "select auditLog from AuditLog auditLog left join fetch auditLog.merchant",
-        countQuery = "select count(auditLog) from AuditLog auditLog"
-    )
+    @Query(value = "select auditLog from AuditLog auditLog", countQuery = "select count(auditLog) from AuditLog auditLog")
     Page<AuditLog> findAllWithToOneRelationships(Pageable pageable);
 
-    @Query("select auditLog from AuditLog auditLog left join fetch auditLog.merchant")
+    @Query("select auditLog from AuditLog auditLog")
     List<AuditLog> findAllWithToOneRelationships();
 
-    @Query("select auditLog from AuditLog auditLog left join fetch auditLog.merchant where auditLog.id =:id")
+    @Query("select auditLog from AuditLog auditLog where auditLog.id =:id")
     Optional<AuditLog> findOneWithToOneRelationships(@Param("id") Long id);
 }

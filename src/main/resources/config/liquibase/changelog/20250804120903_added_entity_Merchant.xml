@@ -11,16 +11,16 @@
     -->
     <changeSet id="20250804120903-1" author="jhipster">
         <createTable tableName="merchant" remarks="Represents a merchant using the CUPA system.\nIt stores all the necessary configuration and credentials\nfor both our system (CUPA) and the upstream remote gateway.">
-            <column name="id" type="bigint">
+            <column name="id" type="varchar(50)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="name" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
-            <column name="mode" type="varchar(255)">
+            <column name="mode" type="varchar(10)">
                 <constraints nullable="false" />
             </column>
-            <column name="status" type="varchar(255)">
+            <column name="status" type="varchar(50)">
                 <constraints nullable="false" />
             </column>
             <column name="balance" type="decimal(21,2)">
@@ -56,6 +56,21 @@
             <column name="remote_prod_api_key" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
+            <column name="version" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_by" type="varchar(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="last_modified_by" type="varchar(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="last_modified_date" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
     </changeSet>
@@ -76,7 +91,7 @@
                   separator=";"
                   tableName="merchant"
                   usePreparedStatements="true">
-            <column name="id" type="numeric"/>
+            <column name="id" type="string"/>
             <column name="name" type="string"/>
             <column name="mode" type="string"/>
             <column name="status" type="string"/>
@@ -91,6 +106,11 @@
             <column name="remote_prod_merchant_id" type="string"/>
             <column name="remote_prod_merchant_key" type="string"/>
             <column name="remote_prod_api_key" type="string"/>
+            <column name="version" type="numeric"/>
+            <column name="created_by" type="string"/>
+            <column name="created_date" type="timestamp with time zone"/>
+            <column name="last_modified_by" type="string"/>
+            <column name="last_modified_date" type="timestamp with time zone"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

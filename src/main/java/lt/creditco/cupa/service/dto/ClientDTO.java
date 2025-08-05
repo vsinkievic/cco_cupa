@@ -3,7 +3,9 @@ package lt.creditco.cupa.service.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * A DTO for the {@link lt.creditco.cupa.domain.Client} entity.
@@ -14,10 +16,7 @@ import java.util.Objects;
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class ClientDTO implements Serializable {
 
-    private Long id;
-
-    @NotNull
-    private String merchantClientId;
+    private String id;
 
     private String name;
 
@@ -49,22 +48,26 @@ public class ClientDTO implements Serializable {
     private Boolean isCorrelatedBlacklisted;
 
     @NotNull
-    private MerchantDTO merchant;
+    private String merchantId;
 
-    public Long getId() {
+    private String merchantName;
+
+    private Long version;
+
+    private String createdBy;
+
+    private Instant createdDate;
+
+    private String lastModifiedBy;
+
+    private Instant lastModifiedDate;
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
-    }
-
-    public String getMerchantClientId() {
-        return merchantClientId;
-    }
-
-    public void setMerchantClientId(String merchantClientId) {
-        this.merchantClientId = merchantClientId;
     }
 
     public String getName() {
@@ -179,12 +182,60 @@ public class ClientDTO implements Serializable {
         this.isCorrelatedBlacklisted = isCorrelatedBlacklisted;
     }
 
-    public MerchantDTO getMerchant() {
-        return merchant;
+    public String getMerchantId() {
+        return merchantId;
     }
 
-    public void setMerchant(MerchantDTO merchant) {
-        this.merchant = merchant;
+    public void setMerchantId(String merchantId) {
+        this.merchantId = merchantId;
+    }
+
+    public String getMerchantName() {
+        return this.merchantName;
+    }
+
+    public void setMerchantName(String merchantName) {
+        this.merchantName = merchantName;
+    }
+
+    public Long getVersion() {
+        return this.version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Instant getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Instant createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public String getLastModifiedBy() {
+        return lastModifiedBy;
+    }
+
+    public void setLastModifiedBy(String lastModifiedBy) {
+        this.lastModifiedBy = lastModifiedBy;
+    }
+
+    public Instant getLastModifiedDate() {
+        return lastModifiedDate;
+    }
+
+    public void setLastModifiedDate(Instant lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
     }
 
     @Override
@@ -213,7 +264,7 @@ public class ClientDTO implements Serializable {
     public String toString() {
         return "ClientDTO{" +
             "id=" + getId() +
-            ", merchantClientId='" + getMerchantClientId() + "'" +
+            ", merchanId='" + getMerchantId() + "'" +
             ", name='" + getName() + "'" +
             ", emailAddress='" + getEmailAddress() + "'" +
             ", mobileNumber='" + getMobileNumber() + "'" +
@@ -228,7 +279,6 @@ public class ClientDTO implements Serializable {
             ", country='" + getCountry() + "'" +
             ", isBlacklisted='" + getIsBlacklisted() + "'" +
             ", isCorrelatedBlacklisted='" + getIsCorrelatedBlacklisted() + "'" +
-            ", merchant=" + getMerchant() +
             "}";
     }
 }

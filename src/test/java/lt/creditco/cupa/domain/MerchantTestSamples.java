@@ -11,7 +11,7 @@ public class MerchantTestSamples {
 
     public static Merchant getMerchantSample1() {
         return new Merchant()
-            .id(1L)
+            .id("11111111-1111-1111-1111-111111111111")
             .name("name1")
             .cupaTestApiKey("cupaTestApiKey1")
             .cupaProdApiKey("cupaProdApiKey1")
@@ -27,7 +27,7 @@ public class MerchantTestSamples {
 
     public static Merchant getMerchantSample2() {
         return new Merchant()
-            .id(2L)
+            .id("22222222-2222-2222-2222-222222222222")
             .name("name2")
             .cupaTestApiKey("cupaTestApiKey2")
             .cupaProdApiKey("cupaProdApiKey2")
@@ -43,7 +43,7 @@ public class MerchantTestSamples {
 
     public static Merchant getMerchantRandomSampleGenerator() {
         return new Merchant()
-            .id(longCount.incrementAndGet())
+            .id(UUID.randomUUID().toString())
             .name(UUID.randomUUID().toString())
             .cupaTestApiKey(UUID.randomUUID().toString())
             .cupaProdApiKey(UUID.randomUUID().toString())

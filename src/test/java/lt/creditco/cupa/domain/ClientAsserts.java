@@ -47,7 +47,6 @@ public class ClientAsserts {
     public static void assertClientUpdatableFieldsEquals(Client expected, Client actual) {
         assertThat(actual)
             .as("Verify Client relevant properties")
-            .satisfies(a -> assertThat(a.getMerchantClientId()).as("check merchantClientId").isEqualTo(expected.getMerchantClientId()))
             .satisfies(a -> assertThat(a.getName()).as("check name").isEqualTo(expected.getName()))
             .satisfies(a -> assertThat(a.getEmailAddress()).as("check emailAddress").isEqualTo(expected.getEmailAddress()))
             .satisfies(a -> assertThat(a.getMobileNumber()).as("check mobileNumber").isEqualTo(expected.getMobileNumber()))
@@ -65,7 +64,8 @@ public class ClientAsserts {
                 assertThat(a.getIsCorrelatedBlacklisted())
                     .as("check isCorrelatedBlacklisted")
                     .isEqualTo(expected.getIsCorrelatedBlacklisted())
-            );
+            )
+            .satisfies(a -> assertThat(a.getMerchantId()).as("check merchantId").isEqualTo(expected.getMerchantId()));
     }
 
     /**
@@ -75,8 +75,7 @@ public class ClientAsserts {
      * @param actual the actual entity
      */
     public static void assertClientUpdatableRelationshipsEquals(Client expected, Client actual) {
-        assertThat(actual)
-            .as("Verify Client relationships")
-            .satisfies(a -> assertThat(a.getMerchant()).as("check merchant").isEqualTo(expected.getMerchant()));
+        // No relationships to check since the entity now uses ID fields instead of relationships
+        // The merchantId field is checked in the updatable fields method above
     }
 }

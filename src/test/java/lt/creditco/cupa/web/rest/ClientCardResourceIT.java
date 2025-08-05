@@ -8,11 +8,15 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import lt.creditco.cupa.IntegrationTest;
 import lt.creditco.cupa.domain.Client;
 import lt.creditco.cupa.domain.ClientCard;
@@ -29,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -143,7 +148,7 @@ class ClientCardResourceIT {
     }
 
     @BeforeEach
-    void initTest() {
+    public void initTest() {
         clientCard = createEntity(em);
     }
 
@@ -183,7 +188,7 @@ class ClientCardResourceIT {
     @Transactional
     void createClientCardWithExistingId() throws Exception {
         // Create the ClientCard with an existing ID
-        clientCard.setId(1L);
+        clientCard.setId(UUID.randomUUID());
         ClientCardDTO clientCardDTO = clientCardMapper.toDto(clientCard);
 
         long databaseSizeBeforeCreate = getRepositoryCount();
@@ -225,7 +230,7 @@ class ClientCardResourceIT {
             .perform(get(ENTITY_API_URL + "?sort=id,desc"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(clientCard.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(insertedClientCard.getId().toString())))
             .andExpect(jsonPath("$.[*].maskedPan").value(hasItem(DEFAULT_MASKED_PAN)))
             .andExpect(jsonPath("$.[*].expiryDate").value(hasItem(DEFAULT_EXPIRY_DATE)))
             .andExpect(jsonPath("$.[*].cardholderName").value(hasItem(DEFAULT_CARDHOLDER_NAME)))
@@ -258,10 +263,10 @@ class ClientCardResourceIT {
 
         // Get the clientCard
         restClientCardMockMvc
-            .perform(get(ENTITY_API_URL_ID, clientCard.getId()))
+            .perform(get(ENTITY_API_URL_ID, insertedClientCard.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.id").value(clientCard.getId().intValue()))
+            .andExpect(jsonPath("$.id").value(insertedClientCard.getId().toString()))
             .andExpect(jsonPath("$.maskedPan").value(DEFAULT_MASKED_PAN))
             .andExpect(jsonPath("$.expiryDate").value(DEFAULT_EXPIRY_DATE))
             .andExpect(jsonPath("$.cardholderName").value(DEFAULT_CARDHOLDER_NAME))
@@ -273,7 +278,7 @@ class ClientCardResourceIT {
     @Transactional
     void getNonExistingClientCard() throws Exception {
         // Get the clientCard
-        restClientCardMockMvc.perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE)).andExpect(status().isNotFound());
+        restClientCardMockMvc.perform(get(ENTITY_API_URL_ID, UUID.randomUUID().toString())).andExpect(status().isNotFound());
     }
 
     @Test
@@ -298,7 +303,7 @@ class ClientCardResourceIT {
 
         restClientCardMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, clientCardDTO.getId())
+                put(ENTITY_API_URL_ID, insertedClientCard.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(om.writeValueAsBytes(clientCardDTO))
             )
@@ -313,7 +318,7 @@ class ClientCardResourceIT {
     @Transactional
     void putNonExistingClientCard() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        clientCard.setId(longCount.incrementAndGet());
+        clientCard.setId(UUID.randomUUID());
 
         // Create the ClientCard
         ClientCardDTO clientCardDTO = clientCardMapper.toDto(clientCard);
@@ -335,7 +340,7 @@ class ClientCardResourceIT {
     @Transactional
     void putWithIdMismatchClientCard() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        clientCard.setId(longCount.incrementAndGet());
+        clientCard.setId(UUID.randomUUID());
 
         // Create the ClientCard
         ClientCardDTO clientCardDTO = clientCardMapper.toDto(clientCard);
@@ -343,7 +348,7 @@ class ClientCardResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restClientCardMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, longCount.incrementAndGet())
+                put(ENTITY_API_URL_ID, UUID.randomUUID())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(om.writeValueAsBytes(clientCardDTO))
             )
@@ -357,7 +362,7 @@ class ClientCardResourceIT {
     @Transactional
     void putWithMissingIdPathParamClientCard() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        clientCard.setId(longCount.incrementAndGet());
+        clientCard.setId(UUID.randomUUID());
 
         // Create the ClientCard
         ClientCardDTO clientCardDTO = clientCardMapper.toDto(clientCard);
@@ -443,7 +448,7 @@ class ClientCardResourceIT {
     @Transactional
     void patchNonExistingClientCard() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        clientCard.setId(longCount.incrementAndGet());
+        clientCard.setId(UUID.randomUUID());
 
         // Create the ClientCard
         ClientCardDTO clientCardDTO = clientCardMapper.toDto(clientCard);
@@ -465,7 +470,7 @@ class ClientCardResourceIT {
     @Transactional
     void patchWithIdMismatchClientCard() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        clientCard.setId(longCount.incrementAndGet());
+        clientCard.setId(UUID.randomUUID());
 
         // Create the ClientCard
         ClientCardDTO clientCardDTO = clientCardMapper.toDto(clientCard);
@@ -473,7 +478,7 @@ class ClientCardResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restClientCardMockMvc
             .perform(
-                patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
+                patch(ENTITY_API_URL_ID, UUID.randomUUID())
                     .contentType("application/merge-patch+json")
                     .content(om.writeValueAsBytes(clientCardDTO))
             )
@@ -487,7 +492,7 @@ class ClientCardResourceIT {
     @Transactional
     void patchWithMissingIdPathParamClientCard() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        clientCard.setId(longCount.incrementAndGet());
+        clientCard.setId(UUID.randomUUID());
 
         // Create the ClientCard
         ClientCardDTO clientCardDTO = clientCardMapper.toDto(clientCard);
@@ -544,5 +549,46 @@ class ClientCardResourceIT {
 
     protected void assertPersistedClientCardToMatchUpdatableProperties(ClientCard expectedClientCard) {
         assertClientCardAllUpdatablePropertiesEquals(expectedClientCard, getPersistedClientCard(expectedClientCard));
+    }
+
+    protected void assertClientCardUpdatableFieldsEquals(ClientCard expected, ClientCard actual) {
+        assertThat(expected)
+            .satisfies(e -> assertThat(e.getMaskedPan()).as("check maskedPan").isEqualTo(actual.getMaskedPan()))
+            .satisfies(e -> assertThat(e.getExpiryDate()).as("check expiryDate").isEqualTo(actual.getExpiryDate()))
+            .satisfies(e -> assertThat(e.getCardholderName()).as("check cardholderName").isEqualTo(actual.getCardholderName()))
+            .satisfies(e -> assertThat(e.getIsDefault()).as("check isDefault").isEqualTo(actual.getIsDefault()))
+            .satisfies(e -> assertThat(e.getIsValid()).as("check isValid").isEqualTo(actual.getIsValid()));
+    }
+
+    protected void assertClientCardAllPropertiesEquals(ClientCard expected, ClientCard actual) {
+        assertThat(expected)
+            .satisfies(e -> assertThat(e.getId()).as("check id").isEqualTo(actual.getId()))
+            .satisfies(e -> assertThat(e.getMaskedPan()).as("check maskedPan").isEqualTo(actual.getMaskedPan()))
+            .satisfies(e -> assertThat(e.getExpiryDate()).as("check expiryDate").isEqualTo(actual.getExpiryDate()))
+            .satisfies(e -> assertThat(e.getCardholderName()).as("check cardholderName").isEqualTo(actual.getCardholderName()))
+            .satisfies(e -> assertThat(e.getIsDefault()).as("check isDefault").isEqualTo(actual.getIsDefault()))
+            .satisfies(e -> assertThat(e.getIsValid()).as("check isValid").isEqualTo(actual.getIsValid()));
+    }
+
+    protected void assertClientCardAllUpdatablePropertiesEquals(ClientCard expected, ClientCard actual) {
+        assertThat(expected)
+            .satisfies(e -> assertThat(e.getMaskedPan()).as("check maskedPan").isEqualTo(actual.getMaskedPan()))
+            .satisfies(e -> assertThat(e.getExpiryDate()).as("check expiryDate").isEqualTo(actual.getExpiryDate()))
+            .satisfies(e -> assertThat(e.getCardholderName()).as("check cardholderName").isEqualTo(actual.getCardholderName()))
+            .satisfies(e -> assertThat(e.getIsDefault()).as("check isDefault").isEqualTo(actual.getIsDefault()))
+            .satisfies(e -> assertThat(e.getIsValid()).as("check isValid").isEqualTo(actual.getIsValid()));
+    }
+
+    protected void partialUpdateClientCardWithPatch(ClientCard existingClientCard, Consumer<ClientCard> patch) throws Exception {
+        ClientCard partialUpdatedClientCard = createUpdateProxyForBean(existingClientCard, existingClientCard);
+        patch.accept(partialUpdatedClientCard);
+
+        restClientCardMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedClientCard.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(om.writeValueAsBytes(partialUpdatedClientCard))
+            )
+            .andExpect(status().isOk());
     }
 }

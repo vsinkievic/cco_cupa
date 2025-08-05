@@ -9,7 +9,9 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -18,7 +20,9 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import lt.creditco.cupa.IntegrationTest;
+import lt.creditco.cupa.domain.Client;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.PaymentTransaction;
 import lt.creditco.cupa.domain.enumeration.Currency;
@@ -37,6 +41,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -55,8 +60,9 @@ class PaymentTransactionResourceIT {
     private static final String DEFAULT_ORDER_ID = "AAAAAAAAAA";
     private static final String UPDATED_ORDER_ID = "BBBBBBBBBB";
 
-    private static final UUID DEFAULT_CUPA_TRANSACTION_ID = UUID.randomUUID();
-    private static final UUID UPDATED_CUPA_TRANSACTION_ID = UUID.randomUUID();
+    private static final String DEFAULT_MERCHANT_ID = "MERCHANT-ID";
+
+    private static final String DEFAULT_CLIENT_ID = "CLIENT-ID";
 
     private static final String DEFAULT_GATEWAY_TRANSACTION_ID = "AAAAAAAAAA";
     private static final String UPDATED_GATEWAY_TRANSACTION_ID = "BBBBBBBBBB";
@@ -154,8 +160,9 @@ class PaymentTransactionResourceIT {
      */
     public static PaymentTransaction createEntity(EntityManager em) {
         PaymentTransaction paymentTransaction = new PaymentTransaction()
-            .orderId(DEFAULT_ORDER_ID)
-            .cupaTransactionId(DEFAULT_CUPA_TRANSACTION_ID)
+            .id(DEFAULT_ORDER_ID)
+            .merchantId(DEFAULT_MERCHANT_ID)
+            .clientId(DEFAULT_CLIENT_ID)
             .gatewayTransactionId(DEFAULT_GATEWAY_TRANSACTION_ID)
             .status(DEFAULT_STATUS)
             .statusDescription(DEFAULT_STATUS_DESCRIPTION)
@@ -175,16 +182,7 @@ class PaymentTransactionResourceIT {
             .callbackTimestamp(DEFAULT_CALLBACK_TIMESTAMP)
             .callbackData(DEFAULT_CALLBACK_DATA)
             .lastQueryData(DEFAULT_LAST_QUERY_DATA);
-        // Add required entity
-        Merchant merchant;
-        if (TestUtil.findAll(em, Merchant.class).isEmpty()) {
-            merchant = MerchantResourceIT.createEntity();
-            em.persist(merchant);
-            em.flush();
-        } else {
-            merchant = TestUtil.findAll(em, Merchant.class).get(0);
-        }
-        paymentTransaction.setMerchant(merchant);
+
         return paymentTransaction;
     }
 
@@ -196,8 +194,9 @@ class PaymentTransactionResourceIT {
      */
     public static PaymentTransaction createUpdatedEntity(EntityManager em) {
         PaymentTransaction updatedPaymentTransaction = new PaymentTransaction()
-            .orderId(UPDATED_ORDER_ID)
-            .cupaTransactionId(UPDATED_CUPA_TRANSACTION_ID)
+            .id(DEFAULT_ORDER_ID)
+            .merchantId(DEFAULT_MERCHANT_ID)
+            .clientId(DEFAULT_CLIENT_ID)
             .gatewayTransactionId(UPDATED_GATEWAY_TRANSACTION_ID)
             .status(UPDATED_STATUS)
             .statusDescription(UPDATED_STATUS_DESCRIPTION)
@@ -217,16 +216,7 @@ class PaymentTransactionResourceIT {
             .callbackTimestamp(UPDATED_CALLBACK_TIMESTAMP)
             .callbackData(UPDATED_CALLBACK_DATA)
             .lastQueryData(UPDATED_LAST_QUERY_DATA);
-        // Add required entity
-        Merchant merchant;
-        if (TestUtil.findAll(em, Merchant.class).isEmpty()) {
-            merchant = MerchantResourceIT.createUpdatedEntity();
-            em.persist(merchant);
-            em.flush();
-        } else {
-            merchant = TestUtil.findAll(em, Merchant.class).get(0);
-        }
-        updatedPaymentTransaction.setMerchant(merchant);
+
         return updatedPaymentTransaction;
     }
 
@@ -274,7 +264,7 @@ class PaymentTransactionResourceIT {
     @Transactional
     void createPaymentTransactionWithExistingId() throws Exception {
         // Create the PaymentTransaction with an existing ID
-        paymentTransaction.setId(1L);
+        paymentTransaction.setId(UUID.randomUUID().toString());
         PaymentTransactionDTO paymentTransactionDTO = paymentTransactionMapper.toDto(paymentTransaction);
 
         long databaseSizeBeforeCreate = getRepositoryCount();
@@ -286,40 +276,6 @@ class PaymentTransactionResourceIT {
 
         // Validate the PaymentTransaction in the database
         assertSameRepositoryCount(databaseSizeBeforeCreate);
-    }
-
-    @Test
-    @Transactional
-    void checkOrderIdIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
-        paymentTransaction.setOrderId(null);
-
-        // Create the PaymentTransaction, which fails.
-        PaymentTransactionDTO paymentTransactionDTO = paymentTransactionMapper.toDto(paymentTransaction);
-
-        restPaymentTransactionMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(paymentTransactionDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
-    void checkCupaTransactionIdIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
-        paymentTransaction.setCupaTransactionId(null);
-
-        // Create the PaymentTransaction, which fails.
-        PaymentTransactionDTO paymentTransactionDTO = paymentTransactionMapper.toDto(paymentTransaction);
-
-        restPaymentTransactionMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(paymentTransactionDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
     }
 
     @Test
@@ -418,9 +374,9 @@ class PaymentTransactionResourceIT {
             .perform(get(ENTITY_API_URL + "?sort=id,desc"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(paymentTransaction.getId().intValue())))
-            .andExpect(jsonPath("$.[*].orderId").value(hasItem(DEFAULT_ORDER_ID)))
-            .andExpect(jsonPath("$.[*].cupaTransactionId").value(hasItem(DEFAULT_CUPA_TRANSACTION_ID.toString())))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(DEFAULT_ORDER_ID)))
+            .andExpect(jsonPath("$.[*].merchantId").value(hasItem(DEFAULT_MERCHANT_ID)))
+            .andExpect(jsonPath("$.[*].clientId").value(hasItem(DEFAULT_CLIENT_ID)))
             .andExpect(jsonPath("$.[*].gatewayTransactionId").value(hasItem(DEFAULT_GATEWAY_TRANSACTION_ID)))
             .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
             .andExpect(jsonPath("$.[*].statusDescription").value(hasItem(DEFAULT_STATUS_DESCRIPTION)))
@@ -470,9 +426,9 @@ class PaymentTransactionResourceIT {
             .perform(get(ENTITY_API_URL_ID, paymentTransaction.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.id").value(paymentTransaction.getId().intValue()))
-            .andExpect(jsonPath("$.orderId").value(DEFAULT_ORDER_ID))
-            .andExpect(jsonPath("$.cupaTransactionId").value(DEFAULT_CUPA_TRANSACTION_ID.toString()))
+            .andExpect(jsonPath("$.id").value(DEFAULT_ORDER_ID))
+            .andExpect(jsonPath("$.merchantId").value(DEFAULT_MERCHANT_ID))
+            .andExpect(jsonPath("$.clientId").value(DEFAULT_CLIENT_ID))
             .andExpect(jsonPath("$.gatewayTransactionId").value(DEFAULT_GATEWAY_TRANSACTION_ID))
             .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()))
             .andExpect(jsonPath("$.statusDescription").value(DEFAULT_STATUS_DESCRIPTION))
@@ -498,7 +454,7 @@ class PaymentTransactionResourceIT {
     @Transactional
     void getNonExistingPaymentTransaction() throws Exception {
         // Get the paymentTransaction
-        restPaymentTransactionMockMvc.perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE)).andExpect(status().isNotFound());
+        restPaymentTransactionMockMvc.perform(get(ENTITY_API_URL_ID, UUID.randomUUID().toString())).andExpect(status().isNotFound());
     }
 
     @Test
@@ -514,8 +470,9 @@ class PaymentTransactionResourceIT {
         // Disconnect from session so that the updates on updatedPaymentTransaction are not directly saved in db
         em.detach(updatedPaymentTransaction);
         updatedPaymentTransaction
-            .orderId(UPDATED_ORDER_ID)
-            .cupaTransactionId(UPDATED_CUPA_TRANSACTION_ID)
+            .id(UPDATED_ORDER_ID)
+            .merchantId(DEFAULT_MERCHANT_ID)
+            .clientId(DEFAULT_CLIENT_ID)
             .gatewayTransactionId(UPDATED_GATEWAY_TRANSACTION_ID)
             .status(UPDATED_STATUS)
             .statusDescription(UPDATED_STATUS_DESCRIPTION)
@@ -554,7 +511,7 @@ class PaymentTransactionResourceIT {
     @Transactional
     void putNonExistingPaymentTransaction() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        paymentTransaction.setId(longCount.incrementAndGet());
+        paymentTransaction.setId(UUID.randomUUID().toString());
 
         // Create the PaymentTransaction
         PaymentTransactionDTO paymentTransactionDTO = paymentTransactionMapper.toDto(paymentTransaction);
@@ -576,7 +533,7 @@ class PaymentTransactionResourceIT {
     @Transactional
     void putWithIdMismatchPaymentTransaction() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        paymentTransaction.setId(longCount.incrementAndGet());
+        paymentTransaction.setId(UUID.randomUUID().toString());
 
         // Create the PaymentTransaction
         PaymentTransactionDTO paymentTransactionDTO = paymentTransactionMapper.toDto(paymentTransaction);
@@ -584,7 +541,7 @@ class PaymentTransactionResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restPaymentTransactionMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, longCount.incrementAndGet())
+                put(ENTITY_API_URL_ID, UUID.randomUUID())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(om.writeValueAsBytes(paymentTransactionDTO))
             )
@@ -598,7 +555,7 @@ class PaymentTransactionResourceIT {
     @Transactional
     void putWithMissingIdPathParamPaymentTransaction() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        paymentTransaction.setId(longCount.incrementAndGet());
+        paymentTransaction.setId(UUID.randomUUID().toString());
 
         // Create the PaymentTransaction
         PaymentTransactionDTO paymentTransactionDTO = paymentTransactionMapper.toDto(paymentTransaction);
@@ -625,8 +582,9 @@ class PaymentTransactionResourceIT {
         partialUpdatedPaymentTransaction.setId(paymentTransaction.getId());
 
         partialUpdatedPaymentTransaction
-            .orderId(UPDATED_ORDER_ID)
-            .cupaTransactionId(UPDATED_CUPA_TRANSACTION_ID)
+            .id(UPDATED_ORDER_ID)
+            .merchantId(DEFAULT_MERCHANT_ID)
+            .clientId(DEFAULT_CLIENT_ID)
             .gatewayTransactionId(UPDATED_GATEWAY_TRANSACTION_ID)
             .status(UPDATED_STATUS)
             .amount(UPDATED_AMOUNT)
@@ -665,8 +623,9 @@ class PaymentTransactionResourceIT {
         partialUpdatedPaymentTransaction.setId(paymentTransaction.getId());
 
         partialUpdatedPaymentTransaction
-            .orderId(UPDATED_ORDER_ID)
-            .cupaTransactionId(UPDATED_CUPA_TRANSACTION_ID)
+            .id(UPDATED_ORDER_ID)
+            .merchantId(DEFAULT_MERCHANT_ID)
+            .clientId(DEFAULT_CLIENT_ID)
             .gatewayTransactionId(UPDATED_GATEWAY_TRANSACTION_ID)
             .status(UPDATED_STATUS)
             .statusDescription(UPDATED_STATUS_DESCRIPTION)
@@ -708,7 +667,7 @@ class PaymentTransactionResourceIT {
     @Transactional
     void patchNonExistingPaymentTransaction() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        paymentTransaction.setId(longCount.incrementAndGet());
+        paymentTransaction.setId(UUID.randomUUID().toString());
 
         // Create the PaymentTransaction
         PaymentTransactionDTO paymentTransactionDTO = paymentTransactionMapper.toDto(paymentTransaction);
@@ -730,7 +689,7 @@ class PaymentTransactionResourceIT {
     @Transactional
     void patchWithIdMismatchPaymentTransaction() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        paymentTransaction.setId(longCount.incrementAndGet());
+        paymentTransaction.setId(UUID.randomUUID().toString());
 
         // Create the PaymentTransaction
         PaymentTransactionDTO paymentTransactionDTO = paymentTransactionMapper.toDto(paymentTransaction);
@@ -738,7 +697,7 @@ class PaymentTransactionResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restPaymentTransactionMockMvc
             .perform(
-                patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
+                patch(ENTITY_API_URL_ID, UUID.randomUUID())
                     .contentType("application/merge-patch+json")
                     .content(om.writeValueAsBytes(paymentTransactionDTO))
             )
@@ -752,7 +711,7 @@ class PaymentTransactionResourceIT {
     @Transactional
     void patchWithMissingIdPathParamPaymentTransaction() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
-        paymentTransaction.setId(longCount.incrementAndGet());
+        paymentTransaction.setId(UUID.randomUUID().toString());
 
         // Create the PaymentTransaction
         PaymentTransactionDTO paymentTransactionDTO = paymentTransactionMapper.toDto(paymentTransaction);

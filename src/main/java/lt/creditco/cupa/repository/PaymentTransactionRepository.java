@@ -13,8 +13,8 @@ import org.springframework.stereotype.Repository;
  * Spring Data JPA repository for the PaymentTransaction entity.
  */
 @Repository
-public interface PaymentTransactionRepository extends JpaRepository<PaymentTransaction, Long> {
-    default Optional<PaymentTransaction> findOneWithEagerRelationships(Long id) {
+public interface PaymentTransactionRepository extends JpaRepository<PaymentTransaction, String> {
+    default Optional<PaymentTransaction> findOneWithEagerRelationships(String id) {
         return this.findOneWithToOneRelationships(id);
     }
 
@@ -27,18 +27,14 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     }
 
     @Query(
-        value = "select paymentTransaction from PaymentTransaction paymentTransaction left join fetch paymentTransaction.client left join fetch paymentTransaction.merchant",
+        value = "select paymentTransaction from PaymentTransaction paymentTransaction",
         countQuery = "select count(paymentTransaction) from PaymentTransaction paymentTransaction"
     )
     Page<PaymentTransaction> findAllWithToOneRelationships(Pageable pageable);
 
-    @Query(
-        "select paymentTransaction from PaymentTransaction paymentTransaction left join fetch paymentTransaction.client left join fetch paymentTransaction.merchant"
-    )
+    @Query("select paymentTransaction from PaymentTransaction paymentTransaction")
     List<PaymentTransaction> findAllWithToOneRelationships();
 
-    @Query(
-        "select paymentTransaction from PaymentTransaction paymentTransaction left join fetch paymentTransaction.client left join fetch paymentTransaction.merchant where paymentTransaction.id =:id"
-    )
-    Optional<PaymentTransaction> findOneWithToOneRelationships(@Param("id") Long id);
+    @Query("select paymentTransaction from PaymentTransaction paymentTransaction where paymentTransaction.id =:id")
+    Optional<PaymentTransaction> findOneWithToOneRelationships(@Param("id") String id);
 }

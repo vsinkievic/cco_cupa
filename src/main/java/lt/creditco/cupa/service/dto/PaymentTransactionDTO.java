@@ -21,13 +21,7 @@ import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class PaymentTransactionDTO implements Serializable {
 
-    private Long id;
-
-    @NotNull
-    private String orderId;
-
-    @NotNull
-    private UUID cupaTransactionId;
+    private String id;
 
     private String gatewayTransactionId;
 
@@ -76,33 +70,32 @@ public class PaymentTransactionDTO implements Serializable {
     @Lob
     private String lastQueryData;
 
-    private ClientDTO client;
+    private String clientId;
 
     @NotNull
-    private MerchantDTO merchant;
+    private String merchantId;
 
-    public Long getId() {
+    private String clientName;
+
+    private String merchantName;
+
+    private Long version;
+
+    private String createdBy;
+
+    private Instant createdDate;
+
+    private String lastModifiedBy;
+
+    private Instant lastModifiedDate;
+
+    // Getters and Setters
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
-    }
-
-    public UUID getCupaTransactionId() {
-        return cupaTransactionId;
-    }
-
-    public void setCupaTransactionId(UUID cupaTransactionId) {
-        this.cupaTransactionId = cupaTransactionId;
     }
 
     public String getGatewayTransactionId() {
@@ -257,20 +250,76 @@ public class PaymentTransactionDTO implements Serializable {
         this.lastQueryData = lastQueryData;
     }
 
-    public ClientDTO getClient() {
-        return client;
+    public String getClientId() {
+        return clientId;
     }
 
-    public void setClient(ClientDTO client) {
-        this.client = client;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
-    public MerchantDTO getMerchant() {
-        return merchant;
+    public String getMerchantId() {
+        return merchantId;
     }
 
-    public void setMerchant(MerchantDTO merchant) {
-        this.merchant = merchant;
+    public void setMerchantId(String merchantId) {
+        this.merchantId = merchantId;
+    }
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
+    }
+
+    public String getMerchantName() {
+        return merchantName;
+    }
+
+    public void setMerchantName(String merchantName) {
+        this.merchantName = merchantName;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    public Long getVersion() {
+        return this.version;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Instant getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Instant createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public String getLastModifiedBy() {
+        return lastModifiedBy;
+    }
+
+    public void setLastModifiedBy(String lastModifiedBy) {
+        this.lastModifiedBy = lastModifiedBy;
+    }
+
+    public Instant getLastModifiedDate() {
+        return lastModifiedDate;
+    }
+
+    public void setLastModifiedDate(Instant lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
     }
 
     @Override
@@ -299,8 +348,10 @@ public class PaymentTransactionDTO implements Serializable {
     public String toString() {
         return "PaymentTransactionDTO{" +
             "id=" + getId() +
-            ", orderId='" + getOrderId() + "'" +
-            ", cupaTransactionId='" + getCupaTransactionId() + "'" +
+            ", clientId='" + getClientId() + "'" +
+            ", merchantId='" + getMerchantId() + "'" +
+            ", clientName='" + getClientName() + "'" +
+            ", merchantName='" + getMerchantName() + "'" +
             ", gatewayTransactionId='" + getGatewayTransactionId() + "'" +
             ", status='" + getStatus() + "'" +
             ", statusDescription='" + getStatusDescription() + "'" +
@@ -308,20 +359,8 @@ public class PaymentTransactionDTO implements Serializable {
             ", amount=" + getAmount() +
             ", balance=" + getBalance() +
             ", currency='" + getCurrency() + "'" +
-            ", replyUrl='" + getReplyUrl() + "'" +
-            ", backofficeUrl='" + getBackofficeUrl() + "'" +
-            ", echo='" + getEcho() + "'" +
             ", sendEmail='" + getSendEmail() + "'" +
-            ", signature='" + getSignature() + "'" +
-            ", signatureVersion='" + getSignatureVersion() + "'" +
             ", requestTimestamp='" + getRequestTimestamp() + "'" +
-            ", requestData='" + getRequestData() + "'" +
-            ", initialResponseData='" + getInitialResponseData() + "'" +
-            ", callbackTimestamp='" + getCallbackTimestamp() + "'" +
-            ", callbackData='" + getCallbackData() + "'" +
-            ", lastQueryData='" + getLastQueryData() + "'" +
-            ", client=" + getClient() +
-            ", merchant=" + getMerchant() +
             "}";
     }
 }
