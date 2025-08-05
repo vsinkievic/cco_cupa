@@ -62,6 +62,10 @@ public class ClientDTO implements Serializable {
 
     private Instant lastModifiedDate;
 
+    private Instant createdInGateway;
+
+    private Instant updatedInGateway;
+
     public String getId() {
         return id;
     }
@@ -236,6 +240,22 @@ public class ClientDTO implements Serializable {
 
     public void setLastModifiedDate(Instant lastModifiedDate) {
         this.lastModifiedDate = lastModifiedDate;
+    }
+
+    public Instant getCreatedInGateway() {
+        return createdInGateway;
+    }
+
+    public void setCreatedInGateway(Instant createdInGateway) {
+        this.createdInGateway = createdInGateway;
+    }
+
+    public Instant getUpdatedInGateway() {
+        return updatedInGateway;
+    }
+
+    public void setUpdatedInGateway(Instant updatedInGateway) {
+        this.updatedInGateway = updatedInGateway;
     }
 
     @Override

@@ -75,6 +75,14 @@
           <dd>
             <span>{{ clientRef.isCorrelatedBlacklisted }}</span>
           </dd>
+          <dt><span>Created In Gateway</span></dt>
+          <dd>
+            <span>{{ clientRef.createdInGateway | date: 'medium' }}</span>
+          </dd>
+          <dt><span>Updated In Gateway</span></dt>
+          <dd>
+            <span>{{ clientRef.updatedInGateway | date: 'medium' }}</span>
+          </dd>
           <dt><span>Merchant</span></dt>
           <dd>
             @if (client()!.merchant) {

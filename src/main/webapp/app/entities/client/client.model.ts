@@ -17,6 +17,8 @@ export interface IClient {
   country?: string | null;
   isBlacklisted?: boolean | null;
   isCorrelatedBlacklisted?: boolean | null;
+  createdInGateway?: string | null;
+  updatedInGateway?: string | null;
   merchant?: Pick<IMerchant, 'id' | 'name'> | null;
 }
 

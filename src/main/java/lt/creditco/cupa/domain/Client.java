@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import org.hibernate.annotations.Cache;
@@ -78,6 +79,12 @@ public class Client extends AbstractAuditingEntity<String> implements Serializab
 
     @Column(name = "merchant_id")
     private String merchantId;
+
+    @Column(name = "created_in_gateway")
+    private Instant createdInGateway;
+
+    @Column(name = "updated_in_gateway")
+    private Instant updatedInGateway;
 
     @Version
     private Long version;
@@ -329,6 +336,32 @@ public class Client extends AbstractAuditingEntity<String> implements Serializab
 
     public void setVersion(Long version) {
         this.version = version;
+    }
+
+    public Instant getCreatedInGateway() {
+        return this.createdInGateway;
+    }
+
+    public Client createdInGateway(Instant createdInGateway) {
+        this.setCreatedInGateway(createdInGateway);
+        return this;
+    }
+
+    public void setCreatedInGateway(Instant createdInGateway) {
+        this.createdInGateway = createdInGateway;
+    }
+
+    public Instant getUpdatedInGateway() {
+        return this.updatedInGateway;
+    }
+
+    public Client updatedInGateway(Instant updatedInGateway) {
+        this.setUpdatedInGateway(updatedInGateway);
+        return this;
+    }
+
+    public void setUpdatedInGateway(Instant updatedInGateway) {
+        this.updatedInGateway = updatedInGateway;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

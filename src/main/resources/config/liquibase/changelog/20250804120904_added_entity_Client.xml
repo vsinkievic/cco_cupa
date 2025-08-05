@@ -59,6 +59,12 @@
             <column name="merchant_id" type="varchar(50)">
                 <constraints nullable="false" />
             </column>
+            <column name="created_in_gateway" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="updated_in_gateway" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
             <column name="version" type="bigint">
                 <constraints nullable="false" />
             </column>
@@ -110,6 +116,8 @@
             <column name="is_blacklisted" type="boolean"/>
             <column name="is_correlated_blacklisted" type="boolean"/>
             <column name="merchant_id" type="string"/>
+            <column name="created_in_gateway" type="timestamp with time zone"/>
+            <column name="updated_in_gateway" type="timestamp with time zone"/>
             <column name="version" type="bigint" />
             <column name="created_by" type="string"/>
             <column name="created_date" type="${datetimeType}"/>
