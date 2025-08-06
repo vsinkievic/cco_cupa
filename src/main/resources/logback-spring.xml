@@ -27,7 +27,7 @@
     </root>
     -->
 
-    <logger name="lt.creditco.cupa" level="INFO"/>
+    <logger name="lt.creditco.cupa" level="DEBUG"/>
 
     <logger name="angus.activation" level="WARN"/>
     <logger name="jakarta.activation" level="WARN"/>
