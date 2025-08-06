@@ -3,7 +3,9 @@ package lt.creditco.cupa.remote;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -22,7 +24,7 @@ public class UpGatewayClient {
         this.restTemplate = restTemplate;
     }
 
-    public String placeTransaction(PaymentRequest request, GatewayConfig config) {
+    public GatewayResponse<PaymentReply> placeTransaction(PaymentRequest request, GatewayConfig config) {
         request.setAmount(request.getAmount().stripTrailingZeros());
 
         String signature = calculateSignature(request, config);
@@ -39,17 +41,27 @@ public class UpGatewayClient {
 
         log.debug("Request to URL: {}", url);
         log.debug("Request Headers: {}", headers);
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+
+        ParameterizedTypeReference<GatewayResponse<PaymentReply>> responseType = new ParameterizedTypeReference<>() {};
+
+        ResponseEntity<GatewayResponse<PaymentReply>> response = restTemplate.exchange(url, HttpMethod.POST, entity, responseType);
 
         if (response.getStatusCode().isError()) {
-            log.error("Received error status: {} for orderId: {}", response.getStatusCode(), request.getOrderID());
+            log.error(
+                "Received error status: {} for orderId: {}, message: {}, details: {}, reason: {}",
+                response.getStatusCode(),
+                request.getOrderID(),
+                response.getBody().getResponse().getMessage(),
+                response.getBody().getResponse().getDetail(),
+                response.getBody().getResponse().getReason()
+            );
             // You can throw a custom exception here or handle the error as needed
         }
 
         return response.getBody();
     }
 
-    public QueryResponse queryTransaction(String orderId, GatewayConfig config) {
+    public GatewayResponse<Map<String, String>> queryTransaction(String orderId, GatewayConfig config) {
         String url = config.getBaseUrl() + "/merchants/" + config.getMerchantMid() + "/transactions/" + orderId;
 
         HttpHeaders headers = new HttpHeaders();
@@ -60,7 +72,9 @@ public class UpGatewayClient {
 
         log.debug("Request to URL: {}", url);
 
-        ResponseEntity<QueryResponse> response = restTemplate.exchange(url, HttpMethod.GET, entity, QueryResponse.class);
+        ParameterizedTypeReference<GatewayResponse<Map<String, String>>> responseType = new ParameterizedTypeReference<>() {};
+
+        ResponseEntity<GatewayResponse<Map<String, String>>> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
 
         if (response.getStatusCode().isError()) {
             log.error("Received error status: {} for orderId: {}", response.getStatusCode(), orderId);
