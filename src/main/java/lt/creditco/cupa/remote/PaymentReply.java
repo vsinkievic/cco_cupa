@@ -9,9 +9,6 @@ import lombok.Data;
 @Data
 public class PaymentReply {
 
-    @JsonProperty("transactionId")
-    private String transactionId;
-
     @JsonProperty("amount")
     private BigDecimal amount;
 

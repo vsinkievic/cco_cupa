@@ -11,7 +11,7 @@ import lombok.Data;
 public class PaymentRequest {
 
     @JsonProperty("clientID")
-    private String clientID;
+    private String clientId;
 
     private ClientDetails client;
     private String signature;
@@ -19,13 +19,13 @@ public class PaymentRequest {
     private String echo;
 
     @JsonProperty("orderID")
-    private String orderID;
+    private String orderId;
 
     @JsonProperty("replyURL")
-    private String replyURL;
+    private String replyUrl;
 
     @JsonProperty("backofficeURL")
-    private String backofficeURL;
+    private String backofficeUrl;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private BigDecimal amount;

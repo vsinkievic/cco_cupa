@@ -59,10 +59,10 @@ class UpGatewayClientIT {
             .build();
 
         PaymentRequest request = new PaymentRequest();
-        request.setOrderID("test-order-" + System.currentTimeMillis());
+        request.setOrderId("test-order-" + System.currentTimeMillis());
         request.setAmount(new BigDecimal("10.12"));
         request.setCurrency("USD");
-        request.setClientID("CLN-001");
+        request.setClientId("CLN-001");
         request.setCardType(CardType.UnionPay);
         request.setSendEmail(1);
 
@@ -76,7 +76,7 @@ class UpGatewayClientIT {
         log.info("Transaction Response: {}", objectMapper.writeValueAsString(transactionResponse));
         assertNotNull(transactionResponse);
         assertNotNull(transactionResponse.getReply());
-        assertNotNull(transactionResponse.getReply().getTransactionId());
+        assertNotNull(transactionResponse.getReply().getOrderId());
     }
 
     @Test
@@ -93,11 +93,11 @@ class UpGatewayClientIT {
             .merchantCurrency("USD")
             //           .paymentType("UnionPay")
             .build();
-        //        String orderId = "test-order-1754460577204";
+        String orderId = "test-order-1754460577204";
         //        String orderId = "408818978";
         //        String orderId = "2025080501";
         //        String orderId = "408617236";
-        String orderId = "FakeOrderId";
+        //String orderId = "FakeOrderId";
 
         // When
         GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.queryTransaction(orderId, config);

@@ -11,6 +11,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @Slf4j
@@ -30,7 +31,10 @@ public class UpGatewayClient {
         request.setSignature(signature);
         request.setSignatureVersion(SIGNATURE_VERSION);
 
-        String url = config.getBaseUrl() + "/merchants/" + config.getMerchantMid() + "/transactions/";
+        String url = UriComponentsBuilder.fromUriString(config.getBaseUrl())
+            .path("/merchants/{merchantMid}/transactions/")
+            .buildAndExpand(config.getMerchantMid())
+            .toUriString();
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
@@ -49,7 +53,7 @@ public class UpGatewayClient {
             log.error(
                 "Received error status: {} for orderId: {}, message: {}, details: {}, reason: {}",
                 response.getStatusCode(),
-                request.getOrderID(),
+                request.getOrderId(),
                 response.getBody().getResponse().getMessage(),
                 response.getBody().getResponse().getDetail(),
                 response.getBody().getResponse().getReason()
@@ -61,7 +65,10 @@ public class UpGatewayClient {
     }
 
     public GatewayResponse<PaymentReply> queryTransaction(String orderId, GatewayConfig config) {
-        String url = config.getBaseUrl() + "/merchants/" + config.getMerchantMid() + "/transactions/" + orderId;
+        String url = UriComponentsBuilder.fromUriString(config.getBaseUrl())
+            .path("/merchants/{merchantMid}/transactions/{orderId}")
+            .buildAndExpand(config.getMerchantMid(), orderId)
+            .toUriString();
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
@@ -93,18 +100,18 @@ public class UpGatewayClient {
         String merchantKeyMd5 = md5(config.getMerchantKey());
 
         StringBuilder clearText = new StringBuilder();
-        if (request.getClientID() != null) {
-            clearText.append(request.getClientID());
+        if (request.getClientId() != null) {
+            clearText.append(request.getClientId());
         }
-        clearText.append(request.getOrderID().toLowerCase());
+        clearText.append(request.getOrderId().toLowerCase());
         clearText.append(merchantKeyMd5);
         clearText.append(request.getAmount());
         clearText.append(request.getCurrency());
-        if (request.getReplyURL() != null) {
-            clearText.append(request.getReplyURL());
+        if (request.getReplyUrl() != null) {
+            clearText.append(request.getReplyUrl());
         }
-        if (request.getBackofficeURL() != null) {
-            clearText.append(request.getBackofficeURL());
+        if (request.getBackofficeUrl() != null) {
+            clearText.append(request.getBackofficeUrl());
         }
 
         return md5(clearText.toString());
