@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.config.JacksonConfiguration;
@@ -136,5 +137,27 @@ class UpGatewayClientIT {
         log.info("Request Body: {}", trace.getRequestBody());
         log.info("Response Body: {}", trace.getResponseBody());
         assertNotNull(clientDetailsResponse);
+    }
+
+    @Test
+    void testGetClientList() {
+        log.info("-------------------------------- testGetClientList --------------------------------");
+        // Given
+        String nextClientId = null;
+
+        // When
+        GatewayResponse<List<ClientDetails>> clientListResponse = null;
+        try {
+            clientListResponse = upGatewayClient.getClientList(nextClientId, gatewayConfig);
+            log.info("Client List Response: {}", objectMapper.writeValueAsString(clientListResponse));
+        } catch (Exception e) {
+            log.error("Error getting client list", e);
+        }
+
+        // Then
+        TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
+        log.info("Request Body: {}", trace.getRequestBody());
+        log.info("Response Body: {}", trace.getResponseBody());
+        assertNotNull(clientListResponse);
     }
 }

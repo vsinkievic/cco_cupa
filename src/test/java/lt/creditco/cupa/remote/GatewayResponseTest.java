@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import lt.creditco.cupa.config.JacksonConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -189,5 +190,91 @@ class GatewayResponseTest {
         assertEquals("LT-0000", address.getPostCode());
         assertEquals("Lithuania", address.getCountry());
         assertFalse(address.getIsValid());
+    }
+
+    @Test
+    void getClientListResponse() throws JsonProcessingException {
+        String json =
+            """
+            {
+            "response":
+            {
+            "statusCode":200,"message":"OK"
+            },
+            "clients":[
+            {
+            "merchantID":"1234abcd-5678-efgh-9012-123456abcdef",
+            "merchantName":"The Merchant",
+            "mobileNumber":"222333444555",
+            "clientID":"TheClient_1",
+            "created":"2023-11-06T06:46:53.953",
+            "updated":"2024-07-14T08:18:22.747",
+            "name":"First Client",
+            "id":"16639678-2c4f-481b-bda6-3144cf9ae8fb",
+            "emailAddress":"client_1@client1.com",
+            "black":false,
+            "valid":true,
+            "correlatedBlack":false
+            },
+            {
+            "merchantID":"1234abcd-5678-efgh-9012-123456abcdef",
+            "merchantName":"The Merchant",
+            "mobileNumber":"666777888",
+            "clientID":"TheClient_2",
+            "created":"2023-11-06T08:06:26.065",
+            "updated":"2024-07-14T06:51:57.540",
+            "name":"Second Client",
+            "id":"826f55b0-4f7d-4700-b53c-b616bceef3f6",
+            "emailAddress":"client_2@client2.com",
+            "black":false,
+            "valid":true,
+            "correlatedBlack":false
+            }
+            ],
+            "next": "nextClientID"
+            }
+            """;
+
+        JavaType innerType = TypeFactory.defaultInstance().constructCollectionType(List.class, ClientDetails.class);
+        JavaType type = TypeFactory.defaultInstance().constructParametricType(GatewayResponse.class, innerType);
+        GatewayResponse<List<ClientDetails>> response = objectMapper.readValue(json, type);
+
+        assertNotNull(response);
+        assertNotNull(response.getResponse());
+        assertEquals(200, response.getResponse().getStatusCode());
+        assertEquals("OK", response.getResponse().getMessage());
+        assertEquals("nextClientID", response.getNext());
+
+        List<ClientDetails> clients = response.getReply();
+        assertNotNull(clients);
+        assertEquals(2, clients.size());
+
+        ClientDetails client1 = clients.get(0);
+        assertEquals("1234abcd-5678-efgh-9012-123456abcdef", client1.getMerchantId());
+        assertEquals("The Merchant", client1.getMerchantName());
+        assertEquals("222333444555", client1.getMobileNumber());
+        assertEquals("TheClient_1", client1.getClientId());
+        assertEquals("2023-11-06T06:46:53.953", client1.getCreatedInGateway());
+        assertEquals("2024-07-14T08:18:22.747", client1.getUpdatedInGateway());
+        assertEquals("First Client", client1.getName());
+        assertEquals("16639678-2c4f-481b-bda6-3144cf9ae8fb", client1.getIdInGateway());
+        assertEquals("client_1@client1.com", client1.getEmailAddress());
+        assertFalse(client1.getBlack());
+        assertTrue(client1.getIsValid());
+        assertFalse(client1.getCorrelatedBlack());
+
+        ClientDetails client2 = clients.get(1);
+        assertEquals("1234abcd-5678-efgh-9012-123456abcdef", client2.getMerchantId());
+        assertEquals("The Merchant", client2.getMerchantName());
+        assertEquals("666777888", client2.getMobileNumber());
+        assertEquals("TheClient_2", client2.getClientId());
+        assertEquals("2023-11-06T08:06:26.065", client2.getCreatedInGateway());
+        assertEquals("2024-07-14T06:51:57.540", client2.getUpdatedInGateway());
+        assertEquals("Second Client", client2.getName());
+        assertEquals("826f55b0-4f7d-4700-b53c-b616bceef3f6", client2.getIdInGateway());
+        assertEquals("client_2@client2.com", client2.getEmailAddress());
+        assertFalse(client2.getBlack());
+        assertTrue(client2.getIsValid());
+        assertFalse(client2.getCorrelatedBlack());
     }
 }

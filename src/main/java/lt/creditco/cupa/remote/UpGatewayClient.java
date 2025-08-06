@@ -1,8 +1,11 @@
 package lt.creditco.cupa.remote;
 
+import io.micrometer.common.util.StringUtils;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -53,14 +56,11 @@ public class UpGatewayClient {
 
         if (response.getStatusCode().isError()) {
             log.error(
-                "Received error status: {} for orderId: {}, message: {}, details: {}, reason: {}",
+                "Received error status: {} for orderId: {}, error: {}",
                 response.getStatusCode(),
                 request.getOrderId(),
-                response.getBody().getResponse().getMessage(),
-                response.getBody().getResponse().getDetail(),
-                response.getBody().getResponse().getReason()
+                getErrorMessage(response.getBody())
             );
-            // You can throw a custom exception here or handle the error as needed
         }
 
         return response.getBody();
@@ -87,14 +87,11 @@ public class UpGatewayClient {
 
         if (response.getStatusCode().isError()) {
             log.error(
-                "Received error status: {} for orderId: {}, message: {}, details: {}, reason: {}",
+                "Received error status: {} for orderId: {}, error: {}",
                 response.getStatusCode(),
                 orderId,
-                response.getBody().getResponse().getMessage(),
-                response.getBody().getResponse().getDetail(),
-                response.getBody().getResponse().getReason()
+                getErrorMessage(response.getBody())
             );
-            // You can throw a custom exception here or handle the error as needed
         }
 
         return response.getBody();
@@ -112,6 +109,7 @@ public class UpGatewayClient {
         headers.add("Content-Type", "application/json");
         headers.add("x-api-key", config.getApiKey());
 
+        log.debug("Request to URL: {}", url);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         ParameterizedTypeReference<GatewayResponse<ClientDetails>> responseType = new ParameterizedTypeReference<>() {};
@@ -119,16 +117,63 @@ public class UpGatewayClient {
 
         if (response.getStatusCode().isError()) {
             log.error(
-                "Received error status: {} for clientId: {}, message: {}, details: {}, reason: {}",
+                "Received error status: {} for clientId: {}, error: {}",
                 response.getStatusCode(),
                 clientId,
-                response.getBody().getResponse().getMessage(),
-                response.getBody().getResponse().getDetail(),
-                response.getBody().getResponse().getReason()
+                getErrorMessage(response.getBody())
             );
         }
 
         return response.getBody();
+    }
+
+    public GatewayResponse<List<ClientDetails>> getClientList(String nextClientId, GatewayConfig config) {
+        log.info("getClientList: nextClientId:{}", nextClientId);
+
+        String url = null;
+        if (StringUtils.isNotBlank(nextClientId)) {
+            url = UriComponentsBuilder.fromUriString(config.getBaseUrl())
+                .path("/merchants/{merchantMid}/clients")
+                .queryParam("next", nextClientId)
+                .buildAndExpand(config.getMerchantMid())
+                .toUriString();
+        } else {
+            url = UriComponentsBuilder.fromUriString(config.getBaseUrl())
+                .path("/merchants/{merchantMid}/clients")
+                .buildAndExpand(config.getMerchantMid())
+                .toUriString();
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
+        headers.add("x-api-key", config.getApiKey());
+
+        log.debug("Request to URL: {}", url);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ParameterizedTypeReference<GatewayResponse<List<ClientDetails>>> responseType = new ParameterizedTypeReference<>() {};
+        ResponseEntity<GatewayResponse<List<ClientDetails>>> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
+
+        if (response.getStatusCode().isError()) {
+            log.error(
+                "Received error status: {} for nextClientId: {}, error: {}",
+                response.getStatusCode(),
+                nextClientId,
+                getErrorMessage(response.getBody())
+            );
+        }
+
+        return response.getBody();
+    }
+
+    private String getErrorMessage(GatewayResponse<?> responseBody) {
+        return Optional.ofNullable(responseBody)
+            .map(GatewayResponse::getResponse)
+            .map(message ->
+                String.format("message: %s, details: %s, reason: %s", message.getMessage(), message.getDetail(), message.getReason())
+            )
+            .orElse("Unknown error");
     }
 
     private String calculateSignature(PaymentRequest request, GatewayConfig config) {
