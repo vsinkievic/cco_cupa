@@ -32,6 +32,19 @@ public class UpGatewayClient {
 
         request.setAmount(request.getAmount().stripTrailingZeros());
 
+        if (!request.isValidForRequest()) {
+            log.error("Invalid payment request: {}", request.getFirstErrorMessage());
+            GatewayResponse<PaymentReply> response = new GatewayResponse<>();
+            response.setResponse(
+                GatewayMessage.builder()
+                    .statusCode(499) // our internally defined error code for invalid requests
+                    .message("Request validation failed")
+                    .detail(request.getFirstErrorMessage())
+                    .build()
+            );
+            return response;
+        }
+
         String signature = calculateSignature(request, config);
         request.setSignature(signature);
         request.setSignatureVersion(SIGNATURE_VERSION);

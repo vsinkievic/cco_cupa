@@ -24,6 +24,7 @@ public class CardDetails {
     @JsonIgnore
     private String firstErrorMessage;
 
+    @JsonIgnore
     public boolean isValidForRequest() {
         firstErrorMessage = null;
         if (isValid != null) return error("isValid cannot be set");

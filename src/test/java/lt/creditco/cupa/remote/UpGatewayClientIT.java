@@ -1,5 +1,8 @@
 package lt.creditco.cupa.remote;
 
+import static lt.creditco.cupa.remote.TestRandomData.random5DigitNumber;
+import static lt.creditco.cupa.remote.TestRandomData.randomFrom;
+import static lt.creditco.cupa.remote.TestRandomData.randomValueFrom;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -76,11 +79,83 @@ class UpGatewayClientIT {
         // Given
         PaymentRequest request = new PaymentRequest();
         request.setOrderId("test-order-" + System.currentTimeMillis());
-        request.setAmount(new BigDecimal("10.12"));
+        request.setAmount(new BigDecimal(String.format("10.%d", System.currentTimeMillis() % 100)));
         request.setCurrency("USD");
         request.setClientId("CLN-001");
         request.setCardType(CardType.UnionPay);
         request.setSendEmail(1);
+
+        // When
+        GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.placeTransaction(request, gatewayConfig);
+
+        // Then
+        TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
+        log.info("Request Body: {}", trace.getRequestBody());
+        log.info("Response Body: {}", trace.getResponseBody());
+        log.info("Transaction Response: {}", objectMapper.writeValueAsString(transactionResponse));
+        assertNotNull(transactionResponse);
+        assertNotNull(transactionResponse.getReply());
+        assertNotNull(transactionResponse.getReply().getOrderId());
+    }
+
+    @Test
+    void testPlaceTransactionWithNewClient() throws JsonProcessingException {
+        log.info("-------------------------------- testPlaceTransactionWithNewClient --------------------------------");
+        // Given
+        PaymentRequest request = new PaymentRequest();
+        request.setOrderId("test-order-" + System.currentTimeMillis());
+        request.setAmount(new BigDecimal(String.format("20.%d", System.currentTimeMillis() % 100)));
+        request.setCurrency("USD");
+        request.setCardType(CardType.UnionPay);
+        request.setSendEmail(1);
+
+        ClientDetails clientDetails = new ClientDetails();
+        clientDetails.setClientId(String.format("CLN-%d", System.currentTimeMillis() % 1000000));
+        clientDetails.setMobileNumber(String.format("+370614%d", System.currentTimeMillis() % 100000));
+        clientDetails.setEmailAddress(String.format("tester_%d@test.dev", System.currentTimeMillis() % 100000));
+        clientDetails.setName(String.format("Tester %d", System.currentTimeMillis() % 100000));
+        request.setClient(clientDetails);
+
+        // When
+        GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.placeTransaction(request, gatewayConfig);
+
+        // Then
+        TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
+        log.info("Request Body: {}", trace.getRequestBody());
+        log.info("Response Body: {}", trace.getResponseBody());
+        log.info("Transaction Response: {}", objectMapper.writeValueAsString(transactionResponse));
+        assertNotNull(transactionResponse);
+        assertNotNull(transactionResponse.getReply());
+        assertNotNull(transactionResponse.getReply().getOrderId());
+    }
+
+    @Test
+    void testPlaceTransactionWithNewClientWitAddress() throws JsonProcessingException {
+        log.info("-------------------------------- testPlaceTransactionWithNewClientWitAddress --------------------------------");
+        // Given
+        PaymentRequest request = new PaymentRequest();
+        request.setOrderId("test-order-" + System.currentTimeMillis());
+        request.setAmount(new BigDecimal(String.format("30.%d", System.currentTimeMillis() % 100)));
+        request.setCurrency("USD");
+        request.setCardType(CardType.UnionPay);
+        request.setSendEmail(1);
+
+        ClientDetails clientDetails = new ClientDetails();
+        clientDetails.setClientId(String.format("CLN-%d", System.currentTimeMillis() % 1000000));
+        clientDetails.setMobileNumber(String.format("+370614%d", System.currentTimeMillis() % 100000));
+        clientDetails.setEmailAddress(String.format("tester_%d@test.dev", System.currentTimeMillis() % 100000));
+        clientDetails.setName(
+            randomValueFrom("John", "Jane", "Jim", "Jill") + " " + randomValueFrom("Doe", "Smith", "Johnson", "Williams")
+        );
+        request.setClient(clientDetails);
+
+        BillingAddress billingAddress = new BillingAddress();
+        billingAddress.setCity(randomValueFrom("Vilnius", "Warsaw", "Riga", "London"));
+        billingAddress.setStreetName(randomValueFrom("Long Street", "Wide avenue", "Developers Street", "Test Street 4"));
+        billingAddress.setStreetNumber(String.format("%d-%d", randomFrom(1, 100), randomFrom(1, 100)));
+        billingAddress.setPostCode(random5DigitNumber());
+        billingAddress.setCountry(randomValueFrom("LT", "PL", "LV", "GB"));
+        clientDetails.setBillingAddress(billingAddress);
 
         // When
         GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.placeTransaction(request, gatewayConfig);

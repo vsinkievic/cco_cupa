@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -45,6 +46,7 @@ public class ClientDetails {
     @JsonIgnore
     private String firstErrorMessage;
 
+    @JsonIgnore
     public boolean isValidForRequest() {
         firstErrorMessage = null;
         if (isValid != null) return error("isValid cannot be set");
@@ -53,6 +55,14 @@ public class ClientDetails {
         if (createdInGateway != null) return error("createdInGateway cannot be set");
         if (updatedInGateway != null) return error("updatedInGateway cannot be set");
         if (idInGateway != null) return error("idInGateway cannot be set");
+
+        if (StringUtils.isBlank(clientId)) return error("clientId cannot be blank");
+
+        if (this.cards != null && this.cards.size() > 3) return error("max 3 cards allowed");
+
+        if (this.billingAddress != null && !this.billingAddress.isValidForRequest()) return error(
+            String.format("billingAddress is not valid (%s)", this.billingAddress.getFirstErrorMessage())
+        );
 
         return true;
     }

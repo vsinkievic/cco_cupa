@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -23,9 +24,18 @@ public class BillingAddress {
     @JsonIgnore
     private String firstErrorMessage;
 
+    @JsonIgnore
     public boolean isValidForRequest() {
         firstErrorMessage = null;
         if (isValid != null) return error("isValid cannot be set");
+
+        if (StringUtils.isBlank(streetName)) this.streetName = "";
+        if (StringUtils.isBlank(streetNumber)) this.streetNumber = "";
+        //        if (StringUtils.isBlank(streetSuffix)) this.streetSuffix = "";
+        if (StringUtils.isBlank(city)) this.city = "";
+        if (StringUtils.isBlank(state)) this.state = "";
+        if (StringUtils.isBlank(postCode)) this.postCode = "";
+        if (StringUtils.isBlank(country)) this.country = "";
 
         return true;
     }
