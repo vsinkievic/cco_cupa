@@ -25,6 +25,8 @@ public class UpGatewayClient {
     }
 
     public GatewayResponse<PaymentReply> placeTransaction(PaymentRequest request, GatewayConfig config) {
+        log.info("placeTransaction: {}", request);
+
         request.setAmount(request.getAmount().stripTrailingZeros());
 
         String signature = calculateSignature(request, config);
@@ -65,6 +67,8 @@ public class UpGatewayClient {
     }
 
     public GatewayResponse<PaymentReply> queryTransaction(String orderId, GatewayConfig config) {
+        log.info("queryTransaction: {}", orderId);
+
         String url = UriComponentsBuilder.fromUriString(config.getBaseUrl())
             .path("/merchants/{merchantMid}/transactions/{orderId}")
             .buildAndExpand(config.getMerchantMid(), orderId)
@@ -91,6 +95,37 @@ public class UpGatewayClient {
                 response.getBody().getResponse().getReason()
             );
             // You can throw a custom exception here or handle the error as needed
+        }
+
+        return response.getBody();
+    }
+
+    public GatewayResponse<ClientDetails> getClientDetails(String clientId, GatewayConfig config) {
+        log.info("getClientDetails: {}", clientId);
+
+        String url = UriComponentsBuilder.fromUriString(config.getBaseUrl())
+            .path("/merchants/{merchantMid}/clients/{clientId}")
+            .buildAndExpand(config.getMerchantMid(), clientId)
+            .toUriString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
+        headers.add("x-api-key", config.getApiKey());
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ParameterizedTypeReference<GatewayResponse<ClientDetails>> responseType = new ParameterizedTypeReference<>() {};
+        ResponseEntity<GatewayResponse<ClientDetails>> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
+
+        if (response.getStatusCode().isError()) {
+            log.error(
+                "Received error status: {} for clientId: {}, message: {}, details: {}, reason: {}",
+                response.getStatusCode(),
+                clientId,
+                response.getBody().getResponse().getMessage(),
+                response.getBody().getResponse().getDetail(),
+                response.getBody().getResponse().getReason()
+            );
         }
 
         return response.getBody();

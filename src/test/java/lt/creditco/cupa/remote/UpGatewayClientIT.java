@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.FileReader;
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Map;
+import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.config.JacksonConfiguration;
 import lt.creditco.cupa.config.RemoteClientConfig;
@@ -29,6 +31,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 @Slf4j
 class UpGatewayClientIT {
 
+    private static final String CONFIG_FILE = "src/test/resources/test_gateway_config.properties";
+
     @Autowired
     private UpGatewayClient upGatewayClient;
 
@@ -38,26 +42,37 @@ class UpGatewayClientIT {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private GatewayConfig gatewayConfig;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
         testTracingInterceptor.clear();
+        gatewayConfig = loadGatewayConfig();
+    }
+
+    private GatewayConfig loadGatewayConfig() throws IOException {
+        Properties properties = new Properties();
+        try (FileReader reader = new FileReader(CONFIG_FILE)) {
+            properties.load(reader);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not load test gateway config file: " + CONFIG_FILE, e);
+        }
+
+        return GatewayConfig.builder()
+            .baseUrl(properties.getProperty("BASE_URL"))
+            .replyUrl(properties.getProperty("REPLY_URL"))
+            .backofficeUrl(properties.getProperty("BACKOFFICE_URL"))
+            .merchantMid(properties.getProperty("MERCHANT_MID"))
+            .merchantKey(properties.getProperty("MERCHANT_KEY"))
+            .apiKey(properties.getProperty("API_KEY"))
+            .merchantCurrency(properties.getProperty("MERCHANT_CURRENCY"))
+            .build();
     }
 
     @Test
     void testPlaceTransaction() throws JsonProcessingException {
         log.info("-------------------------------- testPlaceTransaction --------------------------------");
         // Given
-        GatewayConfig config = GatewayConfig.builder()
-            .baseUrl("https://api.test.oneroadpayments.com")
-            .replyUrl("https://servicec.creditco.lt:8443/cupa/reply")
-            .backofficeUrl("https://servicec.creditco.lt:8443/cupa/backoffice")
-            .merchantMid("2b47b788-d503-440d-9a93-2c9c6bea3552")
-            .merchantKey("3631961956")
-            .apiKey("YYNNLZPh7J42qdgDaMJP6TvkP7NAtMA4xwIGMAv7")
-            .merchantCurrency("USD")
-            //            .paymentType("UnionPay")
-            .build();
-
         PaymentRequest request = new PaymentRequest();
         request.setOrderId("test-order-" + System.currentTimeMillis());
         request.setAmount(new BigDecimal("10.12"));
@@ -67,7 +82,7 @@ class UpGatewayClientIT {
         request.setSendEmail(1);
 
         // When
-        GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.placeTransaction(request, config);
+        GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.placeTransaction(request, gatewayConfig);
 
         // Then
         TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
@@ -83,16 +98,6 @@ class UpGatewayClientIT {
     void testQueryTransaction() throws JsonProcessingException {
         log.info("-------------------------------- testQueryTransaction --------------------------------");
         // Given
-        GatewayConfig config = GatewayConfig.builder()
-            .baseUrl("https://api.test.oneroadpayments.com")
-            .replyUrl("https://servicec.creditco.lt:8443/cupa/reply")
-            .backofficeUrl("https://servicec.creditco.lt:8443/cupa/backoffice")
-            .merchantMid("2b47b788-d503-440d-9a93-2c9c6bea3552")
-            .merchantKey("3631961956")
-            .apiKey("YYNNLZPh7J42qdgDaMJP6TvkP7NAtMA4xwIGMAv7")
-            .merchantCurrency("USD")
-            //           .paymentType("UnionPay")
-            .build();
         String orderId = "test-order-1754460577204";
         //        String orderId = "408818978";
         //        String orderId = "2025080501";
@@ -100,7 +105,7 @@ class UpGatewayClientIT {
         //String orderId = "FakeOrderId";
 
         // When
-        GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.queryTransaction(orderId, config);
+        GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.queryTransaction(orderId, gatewayConfig);
 
         // Then
         TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
@@ -109,5 +114,27 @@ class UpGatewayClientIT {
         log.info("Transaction Response: {}", objectMapper.writeValueAsString(transactionResponse));
         assertNotNull(transactionResponse);
         assertNotNull(transactionResponse.getReply());
+    }
+
+    @Test
+    void testGetClientDetails() {
+        log.info("-------------------------------- testGetClientDetails --------------------------------");
+        // Given
+        String clientId = "CLN-001";
+
+        // When
+        GatewayResponse<ClientDetails> clientDetailsResponse = null;
+        try {
+            clientDetailsResponse = upGatewayClient.getClientDetails(clientId, gatewayConfig);
+            log.info("Client Details Response: {}", objectMapper.writeValueAsString(clientDetailsResponse));
+        } catch (Exception e) {
+            log.error("Error getting client details", e);
+        }
+
+        // Then
+        TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
+        log.info("Request Body: {}", trace.getRequestBody());
+        log.info("Response Body: {}", trace.getResponseBody());
+        assertNotNull(clientDetailsResponse);
     }
 }

@@ -152,4 +152,42 @@ class GatewayResponseTest {
         assertEquals("Amount out of range - for this merchant; USD [min = 10.00, max = 1000.00]", response.getResponse().getDetail());
         assertNull(response.getReply());
     }
+
+    @Test
+    void getClientResponse() throws JsonProcessingException {
+        String json =
+            """
+            {"response":{"statusCode":200,"message":"OK"},"client":{"merchantID":"2b47b788-d503-440d-9a93-2c9c6bea3552","merchantName":"CREDITCO (USD)","merchantShortName":"CREDITCO PROCESSING(USD)","mobileNumber":"+37061495615","clientID":"CLN-001","created":"2025-08-05T15:40:22.880","updated":"2025-08-05T15:46:49.679","name":"Val Sin","id":"2bd56b54-6c72-45c2-b5a7-0ea5fc5f8ac5","emailAddress":"valdemar@sinkievic.lt","black":false,"billingAddress":{"city":"Vilnius","postCode":"LT-0000","country":"Lithuania","valid":false},"valid":true,"correlatedBlack":false}}
+            """;
+
+        JavaType type = TypeFactory.defaultInstance().constructParametricType(GatewayResponse.class, ClientDetails.class);
+        GatewayResponse<ClientDetails> response = objectMapper.readValue(json, type);
+
+        assertNotNull(response);
+        assertNotNull(response.getResponse());
+        assertEquals(200, response.getResponse().getStatusCode());
+        assertEquals("OK", response.getResponse().getMessage());
+
+        ClientDetails client = response.getReply();
+        assertNotNull(client);
+        assertEquals("2b47b788-d503-440d-9a93-2c9c6bea3552", client.getMerchantId());
+        assertEquals("CREDITCO (USD)", client.getMerchantName());
+        assertEquals("+37061495615", client.getMobileNumber());
+        assertEquals("CLN-001", client.getClientId());
+        assertEquals("2025-08-05T15:40:22.880", client.getCreatedInGateway());
+        assertEquals("2025-08-05T15:46:49.679", client.getUpdatedInGateway());
+        assertEquals("Val Sin", client.getName());
+        assertEquals("2bd56b54-6c72-45c2-b5a7-0ea5fc5f8ac5", client.getIdInGateway());
+        assertEquals("valdemar@sinkievic.lt", client.getEmailAddress());
+        assertFalse(client.getBlack());
+        assertTrue(client.getIsValid());
+        assertFalse(client.getCorrelatedBlack());
+
+        BillingAddress address = client.getBillingAddress();
+        assertNotNull(address);
+        assertEquals("Vilnius", address.getCity());
+        assertEquals("LT-0000", address.getPostCode());
+        assertEquals("Lithuania", address.getCountry());
+        assertFalse(address.getIsValid());
+    }
 }
