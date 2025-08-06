@@ -80,7 +80,7 @@ class UpGatewayClientIT {
     }
 
     @Test
-    void testQueryTransaction() {
+    void testQueryTransaction() throws JsonProcessingException {
         log.info("-------------------------------- testQueryTransaction --------------------------------");
         // Given
         GatewayConfig config = GatewayConfig.builder()
@@ -100,15 +100,14 @@ class UpGatewayClientIT {
         String orderId = "FakeOrderId";
 
         // When
-        GatewayResponse<Map<String, String>> actualResponse = upGatewayClient.queryTransaction(orderId, config);
+        GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.queryTransaction(orderId, config);
 
         // Then
-        log.info("Response: {}", actualResponse);
-        assertNotNull(actualResponse);
-        assertNotNull(actualResponse.getReply());
-
         TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
         log.info("Request Body: {}", trace.getRequestBody());
         log.info("Response Body: {}", trace.getResponseBody());
+        log.info("Transaction Response: {}", objectMapper.writeValueAsString(transactionResponse));
+        assertNotNull(transactionResponse);
+        assertNotNull(transactionResponse.getReply());
     }
 }

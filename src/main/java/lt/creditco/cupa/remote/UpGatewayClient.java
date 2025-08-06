@@ -3,7 +3,6 @@ package lt.creditco.cupa.remote;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -61,7 +60,7 @@ public class UpGatewayClient {
         return response.getBody();
     }
 
-    public GatewayResponse<Map<String, String>> queryTransaction(String orderId, GatewayConfig config) {
+    public GatewayResponse<PaymentReply> queryTransaction(String orderId, GatewayConfig config) {
         String url = config.getBaseUrl() + "/merchants/" + config.getMerchantMid() + "/transactions/" + orderId;
 
         HttpHeaders headers = new HttpHeaders();
@@ -72,12 +71,18 @@ public class UpGatewayClient {
 
         log.debug("Request to URL: {}", url);
 
-        ParameterizedTypeReference<GatewayResponse<Map<String, String>>> responseType = new ParameterizedTypeReference<>() {};
-
-        ResponseEntity<GatewayResponse<Map<String, String>>> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
+        ParameterizedTypeReference<GatewayResponse<PaymentReply>> responseType = new ParameterizedTypeReference<>() {};
+        ResponseEntity<GatewayResponse<PaymentReply>> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
 
         if (response.getStatusCode().isError()) {
-            log.error("Received error status: {} for orderId: {}", response.getStatusCode(), orderId);
+            log.error(
+                "Received error status: {} for orderId: {}, message: {}, details: {}, reason: {}",
+                response.getStatusCode(),
+                orderId,
+                response.getBody().getResponse().getMessage(),
+                response.getBody().getResponse().getDetail(),
+                response.getBody().getResponse().getReason()
+            );
             // You can throw a custom exception here or handle the error as needed
         }
 
