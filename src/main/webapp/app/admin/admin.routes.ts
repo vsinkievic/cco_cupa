@@ -8,11 +8,6 @@ const routes: Routes = [
     title: 'userManagement.home.title',
   },
   {
-    path: 'docs',
-    loadComponent: () => import('./docs/docs.component'),
-    title: 'global.menu.admin.apidocs',
-  },
-  {
     path: 'configuration',
     loadComponent: () => import('./configuration/configuration.component'),
     title: 'configuration.title',

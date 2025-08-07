@@ -37,6 +37,11 @@ const routes: Routes = [
     path: '',
     loadChildren: () => import(`./entities/entity.routes`),
   },
+  {
+    path: 'docs',
+    loadComponent: () => import('./docs/docs.component'),
+    title: 'global.menu.admin.apidocs',
+  },
   ...errorRoute,
 ];
 
