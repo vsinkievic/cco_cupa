@@ -7,9 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
@@ -56,7 +59,7 @@ class UpGatewayClientIT {
 
     private GatewayConfig loadGatewayConfig() throws IOException {
         Properties properties = new Properties();
-        try (FileReader reader = new FileReader(CONFIG_FILE)) {
+        try (Reader reader = Files.newBufferedReader(Path.of(CONFIG_FILE))) {
             properties.load(reader);
         } catch (IOException e) {
             throw new IllegalStateException("Could not load test gateway config file: " + CONFIG_FILE, e);
