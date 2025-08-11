@@ -94,6 +94,15 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         ) return (ProblemDetailWithCause) new EmailAlreadyUsedException().getBody();
         if (ex instanceof lt.creditco.cupa.service.InvalidPasswordException) return (ProblemDetailWithCause) new InvalidPasswordException()
             .getBody();
+        if (ex instanceof lt.creditco.cupa.service.InvalidMerchantIdsException) {
+            return ProblemDetailWithCauseBuilder.instance()
+                .withStatus(HttpStatus.BAD_REQUEST.value())
+                .withType(ErrorConstants.CONSTRAINT_VIOLATION_TYPE)
+                .withTitle("Invalid merchant IDs")
+                .withDetail(ex.getMessage())
+                .withProperty("message", "error.validation")
+                .build();
+        }
 
         if (
             ex instanceof ErrorResponseException exp && exp.getBody() instanceof ProblemDetailWithCause problemDetailWithCause
@@ -185,6 +194,7 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
 
     private URI getMappedType(Throwable err) {
         if (err instanceof MethodArgumentNotValidException) return ErrorConstants.CONSTRAINT_VIOLATION_TYPE;
+        if (err instanceof lt.creditco.cupa.service.InvalidMerchantIdsException) return ErrorConstants.CONSTRAINT_VIOLATION_TYPE;
         return ErrorConstants.DEFAULT_TYPE;
     }
 
@@ -193,12 +203,15 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
             return ErrorConstants.ERR_VALIDATION;
         } else if (err instanceof ConcurrencyFailureException || err.getCause() instanceof ConcurrencyFailureException) {
             return ErrorConstants.ERR_CONCURRENCY_FAILURE;
+        } else if (err instanceof lt.creditco.cupa.service.InvalidMerchantIdsException) {
+            return ErrorConstants.ERR_VALIDATION;
         }
         return null;
     }
 
     private String getCustomizedTitle(Throwable err) {
         if (err instanceof MethodArgumentNotValidException) return "Method argument not valid";
+        if (err instanceof lt.creditco.cupa.service.InvalidMerchantIdsException) return "Invalid merchant IDs";
         return null;
     }
 
@@ -207,6 +220,7 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         if (activeProfiles.contains(JHipsterConstants.SPRING_PROFILE_PRODUCTION)) {
             if (err instanceof HttpMessageConversionException) return "Unable to convert http message";
             if (err instanceof DataAccessException) return "Failure during data access";
+            if (err instanceof lt.creditco.cupa.service.InvalidMerchantIdsException) return err.getMessage();
             if (containsPackageName(err.getMessage())) return "Unexpected runtime exception";
         }
         return err.getCause() != null ? err.getCause().getMessage() : err.getMessage();
@@ -217,6 +231,7 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         if (err instanceof AccessDeniedException) return HttpStatus.FORBIDDEN;
         if (err instanceof ConcurrencyFailureException) return HttpStatus.CONFLICT;
         if (err instanceof BadCredentialsException) return HttpStatus.UNAUTHORIZED;
+        if (err instanceof lt.creditco.cupa.service.InvalidMerchantIdsException) return HttpStatus.BAD_REQUEST;
         return null;
     }
 

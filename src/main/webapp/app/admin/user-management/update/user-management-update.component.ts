@@ -38,6 +38,7 @@ export default class UserManagementUpdateComponent implements OnInit {
       nonNullable: true,
       validators: [Validators.minLength(5), Validators.maxLength(254), Validators.email],
     }),
+    merchantIds: new FormControl(userTemplate.merchantIds),
     activated: new FormControl(userTemplate.activated, { nonNullable: true }),
     authorities: new FormControl(userTemplate.authorities, { nonNullable: true }),
   });

@@ -10,8 +10,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import lt.creditco.cupa.IntegrationTest;
+import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.User;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
+import lt.creditco.cupa.domain.enumeration.MerchantStatus;
+import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.repository.UserRepository;
+import lt.creditco.cupa.service.dto.AdminUserDTO;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +54,9 @@ class UserServiceIT {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private MerchantRepository merchantRepository;
 
     @Autowired
     private UserService userService;
@@ -204,5 +212,48 @@ class UserServiceIT {
         userService.removeNotActivatedUsers();
         Optional<User> maybeDbUser = userRepository.findById(dbUser.getId());
         assertThat(maybeDbUser).contains(dbUser);
+    }
+
+    @Test
+    @Transactional
+    void shouldHandleMerchantIdsField() {
+        // Create a test merchant first
+        Merchant merchant = new Merchant();
+        merchant.setId("test-merchant-1");
+        merchant.setName("Test Merchant 1");
+        merchant.setMode(MerchantMode.TEST);
+        merchant.setStatus(MerchantStatus.ACTIVE);
+        merchantRepository.save(merchant);
+
+        // Create another test merchant
+        Merchant merchant2 = new Merchant();
+        merchant2.setId("test-merchant-2");
+        merchant2.setName("Test Merchant 2");
+        merchant2.setMode(MerchantMode.TEST);
+        merchant2.setStatus(MerchantStatus.ACTIVE);
+        merchantRepository.save(merchant2);
+
+        // Create AdminUserDTO with merchant IDs
+        AdminUserDTO userDTO = new AdminUserDTO();
+        userDTO.setLogin("testuser");
+        userDTO.setEmail("test@example.com");
+        userDTO.setFirstName("Test");
+        userDTO.setLastName("User");
+        userDTO.setActivated(true);
+        userDTO.setMerchantIds("test-merchant-1,test-merchant-2");
+
+        // Create user
+        User user = userService.createUser(userDTO);
+
+        // Verify merchant IDs are set
+        assertThat(user.getMerchantIds()).isEqualTo("test-merchant-1,test-merchant-2");
+
+        // Update user with different merchant IDs
+        userDTO.setId(user.getId());
+        userDTO.setMerchantIds("test-merchant-1");
+
+        Optional<AdminUserDTO> updatedUserDTO = userService.updateUser(userDTO);
+        assertThat(updatedUserDTO).isPresent();
+        assertThat(updatedUserDTO.orElseThrow().getMerchantIds()).isEqualTo("test-merchant-1");
     }
 }

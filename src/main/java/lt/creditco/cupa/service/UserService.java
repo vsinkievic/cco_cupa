@@ -8,9 +8,11 @@ import lt.creditco.cupa.config.Constants;
 import lt.creditco.cupa.domain.Authority;
 import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.repository.AuthorityRepository;
+import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.repository.UserRepository;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.security.SecurityUtils;
+import lt.creditco.cupa.service.InvalidMerchantIdsException;
 import lt.creditco.cupa.service.dto.AdminUserDTO;
 import lt.creditco.cupa.service.dto.UserDTO;
 import org.slf4j.Logger;
@@ -41,16 +43,20 @@ public class UserService {
 
     private final CacheManager cacheManager;
 
+    private final MerchantRepository merchantRepository;
+
     public UserService(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         AuthorityRepository authorityRepository,
-        CacheManager cacheManager
+        CacheManager cacheManager,
+        MerchantRepository merchantRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authorityRepository = authorityRepository;
         this.cacheManager = cacheManager;
+        this.merchantRepository = merchantRepository;
     }
 
     public Optional<User> activateRegistration(String key) {
@@ -146,6 +152,9 @@ public class UserService {
     }
 
     public User createUser(AdminUserDTO userDTO) {
+        // Validate merchant IDs before creating user
+        validateMerchantIds(userDTO.getMerchantIds());
+
         User user = new User();
         user.setLogin(userDTO.getLogin().toLowerCase());
         user.setFirstName(userDTO.getFirstName());
@@ -159,6 +168,7 @@ public class UserService {
         } else {
             user.setLangKey(userDTO.getLangKey());
         }
+        user.setMerchantIds(userDTO.getMerchantIds());
         String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
         user.setPassword(encryptedPassword);
         user.setResetKey(RandomUtil.generateResetKey());
@@ -187,6 +197,9 @@ public class UserService {
      * @return updated user.
      */
     public Optional<AdminUserDTO> updateUser(AdminUserDTO userDTO) {
+        // Validate merchant IDs before updating user
+        validateMerchantIds(userDTO.getMerchantIds());
+
         return Optional.of(userRepository.findById(userDTO.getId()))
             .filter(Optional::isPresent)
             .map(Optional::get)
@@ -201,6 +214,7 @@ public class UserService {
                 user.setImageUrl(userDTO.getImageUrl());
                 user.setActivated(userDTO.isActivated());
                 user.setLangKey(userDTO.getLangKey());
+                user.setMerchantIds(userDTO.getMerchantIds());
                 Set<Authority> managedAuthorities = user.getAuthorities();
                 managedAuthorities.clear();
                 userDTO
@@ -313,6 +327,25 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<String> getAuthorities() {
         return authorityRepository.findAll().stream().map(Authority::getName).toList();
+    }
+
+    /**
+     * Validates merchant IDs to ensure they exist in the system.
+     * @param merchantIds comma-separated list of merchant IDs
+     * @throws InvalidMerchantIdsException if any merchant ID is invalid
+     */
+    private void validateMerchantIds(String merchantIds) {
+        if (merchantIds == null || merchantIds.trim().isEmpty()) {
+            return; // null/empty is valid
+        }
+
+        String[] merchantIdArray = merchantIds.split(",");
+        for (String merchantId : merchantIdArray) {
+            String trimmedId = merchantId.trim();
+            if (!trimmedId.isEmpty() && !merchantRepository.existsById(trimmedId)) {
+                throw new InvalidMerchantIdsException("Merchant ID '" + trimmedId + "' does not exist in the system");
+            }
+        }
     }
 
     private void clearUserCaches(User user) {

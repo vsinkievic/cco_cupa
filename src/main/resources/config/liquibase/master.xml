@@ -24,6 +24,7 @@
     <include file="config/liquibase/changelog/20250804120905_added_entity_ClientCard.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20250804120906_added_entity_PaymentTransaction.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20250804120907_added_entity_AuditLog.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20250101000000_added_merchant_ids_to_user.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-changelog - JHipster will add liquibase changelogs here -->
     <include file="config/liquibase/changelog/20250804120904_added_entity_constraints_Client.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20250804120905_added_entity_constraints_ClientCard.xml" relativeToChangelogFile="false"/>

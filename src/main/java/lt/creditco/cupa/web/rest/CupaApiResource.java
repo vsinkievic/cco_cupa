@@ -60,7 +60,7 @@ public class CupaApiResource {
         payment.setOrderId(request.getOrderId());
         payment.setClientId(request.getClientId());
         payment.setAmount(request.getAmount());
-        payment.setCurrency(request.getCurrency());
+        payment.setCurrency(request.getCurrency().name());
         payment.setStatus("PENDING");
         return ResponseEntity.created(new URI("/api/payments/" + payment.getOrderId())).body(payment);
     }

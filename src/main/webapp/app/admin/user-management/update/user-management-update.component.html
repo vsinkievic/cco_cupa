@@ -86,6 +86,19 @@
         }
       </div>
 
+      <div class="mb-3">
+        <label class="form-label" for="field_merchantIds">Allowed MIDs</label>
+        <input
+          type="text"
+          id="field_merchantIds"
+          class="form-control"
+          name="merchantIds"
+          formControlName="merchantIds"
+          placeholder="Enter comma-separated merchant IDs"
+        />
+        <small class="form-text text-muted">Enter merchant IDs separated by commas (e.g., merchant1,merchant2,merchant3)</small>
+      </div>
+
       <div class="form-check">
         <label class="form-check-label" for="activated">
           <input
