@@ -161,6 +161,12 @@ Unit tests are run by [Jest][]. They're located near components and can be run w
 ./npmw test
 ```
 
+Run tests in a particular file:
+
+```
+./npmw run test -- --test-path-pattern="client-card-update.component.spec.ts"
+```
+
 ## Others
 
 ### Code quality using Sonar
