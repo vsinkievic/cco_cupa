@@ -6,7 +6,7 @@ import { PaymentBrand } from 'app/entities/enumerations/payment-brand.model';
 import { Currency } from 'app/entities/enumerations/currency.model';
 
 export interface IPaymentTransaction {
-  id: number;
+  id: string;
   orderId?: string | null;
   cupaTransactionId?: string | null;
   gatewayTransactionId?: string | null;
@@ -30,6 +30,7 @@ export interface IPaymentTransaction {
   lastQueryData?: string | null;
   client?: Pick<IClient, 'id' | 'merchantClientId'> | null;
   merchant?: Pick<IMerchant, 'id' | 'name'> | null;
+  version?: number | null;
 }
 
-export type NewPaymentTransaction = Omit<IPaymentTransaction, 'id'> & { id: null };
+export type NewPaymentTransaction = Omit<IPaymentTransaction, 'id' | 'version'> & { id: null; version: null };

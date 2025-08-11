@@ -7,11 +7,11 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.MerchantDTO;
 import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,7 +58,10 @@ public class MerchantResource {
     @PostMapping("")
     public ResponseEntity<MerchantDTO> createMerchant(@Valid @RequestBody MerchantDTO merchantDTO) throws URISyntaxException {
         LOG.debug("REST request to save Merchant : {}", merchantDTO);
-        if (merchantDTO.getId() != null) {
+        if (StringUtils.isBlank(merchantDTO.getId())) {
+            throw new BadRequestAlertException("ID is required", ENTITY_NAME, "idrequired");
+        }
+        if (merchantDTO.getVersion() != null) {
             throw new BadRequestAlertException("A new merchant cannot already have an ID", ENTITY_NAME, "idexists");
         }
         merchantDTO = merchantService.save(merchantDTO);

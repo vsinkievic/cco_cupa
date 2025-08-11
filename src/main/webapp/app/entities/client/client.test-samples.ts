@@ -1,12 +1,12 @@
 import { IClient, NewClient } from './client.model';
 
 export const sampleWithRequiredData: IClient = {
-  id: 16289,
+  id: '16289',
   merchantClientId: 'save colour yippee',
 };
 
 export const sampleWithPartialData: IClient = {
-  id: 29388,
+  id: '29388',
   merchantClientId: 'blah absent',
   name: 'magnetize purse',
   emailAddress: '8@J}."~Hi',
@@ -21,7 +21,7 @@ export const sampleWithPartialData: IClient = {
 };
 
 export const sampleWithFullData: IClient = {
-  id: 31496,
+  id: '31496',
   merchantClientId: 'boohoo shipper soggy',
   name: 'that consequently',
   emailAddress: 'V@Fqx=(Z.{Tqn',

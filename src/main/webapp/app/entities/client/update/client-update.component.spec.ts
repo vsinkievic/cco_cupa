@@ -48,11 +48,11 @@ describe('Client Management Update Component', () => {
 
   describe('ngOnInit', () => {
     it('should call Merchant query and add missing value', () => {
-      const client: IClient = { id: 16836 };
-      const merchant: IMerchant = { id: 23082 };
+      const client: IClient = { id: '16836' };
+      const merchant: IMerchant = { id: '23082' };
       client.merchant = merchant;
 
-      const merchantCollection: IMerchant[] = [{ id: 23082 }];
+      const merchantCollection: IMerchant[] = [{ id: '23082' }];
       jest.spyOn(merchantService, 'query').mockReturnValue(of(new HttpResponse({ body: merchantCollection })));
       const additionalMerchants = [merchant];
       const expectedCollection: IMerchant[] = [...additionalMerchants, ...merchantCollection];
@@ -70,8 +70,8 @@ describe('Client Management Update Component', () => {
     });
 
     it('should update editForm', () => {
-      const client: IClient = { id: 16836 };
-      const merchant: IMerchant = { id: 23082 };
+      const client: IClient = { id: '16836' };
+      const merchant: IMerchant = { id: '23082' };
       client.merchant = merchant;
 
       activatedRoute.data = of({ client });
@@ -86,7 +86,7 @@ describe('Client Management Update Component', () => {
     it('should call update service on save for existing entity', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IClient>>();
-      const client = { id: 26282 };
+      const client = { id: '26282' };
       jest.spyOn(clientFormService, 'getClient').mockReturnValue(client);
       jest.spyOn(clientService, 'update').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
@@ -109,7 +109,7 @@ describe('Client Management Update Component', () => {
     it('should call create service on save for new entity', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IClient>>();
-      const client = { id: 26282 };
+      const client = { id: '26282' };
       jest.spyOn(clientFormService, 'getClient').mockReturnValue({ id: null });
       jest.spyOn(clientService, 'create').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
@@ -132,7 +132,7 @@ describe('Client Management Update Component', () => {
     it('should set isSaving to false on error', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IClient>>();
-      const client = { id: 26282 };
+      const client = { id: '26282' };
       jest.spyOn(clientService, 'update').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ client });
@@ -153,8 +153,8 @@ describe('Client Management Update Component', () => {
   describe('Compare relationships', () => {
     describe('compareMerchant', () => {
       it('should forward to merchantService', () => {
-        const entity = { id: 23082 };
-        const entity2 = { id: 16734 };
+        const entity = { id: '23082' };
+        const entity2 = { id: '16734' };
         jest.spyOn(merchantService, 'compareMerchant');
         comp.compareMerchant(entity, entity2);
         expect(merchantService.compareMerchant).toHaveBeenCalledWith(entity, entity2);

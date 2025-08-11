@@ -32,7 +32,7 @@ describe('PaymentTransaction Service', () => {
       const returnedFromService = { ...requireRestSample };
       const expected = { ...sampleWithRequiredData };
 
-      service.find(123).subscribe(resp => (expectedResult = resp.body));
+      service.find('123').subscribe(resp => (expectedResult = resp.body));
 
       const req = httpMock.expectOne({ method: 'GET' });
       req.flush(returnedFromService);
@@ -86,16 +86,6 @@ describe('PaymentTransaction Service', () => {
       req.flush([returnedFromService]);
       httpMock.verify();
       expect(expectedResult).toMatchObject([expected]);
-    });
-
-    it('should delete a PaymentTransaction', () => {
-      const expected = true;
-
-      service.delete(123).subscribe(resp => (expectedResult = resp.ok));
-
-      const req = httpMock.expectOne({ method: 'DELETE' });
-      req.flush({ status: 200 });
-      expect(expectedResult).toBe(expected);
     });
 
     describe('addPaymentTransactionToCollectionIfMissing', () => {
@@ -167,7 +157,7 @@ describe('PaymentTransaction Service', () => {
       });
 
       it('should return false if one entity is null', () => {
-        const entity1 = { id: 10661 };
+        const entity1 = { id: '10661' };
         const entity2 = null;
 
         const compareResult1 = service.comparePaymentTransaction(entity1, entity2);
@@ -178,8 +168,8 @@ describe('PaymentTransaction Service', () => {
       });
 
       it('should return false if primaryKey differs', () => {
-        const entity1 = { id: 10661 };
-        const entity2 = { id: 1571 };
+        const entity1 = { id: '10661' };
+        const entity2 = { id: '1571' };
 
         const compareResult1 = service.comparePaymentTransaction(entity1, entity2);
         const compareResult2 = service.comparePaymentTransaction(entity2, entity1);
@@ -189,8 +179,8 @@ describe('PaymentTransaction Service', () => {
       });
 
       it('should return false if primaryKey matches', () => {
-        const entity1 = { id: 10661 };
-        const entity2 = { id: 10661 };
+        const entity1 = { id: '10661' };
+        const entity2 = { id: '10661' };
 
         const compareResult1 = service.comparePaymentTransaction(entity1, entity2);
         const compareResult2 = service.comparePaymentTransaction(entity2, entity1);

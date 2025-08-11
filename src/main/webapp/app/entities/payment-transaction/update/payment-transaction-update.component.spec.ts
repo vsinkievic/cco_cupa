@@ -52,11 +52,11 @@ describe('PaymentTransaction Management Update Component', () => {
 
   describe('ngOnInit', () => {
     it('should call Client query and add missing value', () => {
-      const paymentTransaction: IPaymentTransaction = { id: 1571 };
-      const client: IClient = { id: 26282 };
+      const paymentTransaction: IPaymentTransaction = { id: '1571' };
+      const client: IClient = { id: '26282' };
       paymentTransaction.client = client;
 
-      const clientCollection: IClient[] = [{ id: 26282 }];
+      const clientCollection: IClient[] = [{ id: '26282' }];
       jest.spyOn(clientService, 'query').mockReturnValue(of(new HttpResponse({ body: clientCollection })));
       const additionalClients = [client];
       const expectedCollection: IClient[] = [...additionalClients, ...clientCollection];
@@ -74,11 +74,11 @@ describe('PaymentTransaction Management Update Component', () => {
     });
 
     it('should call Merchant query and add missing value', () => {
-      const paymentTransaction: IPaymentTransaction = { id: 1571 };
-      const merchant: IMerchant = { id: 23082 };
+      const paymentTransaction: IPaymentTransaction = { id: '1571' };
+      const merchant: IMerchant = { id: '23082' };
       paymentTransaction.merchant = merchant;
 
-      const merchantCollection: IMerchant[] = [{ id: 23082 }];
+      const merchantCollection: IMerchant[] = [{ id: '23082' }];
       jest.spyOn(merchantService, 'query').mockReturnValue(of(new HttpResponse({ body: merchantCollection })));
       const additionalMerchants = [merchant];
       const expectedCollection: IMerchant[] = [...additionalMerchants, ...merchantCollection];
@@ -96,10 +96,10 @@ describe('PaymentTransaction Management Update Component', () => {
     });
 
     it('should update editForm', () => {
-      const paymentTransaction: IPaymentTransaction = { id: 1571 };
-      const client: IClient = { id: 26282 };
+      const paymentTransaction: IPaymentTransaction = { id: '1571' };
+      const client: IClient = { id: '26282' };
       paymentTransaction.client = client;
-      const merchant: IMerchant = { id: 23082 };
+      const merchant: IMerchant = { id: '23082' };
       paymentTransaction.merchant = merchant;
 
       activatedRoute.data = of({ paymentTransaction });
@@ -115,7 +115,7 @@ describe('PaymentTransaction Management Update Component', () => {
     it('should call update service on save for existing entity', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IPaymentTransaction>>();
-      const paymentTransaction = { id: 10661 };
+      const paymentTransaction = { id: '10661' };
       jest.spyOn(paymentTransactionFormService, 'getPaymentTransaction').mockReturnValue(paymentTransaction);
       jest.spyOn(paymentTransactionService, 'update').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
@@ -138,8 +138,8 @@ describe('PaymentTransaction Management Update Component', () => {
     it('should call create service on save for new entity', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IPaymentTransaction>>();
-      const paymentTransaction = { id: 10661 };
-      jest.spyOn(paymentTransactionFormService, 'getPaymentTransaction').mockReturnValue({ id: null });
+      const paymentTransaction = { id: '10661' };
+      jest.spyOn(paymentTransactionFormService, 'getPaymentTransaction').mockReturnValue({ id: null, version: null });
       jest.spyOn(paymentTransactionService, 'create').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ paymentTransaction: null });
@@ -161,7 +161,7 @@ describe('PaymentTransaction Management Update Component', () => {
     it('should set isSaving to false on error', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IPaymentTransaction>>();
-      const paymentTransaction = { id: 10661 };
+      const paymentTransaction = { id: '10661' };
       jest.spyOn(paymentTransactionService, 'update').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ paymentTransaction });
@@ -182,8 +182,8 @@ describe('PaymentTransaction Management Update Component', () => {
   describe('Compare relationships', () => {
     describe('compareClient', () => {
       it('should forward to clientService', () => {
-        const entity = { id: 26282 };
-        const entity2 = { id: 16836 };
+        const entity = { id: '26282' };
+        const entity2 = { id: '16836' };
         jest.spyOn(clientService, 'compareClient');
         comp.compareClient(entity, entity2);
         expect(clientService.compareClient).toHaveBeenCalledWith(entity, entity2);
@@ -192,8 +192,8 @@ describe('PaymentTransaction Management Update Component', () => {
 
     describe('compareMerchant', () => {
       it('should forward to merchantService', () => {
-        const entity = { id: 23082 };
-        const entity2 = { id: 16734 };
+        const entity = { id: '23082' };
+        const entity2 = { id: '16734' };
         jest.spyOn(merchantService, 'compareMerchant');
         comp.compareMerchant(entity, entity2);
         expect(merchantService.compareMerchant).toHaveBeenCalledWith(entity, entity2);

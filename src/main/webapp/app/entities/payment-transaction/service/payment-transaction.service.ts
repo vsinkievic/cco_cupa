@@ -57,7 +57,7 @@ export class PaymentTransactionService {
       .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
-  find(id: number): Observable<EntityResponseType> {
+  find(id: string): Observable<EntityResponseType> {
     return this.http
       .get<RestPaymentTransaction>(`${this.resourceUrl}/${id}`, { observe: 'response' })
       .pipe(map(res => this.convertResponseFromServer(res)));
@@ -70,11 +70,7 @@ export class PaymentTransactionService {
       .pipe(map(res => this.convertResponseArrayFromServer(res)));
   }
 
-  delete(id: number): Observable<HttpResponse<{}>> {
-    return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
-  }
-
-  getPaymentTransactionIdentifier(paymentTransaction: Pick<IPaymentTransaction, 'id'>): number {
+  getPaymentTransactionIdentifier(paymentTransaction: Pick<IPaymentTransaction, 'id'>): string {
     return paymentTransaction.id;
   }
 

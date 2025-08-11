@@ -44,7 +44,7 @@ describe('Merchant Management Update Component', () => {
 
   describe('ngOnInit', () => {
     it('should update editForm', () => {
-      const merchant: IMerchant = { id: 16734 };
+      const merchant: IMerchant = { id: '16734' };
 
       activatedRoute.data = of({ merchant });
       comp.ngOnInit();
@@ -57,7 +57,7 @@ describe('Merchant Management Update Component', () => {
     it('should call update service on save for existing entity', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IMerchant>>();
-      const merchant = { id: 23082 };
+      const merchant = { id: '23082' };
       jest.spyOn(merchantFormService, 'getMerchant').mockReturnValue(merchant);
       jest.spyOn(merchantService, 'update').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
@@ -80,8 +80,8 @@ describe('Merchant Management Update Component', () => {
     it('should call create service on save for new entity', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IMerchant>>();
-      const merchant = { id: 23082 };
-      jest.spyOn(merchantFormService, 'getMerchant').mockReturnValue({ id: null });
+      const merchant = { id: '23082' };
+      jest.spyOn(merchantFormService, 'getMerchant').mockReturnValue({ id: null, version: null });
       jest.spyOn(merchantService, 'create').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ merchant: null });
@@ -103,7 +103,7 @@ describe('Merchant Management Update Component', () => {
     it('should set isSaving to false on error', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IMerchant>>();
-      const merchant = { id: 23082 };
+      const merchant = { id: '23082' };
       jest.spyOn(merchantService, 'update').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ merchant });

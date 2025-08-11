@@ -15,7 +15,6 @@ import { DataUtils } from 'app/core/util/data-util.service';
 import { IPaymentTransaction } from '../payment-transaction.model';
 
 import { EntityArrayResponseType, PaymentTransactionService } from '../service/payment-transaction.service';
-import { PaymentTransactionDeleteDialogComponent } from '../delete/payment-transaction-delete-dialog.component';
 
 @Component({
   selector: 'jhi-payment-transaction',
@@ -41,7 +40,7 @@ export class PaymentTransactionComponent implements OnInit {
   protected modalService = inject(NgbModal);
   protected ngZone = inject(NgZone);
 
-  trackId = (item: IPaymentTransaction): number => this.paymentTransactionService.getPaymentTransactionIdentifier(item);
+  trackId = (item: IPaymentTransaction): string => this.paymentTransactionService.getPaymentTransactionIdentifier(item);
 
   ngOnInit(): void {
     this.subscription = combineLatest([this.activatedRoute.queryParamMap, this.activatedRoute.data])
@@ -58,18 +57,6 @@ export class PaymentTransactionComponent implements OnInit {
 
   openFile(base64String: string, contentType: string | null | undefined): void {
     return this.dataUtils.openFile(base64String, contentType);
-  }
-
-  delete(paymentTransaction: IPaymentTransaction): void {
-    const modalRef = this.modalService.open(PaymentTransactionDeleteDialogComponent, { size: 'lg', backdrop: 'static' });
-    modalRef.componentInstance.paymentTransaction = paymentTransaction;
-    // unsubscribe not needed because closed completes on modal close
-    modalRef.closed
-      .pipe(
-        filter(reason => reason === ITEM_DELETED_EVENT),
-        tap(() => this.load()),
-      )
-      .subscribe();
   }
 
   load(): void {

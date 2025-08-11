@@ -30,7 +30,7 @@ describe('ClientCard Service', () => {
       const returnedFromService = { ...requireRestSample };
       const expected = { ...sampleWithRequiredData };
 
-      service.find(123).subscribe(resp => (expectedResult = resp.body));
+      service.find('123').subscribe(resp => (expectedResult = resp.body));
 
       const req = httpMock.expectOne({ method: 'GET' });
       req.flush(returnedFromService);
@@ -89,7 +89,7 @@ describe('ClientCard Service', () => {
     it('should delete a ClientCard', () => {
       const expected = true;
 
-      service.delete(123).subscribe(resp => (expectedResult = resp.ok));
+      service.delete('123').subscribe(resp => (expectedResult = resp.ok));
 
       const req = httpMock.expectOne({ method: 'DELETE' });
       req.flush({ status: 200 });
@@ -165,7 +165,7 @@ describe('ClientCard Service', () => {
       });
 
       it('should return false if one entity is null', () => {
-        const entity1 = { id: 15916 };
+        const entity1 = { id: '15916' };
         const entity2 = null;
 
         const compareResult1 = service.compareClientCard(entity1, entity2);
@@ -176,8 +176,8 @@ describe('ClientCard Service', () => {
       });
 
       it('should return false if primaryKey differs', () => {
-        const entity1 = { id: 15916 };
-        const entity2 = { id: 26157 };
+        const entity1 = { id: '15916' };
+        const entity2 = { id: '26157' };
 
         const compareResult1 = service.compareClientCard(entity1, entity2);
         const compareResult2 = service.compareClientCard(entity2, entity1);
@@ -187,8 +187,8 @@ describe('ClientCard Service', () => {
       });
 
       it('should return false if primaryKey matches', () => {
-        const entity1 = { id: 15916 };
-        const entity2 = { id: 15916 };
+        const entity1 = { id: '15916' };
+        const entity2 = { id: '15916' };
 
         const compareResult1 = service.compareClientCard(entity1, entity2);
         const compareResult2 = service.compareClientCard(entity2, entity1);

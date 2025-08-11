@@ -28,7 +28,10 @@ type PaymentTransactionFormRawValue = FormValueOf<IPaymentTransaction>;
 
 type NewPaymentTransactionFormRawValue = FormValueOf<NewPaymentTransaction>;
 
-type PaymentTransactionFormDefaults = Pick<NewPaymentTransaction, 'id' | 'sendEmail' | 'requestTimestamp' | 'callbackTimestamp'>;
+type PaymentTransactionFormDefaults = Pick<
+  NewPaymentTransaction,
+  'id' | 'sendEmail' | 'requestTimestamp' | 'callbackTimestamp' | 'version'
+>;
 
 type PaymentTransactionFormGroupContent = {
   id: FormControl<PaymentTransactionFormRawValue['id'] | NewPaymentTransaction['id']>;
@@ -55,13 +58,14 @@ type PaymentTransactionFormGroupContent = {
   lastQueryData: FormControl<PaymentTransactionFormRawValue['lastQueryData']>;
   client: FormControl<PaymentTransactionFormRawValue['client']>;
   merchant: FormControl<PaymentTransactionFormRawValue['merchant']>;
+  version: FormControl<PaymentTransactionFormRawValue['version']>;
 };
 
 export type PaymentTransactionFormGroup = FormGroup<PaymentTransactionFormGroupContent>;
 
 @Injectable({ providedIn: 'root' })
 export class PaymentTransactionFormService {
-  createPaymentTransactionFormGroup(paymentTransaction: PaymentTransactionFormGroupInput = { id: null }): PaymentTransactionFormGroup {
+  createPaymentTransactionFormGroup(paymentTransaction: PaymentTransactionFormGroupInput = { id: '' }): PaymentTransactionFormGroup {
     const paymentTransactionRawValue = this.convertPaymentTransactionToPaymentTransactionRawValue({
       ...this.getFormDefaults(),
       ...paymentTransaction,
@@ -113,6 +117,7 @@ export class PaymentTransactionFormService {
       merchant: new FormControl(paymentTransactionRawValue.merchant, {
         validators: [Validators.required],
       }),
+      version: new FormControl(paymentTransactionRawValue.version),
     });
   }
 
@@ -143,6 +148,7 @@ export class PaymentTransactionFormService {
       sendEmail: false,
       requestTimestamp: currentTime,
       callbackTimestamp: currentTime,
+      version: null,
     };
   }
 

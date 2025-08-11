@@ -48,11 +48,11 @@ describe('ClientCard Management Update Component', () => {
 
   describe('ngOnInit', () => {
     it('should call Client query and add missing value', () => {
-      const clientCard: IClientCard = { id: 26157 };
-      const client: IClient = { id: 26282 };
+      const clientCard: IClientCard = { id: '26157' };
+      const client: IClient = { id: '26282' };
       clientCard.client = client;
 
-      const clientCollection: IClient[] = [{ id: 26282 }];
+      const clientCollection: IClient[] = [{ id: '26282' }];
       jest.spyOn(clientService, 'query').mockReturnValue(of(new HttpResponse({ body: clientCollection })));
       const additionalClients = [client];
       const expectedCollection: IClient[] = [...additionalClients, ...clientCollection];
@@ -70,8 +70,8 @@ describe('ClientCard Management Update Component', () => {
     });
 
     it('should update editForm', () => {
-      const clientCard: IClientCard = { id: 26157 };
-      const client: IClient = { id: 26282 };
+      const clientCard: IClientCard = { id: '26157' };
+      const client: IClient = { id: '26282' };
       clientCard.client = client;
 
       activatedRoute.data = of({ clientCard });
@@ -86,7 +86,7 @@ describe('ClientCard Management Update Component', () => {
     it('should call update service on save for existing entity', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IClientCard>>();
-      const clientCard = { id: 15916 };
+      const clientCard = { id: '15916' };
       jest.spyOn(clientCardFormService, 'getClientCard').mockReturnValue(clientCard);
       jest.spyOn(clientCardService, 'update').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
@@ -109,8 +109,8 @@ describe('ClientCard Management Update Component', () => {
     it('should call create service on save for new entity', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IClientCard>>();
-      const clientCard = { id: 15916 };
-      jest.spyOn(clientCardFormService, 'getClientCard').mockReturnValue({ id: null });
+      const clientCard = { id: '15916' };
+      jest.spyOn(clientCardFormService, 'getClientCard').mockReturnValue({ id: null, version: null });
       jest.spyOn(clientCardService, 'create').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ clientCard: null });
@@ -153,8 +153,8 @@ describe('ClientCard Management Update Component', () => {
   describe('Compare relationships', () => {
     describe('compareClient', () => {
       it('should forward to clientService', () => {
-        const entity = { id: 26282 };
-        const entity2 = { id: 16836 };
+        const entity = { id: '26282' };
+        const entity2 = { id: '16836' };
         jest.spyOn(clientService, 'compareClient');
         comp.compareClient(entity, entity2);
         expect(clientService.compareClient).toHaveBeenCalledWith(entity, entity2);

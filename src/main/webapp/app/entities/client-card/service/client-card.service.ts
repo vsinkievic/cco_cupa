@@ -35,7 +35,7 @@ export class ClientCardService {
     });
   }
 
-  find(id: number): Observable<EntityResponseType> {
+  find(id: string): Observable<EntityResponseType> {
     return this.http.get<IClientCard>(`${this.resourceUrl}/${id}`, { observe: 'response' });
   }
 
@@ -44,11 +44,11 @@ export class ClientCardService {
     return this.http.get<IClientCard[]>(this.resourceUrl, { params: options, observe: 'response' });
   }
 
-  delete(id: number): Observable<HttpResponse<{}>> {
+  delete(id: string): Observable<HttpResponse<{}>> {
     return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
   }
 
-  getClientCardIdentifier(clientCard: Pick<IClientCard, 'id'>): number {
+  getClientCardIdentifier(clientCard: Pick<IClientCard, 'id'>): string {
     return clientCard.id;
   }
 

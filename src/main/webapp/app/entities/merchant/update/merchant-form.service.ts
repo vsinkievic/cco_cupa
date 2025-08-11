@@ -14,10 +14,11 @@ type PartialWithRequiredKeyOf<T extends { id: unknown }> = Partial<Omit<T, 'id'>
  */
 type MerchantFormGroupInput = IMerchant | PartialWithRequiredKeyOf<NewMerchant>;
 
-type MerchantFormDefaults = Pick<NewMerchant, 'id'>;
+type MerchantFormDefaults = Pick<NewMerchant, 'id' | 'version'>;
 
 type MerchantFormGroupContent = {
   id: FormControl<IMerchant['id'] | NewMerchant['id']>;
+  version: FormControl<IMerchant['version']>;
   name: FormControl<IMerchant['name']>;
   mode: FormControl<IMerchant['mode']>;
   status: FormControl<IMerchant['status']>;
@@ -38,7 +39,7 @@ export type MerchantFormGroup = FormGroup<MerchantFormGroupContent>;
 
 @Injectable({ providedIn: 'root' })
 export class MerchantFormService {
-  createMerchantFormGroup(merchant: MerchantFormGroupInput = { id: null }): MerchantFormGroup {
+  createMerchantFormGroup(merchant: MerchantFormGroupInput = { id: null, version: null }): MerchantFormGroup {
     const merchantRawValue = {
       ...this.getFormDefaults(),
       ...merchant,
@@ -51,6 +52,7 @@ export class MerchantFormService {
           validators: [Validators.required],
         },
       ),
+      version: new FormControl(merchantRawValue.version),
       name: new FormControl(merchantRawValue.name, {
         validators: [Validators.required],
       }),
@@ -84,6 +86,7 @@ export class MerchantFormService {
       {
         ...merchantRawValue,
         id: { value: merchantRawValue.id, disabled: true },
+        version: { version: merchantRawValue.version },
       } as any /* cast to workaround https://github.com/angular/angular/issues/46458 */,
     );
   }
@@ -91,6 +94,7 @@ export class MerchantFormService {
   private getFormDefaults(): MerchantFormDefaults {
     return {
       id: null,
+      version: null,
     };
   }
 }

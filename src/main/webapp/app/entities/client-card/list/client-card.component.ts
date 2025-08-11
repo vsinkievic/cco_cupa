@@ -38,7 +38,7 @@ export class ClientCardComponent implements OnInit {
   protected modalService = inject(NgbModal);
   protected ngZone = inject(NgZone);
 
-  trackId = (item: IClientCard): number => this.clientCardService.getClientCardIdentifier(item);
+  trackId = (item: IClientCard): string => this.clientCardService.getClientCardIdentifier(item);
 
   ngOnInit(): void {
     this.subscription = combineLatest([this.activatedRoute.queryParamMap, this.activatedRoute.data])

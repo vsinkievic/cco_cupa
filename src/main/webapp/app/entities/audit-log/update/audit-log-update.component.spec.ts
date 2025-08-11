@@ -49,10 +49,10 @@ describe('AuditLog Management Update Component', () => {
   describe('ngOnInit', () => {
     it('should call Merchant query and add missing value', () => {
       const auditLog: IAuditLog = { id: 25691 };
-      const merchant: IMerchant = { id: 23082 };
+      const merchant: IMerchant = { id: '23082' };
       auditLog.merchant = merchant;
 
-      const merchantCollection: IMerchant[] = [{ id: 23082 }];
+      const merchantCollection: IMerchant[] = [{ id: '23082' }];
       jest.spyOn(merchantService, 'query').mockReturnValue(of(new HttpResponse({ body: merchantCollection })));
       const additionalMerchants = [merchant];
       const expectedCollection: IMerchant[] = [...additionalMerchants, ...merchantCollection];
@@ -71,7 +71,7 @@ describe('AuditLog Management Update Component', () => {
 
     it('should update editForm', () => {
       const auditLog: IAuditLog = { id: 25691 };
-      const merchant: IMerchant = { id: 23082 };
+      const merchant: IMerchant = { id: '23082' };
       auditLog.merchant = merchant;
 
       activatedRoute.data = of({ auditLog });
@@ -153,8 +153,8 @@ describe('AuditLog Management Update Component', () => {
   describe('Compare relationships', () => {
     describe('compareMerchant', () => {
       it('should forward to merchantService', () => {
-        const entity = { id: 23082 };
-        const entity2 = { id: 16734 };
+        const entity = { id: '23082' };
+        const entity2 = { id: '16734' };
         jest.spyOn(merchantService, 'compareMerchant');
         comp.compareMerchant(entity, entity2);
         expect(merchantService.compareMerchant).toHaveBeenCalledWith(entity, entity2);

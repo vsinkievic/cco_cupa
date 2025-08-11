@@ -3,7 +3,7 @@ import dayjs from 'dayjs/esm';
 import { IPaymentTransaction, NewPaymentTransaction } from './payment-transaction.model';
 
 export const sampleWithRequiredData: IPaymentTransaction = {
-  id: 16213,
+  id: '16213',
   orderId: 'icy',
   cupaTransactionId: '84ea121b-e25a-43a3-b0a5-68c77b5fba45',
   status: 'FAILED',
@@ -14,7 +14,7 @@ export const sampleWithRequiredData: IPaymentTransaction = {
 };
 
 export const sampleWithPartialData: IPaymentTransaction = {
-  id: 20858,
+  id: '20858',
   orderId: 'heartbeat failing whirlwind',
   cupaTransactionId: '5ac96a25-1193-498d-9291-704df414ce6a',
   status: 'FAILED',
@@ -29,10 +29,11 @@ export const sampleWithPartialData: IPaymentTransaction = {
   requestTimestamp: dayjs('2025-08-04T08:13'),
   requestData: '../fake-data/blob/hipster.txt',
   callbackData: '../fake-data/blob/hipster.txt',
+  version: 1,
 };
 
 export const sampleWithFullData: IPaymentTransaction = {
-  id: 8871,
+  id: '8871',
   orderId: 'extricate searchingly',
   cupaTransactionId: '991ccee8-8567-45f4-acd0-73ebb0727ec5',
   gatewayTransactionId: 'busily foot adumbrate',
@@ -54,6 +55,7 @@ export const sampleWithFullData: IPaymentTransaction = {
   callbackTimestamp: dayjs('2025-08-04T09:00'),
   callbackData: '../fake-data/blob/hipster.txt',
   lastQueryData: '../fake-data/blob/hipster.txt',
+  version: 0,
 };
 
 export const sampleWithNewData: NewPaymentTransaction = {
@@ -65,6 +67,7 @@ export const sampleWithNewData: NewPaymentTransaction = {
   currency: 'CAD',
   requestTimestamp: dayjs('2025-08-03T16:09'),
   id: null,
+  version: null,
 };
 
 Object.freeze(sampleWithNewData);

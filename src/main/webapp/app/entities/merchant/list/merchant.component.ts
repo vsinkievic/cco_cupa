@@ -38,7 +38,7 @@ export class MerchantComponent implements OnInit {
   protected modalService = inject(NgbModal);
   protected ngZone = inject(NgZone);
 
-  trackId = (item: IMerchant): number => this.merchantService.getMerchantIdentifier(item);
+  trackId = (item: IMerchant): string => this.merchantService.getMerchantIdentifier(item);
 
   ngOnInit(): void {
     this.subscription = combineLatest([this.activatedRoute.queryParamMap, this.activatedRoute.data])

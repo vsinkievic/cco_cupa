@@ -2,7 +2,7 @@ import { MerchantMode } from 'app/entities/enumerations/merchant-mode.model';
 import { MerchantStatus } from 'app/entities/enumerations/merchant-status.model';
 
 export interface IMerchant {
-  id: number;
+  id: string;
   name?: string | null;
   mode?: keyof typeof MerchantMode | null;
   status?: keyof typeof MerchantStatus | null;
@@ -17,6 +17,7 @@ export interface IMerchant {
   remoteProdMerchantId?: string | null;
   remoteProdMerchantKey?: string | null;
   remoteProdApiKey?: string | null;
+  version?: number | null;
 }
 
-export type NewMerchant = Omit<IMerchant, 'id'> & { id: null };
+export type NewMerchant = Omit<IMerchant, 'id' | 'version'> & { id: null; version: null };

@@ -1,14 +1,15 @@
 import { IMerchant, NewMerchant } from './merchant.model';
 
 export const sampleWithRequiredData: IMerchant = {
-  id: 31556,
+  id: '31556',
   name: 'until',
   mode: 'TEST',
   status: 'INACTIVE',
+  version: 1,
 };
 
 export const sampleWithPartialData: IMerchant = {
-  id: 3470,
+  id: '3470',
   name: 'briskly wedge',
   mode: 'LIVE',
   status: 'INACTIVE',
@@ -17,10 +18,11 @@ export const sampleWithPartialData: IMerchant = {
   remoteTestApiKey: 'beneath ribbon',
   remoteProdMerchantId: 'apt',
   remoteProdApiKey: 'steeple stack',
+  version: 1,
 };
 
 export const sampleWithFullData: IMerchant = {
-  id: 10412,
+  id: '10412',
   name: 'stool jealously uh-huh',
   mode: 'TEST',
   status: 'INACTIVE',
@@ -35,6 +37,7 @@ export const sampleWithFullData: IMerchant = {
   remoteProdMerchantId: 'unto',
   remoteProdMerchantKey: 'inasmuch ack when',
   remoteProdApiKey: 'physically axe',
+  version: 0,
 };
 
 export const sampleWithNewData: NewMerchant = {
@@ -42,6 +45,7 @@ export const sampleWithNewData: NewMerchant = {
   mode: 'TEST',
   status: 'INACTIVE',
   id: null,
+  version: null,
 };
 
 Object.freeze(sampleWithNewData);

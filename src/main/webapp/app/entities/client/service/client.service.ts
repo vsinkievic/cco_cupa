@@ -31,7 +31,7 @@ export class ClientService {
     return this.http.patch<IClient>(`${this.resourceUrl}/${this.getClientIdentifier(client)}`, client, { observe: 'response' });
   }
 
-  find(id: number): Observable<EntityResponseType> {
+  find(id: string): Observable<EntityResponseType> {
     return this.http.get<IClient>(`${this.resourceUrl}/${id}`, { observe: 'response' });
   }
 
@@ -40,11 +40,11 @@ export class ClientService {
     return this.http.get<IClient[]>(this.resourceUrl, { params: options, observe: 'response' });
   }
 
-  delete(id: number): Observable<HttpResponse<{}>> {
+  delete(id: string): Observable<HttpResponse<{}>> {
     return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
   }
 
-  getClientIdentifier(client: Pick<IClient, 'id'>): number {
+  getClientIdentifier(client: Pick<IClient, 'id'>): string {
     return client.id;
   }
 

@@ -12,6 +12,7 @@ import { MerchantStatus } from 'app/entities/enumerations/merchant-status.model'
 import { IMerchant } from '../merchant.model';
 import { MerchantService } from '../service/merchant.service';
 import { MerchantFormGroup, MerchantFormService } from './merchant-form.service';
+import { NewMerchant } from '../merchant.model';
 
 @Component({
   selector: 'jhi-merchant-update',
@@ -21,6 +22,7 @@ import { MerchantFormGroup, MerchantFormService } from './merchant-form.service'
 export class MerchantUpdateComponent implements OnInit {
   isSaving = false;
   merchant: IMerchant | null = null;
+  newRecordMode = false;
   merchantModeValues = Object.keys(MerchantMode);
   merchantStatusValues = Object.keys(MerchantStatus);
 
@@ -36,6 +38,11 @@ export class MerchantUpdateComponent implements OnInit {
       this.merchant = merchant;
       if (merchant) {
         this.updateForm(merchant);
+        this.newRecordMode = false;
+      } else {
+        this.newRecordMode = true;
+        // For new records, enable the ID field
+        this.editForm.get('id')?.enable();
       }
     });
   }
@@ -46,11 +53,16 @@ export class MerchantUpdateComponent implements OnInit {
 
   save(): void {
     this.isSaving = true;
-    const merchant = this.merchantFormService.getMerchant(this.editForm);
-    if (merchant.id !== null) {
-      this.subscribeToSaveResponse(this.merchantService.update(merchant));
+    const formMerchant = this.merchantFormService.getMerchant(this.editForm);
+
+    if (formMerchant.version !== null) {
+      // For existing merchants, merge form data with original data
+      // const updatedMerchant = { ...this.merchant, ...formMerchant };
+      this.subscribeToSaveResponse(this.merchantService.update(formMerchant));
     } else {
-      this.subscribeToSaveResponse(this.merchantService.create(merchant));
+      // For new merchants, ensure version is null
+      const newMerchant = { ...formMerchant, version: null } as NewMerchant;
+      this.subscribeToSaveResponse(this.merchantService.create(newMerchant));
     }
   }
 

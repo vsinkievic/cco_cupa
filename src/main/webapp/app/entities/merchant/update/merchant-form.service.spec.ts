@@ -103,7 +103,7 @@ describe('Merchant Form Service', () => {
         const formGroup = service.createMerchantFormGroup(sampleWithRequiredData);
         expect(formGroup.controls.id.disabled).toBe(true);
 
-        service.resetForm(formGroup, { id: null });
+        service.resetForm(formGroup, { id: '' });
 
         expect(formGroup.controls.id.disabled).toBe(true);
       });

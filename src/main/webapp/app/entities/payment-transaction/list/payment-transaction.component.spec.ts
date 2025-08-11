@@ -59,7 +59,7 @@ describe('PaymentTransaction Management Component', () => {
       .mockReturnValueOnce(
         of(
           new HttpResponse({
-            body: [{ id: 10661 }],
+            body: [{ id: '10661' }],
             headers: new HttpHeaders({
               link: '<http://localhost/api/foo?page=1&size=20>; rel="next"',
             }),
@@ -69,7 +69,7 @@ describe('PaymentTransaction Management Component', () => {
       .mockReturnValueOnce(
         of(
           new HttpResponse({
-            body: [{ id: 1571 }],
+            body: [{ id: '1571' }],
             headers: new HttpHeaders({
               link: '<http://localhost/api/foo?page=0&size=20>; rel="prev",<http://localhost/api/foo?page=2&size=20>; rel="next"',
             }),
@@ -84,12 +84,12 @@ describe('PaymentTransaction Management Component', () => {
 
     // THEN
     expect(service.query).toHaveBeenCalled();
-    expect(comp.paymentTransactions()[0]).toEqual(expect.objectContaining({ id: 10661 }));
+    expect(comp.paymentTransactions()[0]).toEqual(expect.objectContaining({ id: '10661' }));
   });
 
   describe('trackId', () => {
     it('should forward to paymentTransactionService', () => {
-      const entity = { id: 10661 };
+      const entity = { id: '10661' };
       jest.spyOn(service, 'getPaymentTransactionIdentifier');
       const id = comp.trackId(entity);
       expect(service.getPaymentTransactionIdentifier).toHaveBeenCalledWith(entity);
@@ -126,52 +126,5 @@ describe('PaymentTransaction Management Component', () => {
 
     // THEN
     expect(service.query).toHaveBeenLastCalledWith(expect.objectContaining({ sort: ['id,desc'] }));
-  });
-
-  describe('delete', () => {
-    let ngbModal: NgbModal;
-    let deleteModalMock: any;
-
-    beforeEach(() => {
-      deleteModalMock = { componentInstance: {}, closed: new Subject() };
-      // NgbModal is not a singleton using TestBed.inject.
-      // ngbModal = TestBed.inject(NgbModal);
-      ngbModal = (comp as any).modalService;
-      jest.spyOn(ngbModal, 'open').mockReturnValue(deleteModalMock);
-    });
-
-    it('on confirm should call load', inject(
-      [],
-      fakeAsync(() => {
-        // GIVEN
-        jest.spyOn(comp, 'load');
-
-        // WHEN
-        comp.delete(sampleWithRequiredData);
-        deleteModalMock.closed.next('deleted');
-        tick();
-
-        // THEN
-        expect(ngbModal.open).toHaveBeenCalled();
-        expect(comp.load).toHaveBeenCalled();
-      }),
-    ));
-
-    it('on dismiss should call load', inject(
-      [],
-      fakeAsync(() => {
-        // GIVEN
-        jest.spyOn(comp, 'load');
-
-        // WHEN
-        comp.delete(sampleWithRequiredData);
-        deleteModalMock.closed.next();
-        tick();
-
-        // THEN
-        expect(ngbModal.open).toHaveBeenCalled();
-        expect(comp.load).not.toHaveBeenCalled();
-      }),
-    ));
   });
 });

@@ -1,7 +1,7 @@
 import { IMerchant } from 'app/entities/merchant/merchant.model';
 
 export interface IClient {
-  id: number;
+  id: string;
   merchantClientId?: string | null;
   name?: string | null;
   emailAddress?: string | null;

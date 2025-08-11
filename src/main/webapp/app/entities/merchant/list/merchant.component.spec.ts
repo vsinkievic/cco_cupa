@@ -59,7 +59,7 @@ describe('Merchant Management Component', () => {
       .mockReturnValueOnce(
         of(
           new HttpResponse({
-            body: [{ id: 23082 }],
+            body: [{ id: '23082' }],
             headers: new HttpHeaders({
               link: '<http://localhost/api/foo?page=1&size=20>; rel="next"',
             }),
@@ -69,7 +69,7 @@ describe('Merchant Management Component', () => {
       .mockReturnValueOnce(
         of(
           new HttpResponse({
-            body: [{ id: 16734 }],
+            body: [{ id: '16734' }],
             headers: new HttpHeaders({
               link: '<http://localhost/api/foo?page=0&size=20>; rel="prev",<http://localhost/api/foo?page=2&size=20>; rel="next"',
             }),
@@ -84,12 +84,12 @@ describe('Merchant Management Component', () => {
 
     // THEN
     expect(service.query).toHaveBeenCalled();
-    expect(comp.merchants()[0]).toEqual(expect.objectContaining({ id: 23082 }));
+    expect(comp.merchants()[0]).toEqual(expect.objectContaining({ id: '23082' }));
   });
 
   describe('trackId', () => {
     it('should forward to merchantService', () => {
-      const entity = { id: 23082 };
+      const entity = { id: '23082' };
       jest.spyOn(service, 'getMerchantIdentifier');
       const id = comp.trackId(entity);
       expect(service.getMerchantIdentifier).toHaveBeenCalledWith(entity);

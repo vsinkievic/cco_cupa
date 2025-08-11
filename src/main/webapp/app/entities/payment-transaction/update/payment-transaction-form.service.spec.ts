@@ -121,7 +121,7 @@ describe('PaymentTransaction Form Service', () => {
         const formGroup = service.createPaymentTransactionFormGroup(sampleWithRequiredData);
         expect(formGroup.controls.id.disabled).toBe(true);
 
-        service.resetForm(formGroup, { id: null });
+        service.resetForm(formGroup, { id: '' });
 
         expect(formGroup.controls.id.disabled).toBe(true);
       });
