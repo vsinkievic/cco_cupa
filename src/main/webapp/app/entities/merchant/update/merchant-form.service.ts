@@ -14,7 +14,9 @@ type PartialWithRequiredKeyOf<T extends { id: unknown }> = Partial<Omit<T, 'id'>
  */
 type MerchantFormGroupInput = IMerchant | PartialWithRequiredKeyOf<NewMerchant>;
 
-type MerchantFormDefaults = Pick<NewMerchant, 'id' | 'version'>;
+type MerchantFormDefaults = Pick<NewMerchant, 'id' | 'version'> & {
+  currency: string;
+};
 
 type MerchantFormGroupContent = {
   id: FormControl<IMerchant['id'] | NewMerchant['id']>;
@@ -23,6 +25,7 @@ type MerchantFormGroupContent = {
   mode: FormControl<IMerchant['mode']>;
   status: FormControl<IMerchant['status']>;
   balance: FormControl<IMerchant['balance']>;
+  currency: FormControl<IMerchant['currency']>;
   cupaTestApiKey: FormControl<IMerchant['cupaTestApiKey']>;
   cupaProdApiKey: FormControl<IMerchant['cupaProdApiKey']>;
   remoteTestUrl: FormControl<IMerchant['remoteTestUrl']>;
@@ -63,6 +66,9 @@ export class MerchantFormService {
         validators: [Validators.required],
       }),
       balance: new FormControl(merchantRawValue.balance),
+      currency: new FormControl(merchantRawValue.currency, {
+        validators: [Validators.required],
+      }),
       cupaTestApiKey: new FormControl(merchantRawValue.cupaTestApiKey),
       cupaProdApiKey: new FormControl(merchantRawValue.cupaProdApiKey),
       remoteTestUrl: new FormControl(merchantRawValue.remoteTestUrl),
@@ -95,6 +101,7 @@ export class MerchantFormService {
     return {
       id: null,
       version: null,
+      currency: 'USD',
     };
   }
 }

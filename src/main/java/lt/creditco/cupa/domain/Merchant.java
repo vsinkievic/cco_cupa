@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 import org.hibernate.annotations.Cache;
@@ -48,6 +49,10 @@ public class Merchant extends AbstractAuditingEntity<String> implements Serializ
 
     @Column(name = "balance", precision = 21, scale = 2)
     private BigDecimal balance;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "currency")
+    private Currency currency;
 
     @Column(name = "cupa_test_api_key")
     private String cupaTestApiKey;
@@ -147,6 +152,19 @@ public class Merchant extends AbstractAuditingEntity<String> implements Serializ
 
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
+    }
+
+    public Currency getCurrency() {
+        return this.currency;
+    }
+
+    public Merchant currency(Currency currency) {
+        this.setCurrency(currency);
+        return this;
+    }
+
+    public void setCurrency(Currency currency) {
+        this.currency = currency;
     }
 
     public String getCupaTestApiKey() {
@@ -315,6 +333,7 @@ public class Merchant extends AbstractAuditingEntity<String> implements Serializ
             ", mode='" + getMode() + "'" +
             ", status='" + getStatus() + "'" +
             ", balance=" + getBalance() +
+            ", currency='" + getCurrency() + "'" +
             ", cupaTestApiKey='" + getCupaTestApiKey() + "'" +
             ", cupaProdApiKey='" + getCupaProdApiKey() + "'" +
             ", remoteTestUrl='" + getRemoteTestUrl() + "'" +

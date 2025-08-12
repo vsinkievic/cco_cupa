@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.UUID;
+import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 
@@ -31,6 +31,8 @@ public class MerchantDTO implements Serializable {
     private MerchantStatus status;
 
     private BigDecimal balance;
+
+    private Currency currency;
 
     private String cupaTestApiKey;
 
@@ -100,6 +102,14 @@ public class MerchantDTO implements Serializable {
 
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
+    }
+
+    public Currency getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(Currency currency) {
+        this.currency = currency;
     }
 
     public String getCupaTestApiKey() {
@@ -252,6 +262,7 @@ public class MerchantDTO implements Serializable {
             ", mode='" + getMode() + "'" +
             ", status='" + getStatus() + "'" +
             ", balance=" + getBalance() +
+            ", currency='" + getCurrency() + "'" +
             ", cupaTestApiKey='" + getCupaTestApiKey() + "'" +
             ", cupaProdApiKey='" + getCupaProdApiKey() + "'" +
             ", remoteTestUrl='" + getRemoteTestUrl() + "'" +

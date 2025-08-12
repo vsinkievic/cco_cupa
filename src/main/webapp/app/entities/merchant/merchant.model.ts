@@ -7,6 +7,7 @@ export interface IMerchant {
   mode?: keyof typeof MerchantMode | null;
   status?: keyof typeof MerchantStatus | null;
   balance?: number | null;
+  currency?: string | null;
   cupaTestApiKey?: string | null;
   cupaProdApiKey?: string | null;
   remoteTestUrl?: string | null;

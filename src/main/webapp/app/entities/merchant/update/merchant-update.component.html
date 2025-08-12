@@ -73,6 +73,19 @@
           <input type="number" class="form-control" name="balance" id="field_balance" data-cy="balance" formControlName="balance" />
         </div>
 
+        @let currencyRef = editForm.get('currency')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_currency">Currency</label>
+          <input type="text" class="form-control" name="currency" id="field_currency" data-cy="currency" formControlName="currency" />
+          @if (currencyRef.invalid && (currencyRef.dirty || currencyRef.touched)) {
+            <div>
+              @if (editForm.get('currency')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
         <div class="mb-3">
           <label class="form-label" for="field_cupaTestApiKey">Cupa Test Api Key</label>
           <input

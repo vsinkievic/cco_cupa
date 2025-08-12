@@ -5,6 +5,7 @@ export const sampleWithRequiredData: IMerchant = {
   name: 'until',
   mode: 'TEST',
   status: 'INACTIVE',
+  currency: 'USD',
   version: 1,
 };
 
@@ -14,6 +15,7 @@ export const sampleWithPartialData: IMerchant = {
   mode: 'LIVE',
   status: 'INACTIVE',
   balance: 684.06,
+  currency: 'AUD',
   remoteTestMerchantKey: 'and cake bah',
   remoteTestApiKey: 'beneath ribbon',
   remoteProdMerchantId: 'apt',
@@ -27,6 +29,7 @@ export const sampleWithFullData: IMerchant = {
   mode: 'TEST',
   status: 'INACTIVE',
   balance: 9383.03,
+  currency: 'USD',
   cupaTestApiKey: 'for under remorseful',
   cupaProdApiKey: 'thankfully maul',
   remoteTestUrl: 'inwardly ouch supposing',
@@ -44,6 +47,7 @@ export const sampleWithNewData: NewMerchant = {
   name: 'overreact festival',
   mode: 'TEST',
   status: 'INACTIVE',
+  currency: 'USD',
   id: null,
   version: null,
 };

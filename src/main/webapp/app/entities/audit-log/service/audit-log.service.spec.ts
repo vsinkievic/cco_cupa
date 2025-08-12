@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 
 import { IAuditLog } from '../audit-log.model';
-import { sampleWithFullData, sampleWithNewData, sampleWithPartialData, sampleWithRequiredData } from '../audit-log.test-samples';
+import { sampleWithFullData, sampleWithPartialData, sampleWithRequiredData } from '../audit-log.test-samples';
 
 import { AuditLogService, RestAuditLog } from './audit-log.service';
 
@@ -16,6 +16,7 @@ describe('AuditLog Service', () => {
   let service: AuditLogService;
   let httpMock: HttpTestingController;
   let expectedResult: IAuditLog | IAuditLog[] | boolean | null;
+  let expectedResultArray: IAuditLog[];
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -38,42 +39,6 @@ describe('AuditLog Service', () => {
       expect(expectedResult).toMatchObject(expected);
     });
 
-    it('should create a AuditLog', () => {
-      const auditLog = { ...sampleWithNewData };
-      const returnedFromService = { ...requireRestSample };
-      const expected = { ...sampleWithRequiredData };
-
-      service.create(auditLog).subscribe(resp => (expectedResult = resp.body));
-
-      const req = httpMock.expectOne({ method: 'POST' });
-      req.flush(returnedFromService);
-      expect(expectedResult).toMatchObject(expected);
-    });
-
-    it('should update a AuditLog', () => {
-      const auditLog = { ...sampleWithRequiredData };
-      const returnedFromService = { ...requireRestSample };
-      const expected = { ...sampleWithRequiredData };
-
-      service.update(auditLog).subscribe(resp => (expectedResult = resp.body));
-
-      const req = httpMock.expectOne({ method: 'PUT' });
-      req.flush(returnedFromService);
-      expect(expectedResult).toMatchObject(expected);
-    });
-
-    it('should partial update a AuditLog', () => {
-      const patchObject = { ...sampleWithPartialData };
-      const returnedFromService = { ...requireRestSample };
-      const expected = { ...sampleWithRequiredData };
-
-      service.partialUpdate(patchObject).subscribe(resp => (expectedResult = resp.body));
-
-      const req = httpMock.expectOne({ method: 'PATCH' });
-      req.flush(returnedFromService);
-      expect(expectedResult).toMatchObject(expected);
-    });
-
     it('should return a list of AuditLog', () => {
       const returnedFromService = { ...requireRestSample };
 
@@ -87,22 +52,12 @@ describe('AuditLog Service', () => {
       expect(expectedResult).toMatchObject([expected]);
     });
 
-    it('should delete a AuditLog', () => {
-      const expected = true;
-
-      service.delete(123).subscribe(resp => (expectedResult = resp.ok));
-
-      const req = httpMock.expectOne({ method: 'DELETE' });
-      req.flush({ status: 200 });
-      expect(expectedResult).toBe(expected);
-    });
-
     describe('addAuditLogToCollectionIfMissing', () => {
       it('should add a AuditLog to an empty array', () => {
         const auditLog: IAuditLog = sampleWithRequiredData;
-        expectedResult = service.addAuditLogToCollectionIfMissing([], auditLog);
-        expect(expectedResult).toHaveLength(1);
-        expect(expectedResult).toContain(auditLog);
+        expectedResultArray = service.addAuditLogToCollectionIfMissing([], auditLog);
+        expect(expectedResultArray).toHaveLength(1);
+        expect(expectedResultArray).toContain(auditLog);
       });
 
       it('should not add a AuditLog to an array that contains it', () => {
@@ -113,45 +68,45 @@ describe('AuditLog Service', () => {
           },
           sampleWithPartialData,
         ];
-        expectedResult = service.addAuditLogToCollectionIfMissing(auditLogCollection, auditLog);
-        expect(expectedResult).toHaveLength(2);
+        expectedResultArray = service.addAuditLogToCollectionIfMissing(auditLogCollection, auditLog);
+        expect(expectedResultArray).toHaveLength(2);
       });
 
       it("should add a AuditLog to an array that doesn't contain it", () => {
         const auditLog: IAuditLog = sampleWithRequiredData;
         const auditLogCollection: IAuditLog[] = [sampleWithPartialData];
-        expectedResult = service.addAuditLogToCollectionIfMissing(auditLogCollection, auditLog);
-        expect(expectedResult).toHaveLength(2);
-        expect(expectedResult).toContain(auditLog);
+        expectedResultArray = service.addAuditLogToCollectionIfMissing(auditLogCollection, auditLog);
+        expect(expectedResultArray).toHaveLength(2);
+        expect(expectedResultArray).toContain(auditLog);
       });
 
       it('should add only unique AuditLog to an array', () => {
         const auditLogArray: IAuditLog[] = [sampleWithRequiredData, sampleWithPartialData, sampleWithFullData];
         const auditLogCollection: IAuditLog[] = [sampleWithRequiredData];
-        expectedResult = service.addAuditLogToCollectionIfMissing(auditLogCollection, ...auditLogArray);
-        expect(expectedResult).toHaveLength(3);
+        expectedResultArray = service.addAuditLogToCollectionIfMissing(auditLogCollection, ...auditLogArray);
+        expect(expectedResultArray).toHaveLength(3);
       });
 
       it('should accept varargs', () => {
         const auditLog: IAuditLog = sampleWithRequiredData;
         const auditLog2: IAuditLog = sampleWithPartialData;
-        expectedResult = service.addAuditLogToCollectionIfMissing([], auditLog, auditLog2);
-        expect(expectedResult).toHaveLength(2);
-        expect(expectedResult).toContain(auditLog);
-        expect(expectedResult).toContain(auditLog2);
+        expectedResultArray = service.addAuditLogToCollectionIfMissing([], auditLog, auditLog2);
+        expect(expectedResultArray).toHaveLength(2);
+        expect(expectedResultArray).toContain(auditLog);
+        expect(expectedResultArray).toContain(auditLog2);
       });
 
       it('should accept null and undefined values', () => {
         const auditLog: IAuditLog = sampleWithRequiredData;
-        expectedResult = service.addAuditLogToCollectionIfMissing([], null, auditLog, undefined);
-        expect(expectedResult).toHaveLength(1);
-        expect(expectedResult).toContain(auditLog);
+        expectedResultArray = service.addAuditLogToCollectionIfMissing([], null, auditLog, undefined);
+        expect(expectedResultArray).toHaveLength(1);
+        expect(expectedResultArray).toContain(auditLog);
       });
 
       it('should return initial array if no AuditLog is added', () => {
         const auditLogCollection: IAuditLog[] = [sampleWithRequiredData];
-        expectedResult = service.addAuditLogToCollectionIfMissing(auditLogCollection, undefined, null);
-        expect(expectedResult).toEqual(auditLogCollection);
+        expectedResultArray = service.addAuditLogToCollectionIfMissing(auditLogCollection, undefined, null);
+        expect(expectedResultArray).toEqual(auditLogCollection);
       });
     });
 

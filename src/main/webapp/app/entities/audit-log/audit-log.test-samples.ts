@@ -1,6 +1,6 @@
 import dayjs from 'dayjs/esm';
 
-import { IAuditLog, NewAuditLog } from './audit-log.model';
+import { IAuditLog } from './audit-log.model';
 
 export const sampleWithRequiredData: IAuditLog = {
   id: 24557,
@@ -38,14 +38,6 @@ export const sampleWithFullData: IAuditLog = {
   requesterIpAddress: 'ew tinted',
 };
 
-export const sampleWithNewData: NewAuditLog = {
-  requestTimestamp: dayjs('2025-08-04T00:11'),
-  apiEndpoint: 'schlep lend gosh',
-  httpMethod: 'weakly once',
-  id: null,
-};
-
-Object.freeze(sampleWithNewData);
 Object.freeze(sampleWithRequiredData);
 Object.freeze(sampleWithPartialData);
 Object.freeze(sampleWithFullData);

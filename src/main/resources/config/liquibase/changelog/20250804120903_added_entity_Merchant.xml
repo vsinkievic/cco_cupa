@@ -26,6 +26,9 @@
             <column name="balance" type="decimal(21,2)">
                 <constraints nullable="true" />
             </column>
+            <column name="currency" type="varchar(3)">
+                <constraints nullable="false" />
+            </column>
             <column name="cupa_test_api_key" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
@@ -96,6 +99,7 @@
             <column name="mode" type="string"/>
             <column name="status" type="string"/>
             <column name="balance" type="numeric"/>
+            <column name="currency" type="string"/>
             <column name="cupa_test_api_key" type="string"/>
             <column name="cupa_prod_api_key" type="string"/>
             <column name="remote_test_url" type="string"/>
