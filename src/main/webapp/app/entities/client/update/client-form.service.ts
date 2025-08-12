@@ -52,14 +52,19 @@ export class ClientFormService {
 
     return new FormGroup<ClientFormGroupContent>({
       id: new FormControl(
-        { value: clientRawValue.id, disabled: isExistingClient },
+        { value: clientRawValue.id, disabled: Boolean(clientRawValue.id) },
         {
-          nonNullable: true,
-          validators: [Validators.required],
+          nonNullable: false,
+          validators: [],
         },
       ),
       version: new FormControl(clientRawValue.version),
-      merchantClientId: new FormControl({ value: clientRawValue.merchantClientId, disabled: true }),
+      merchantClientId: new FormControl(
+        { value: clientRawValue.merchantClientId, disabled: Boolean(clientRawValue.createdInGateway) },
+        {
+          validators: [Validators.required],
+        },
+      ),
       merchantId: new FormControl(
         { value: clientRawValue.merchantId, disabled: isExistingClient },
         {
@@ -98,9 +103,9 @@ export class ClientFormService {
     form.reset(
       {
         ...clientRawValue,
-        id: { value: clientRawValue.id, disabled: isExistingClient },
+        id: { value: clientRawValue.id, disabled: Boolean(clientRawValue.id) },
         version: clientRawValue.version,
-        merchantClientId: { value: clientRawValue.merchantClientId, disabled: true },
+        merchantClientId: { value: clientRawValue.merchantClientId, disabled: Boolean(clientRawValue.createdInGateway) },
         merchantId: { value: clientRawValue.merchantId, disabled: isExistingClient },
         valid: { value: clientRawValue.valid, disabled: true },
         isBlacklisted: { value: clientRawValue.isBlacklisted, disabled: true },

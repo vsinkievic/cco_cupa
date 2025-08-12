@@ -7,7 +7,6 @@ export interface IClient {
   emailAddress?: string | null;
   mobileNumber?: string | null;
   clientPhone?: string | null;
-  valid?: boolean | null;
   streetNumber?: string | null;
   streetName?: string | null;
   streetSuffix?: string | null;
@@ -15,10 +14,12 @@ export interface IClient {
   state?: string | null;
   postCode?: string | null;
   country?: string | null;
-  isBlacklisted?: boolean | null;
-  isCorrelatedBlacklisted?: boolean | null;
+  gatewayClientId?: string | null;
   createdInGateway?: string | null;
   updatedInGateway?: string | null;
+  valid?: boolean | null;
+  isBlacklisted?: boolean | null;
+  isCorrelatedBlacklisted?: boolean | null;
   version?: number | null;
 }
 

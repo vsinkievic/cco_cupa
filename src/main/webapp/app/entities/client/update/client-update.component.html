@@ -6,12 +6,9 @@
       <div>
         <jhi-alert-error />
 
-        <div class="mb-3">
+        <div class="mb-3" *ngIf="client?.id">
           <label class="form-label" for="field_id">ID</label>
           <input type="text" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" />
-          <div *ngIf="editForm.get('id')?.invalid && (editForm.get('id')?.dirty || editForm.get('id')?.touched)">
-            <small class="form-text text-danger" *ngIf="editForm.get('id')?.errors?.required"> This field is required. </small>
-          </div>
         </div>
 
         <div class="mb-3">
@@ -22,7 +19,7 @@
             data-cy="merchantId"
             name="merchantId"
             (change)="onMerchantChange($event)"
-            [disabled]="editForm.get('merchantId')?.disabled"
+            [disabled]="editForm.get('merchantId')?.disabled ?? false"
           >
             <option value="">Select a merchant</option>
             <option
@@ -35,6 +32,29 @@
           </select>
           <div *ngIf="editForm.get('merchantId')?.invalid && (editForm.get('merchantId')?.dirty || editForm.get('merchantId')?.touched)">
             <small class="form-text text-danger" *ngIf="editForm.get('merchantId')?.errors?.required"> This field is required. </small>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_merchantClientId">Merchant Client ID</label>
+          <input
+            type="text"
+            class="form-control"
+            name="merchantClientId"
+            id="field_merchantClientId"
+            data-cy="merchantClientId"
+            formControlName="merchantClientId"
+            [disabled]="editForm.get('merchantClientId')?.disabled ?? false"
+          />
+          <div
+            *ngIf="
+              editForm.get('merchantClientId')?.invalid &&
+              (editForm.get('merchantClientId')?.dirty || editForm.get('merchantClientId')?.touched)
+            "
+          >
+            <small class="form-text text-danger" *ngIf="editForm.get('merchantClientId')?.errors?.required">
+              This field is required.
+            </small>
           </div>
         </div>
 

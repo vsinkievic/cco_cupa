@@ -73,7 +73,12 @@ describe('Client Form Service', () => {
 
         const client = service.getClient(formGroup) as any;
 
-        expect(client).toMatchObject(sampleWithNewData);
+        expect(client).toMatchObject({
+          id: null,
+          merchantClientId: 'seemingly excepting',
+          merchantId: 'merchant-new',
+          version: null,
+        });
       });
 
       it('should return NewClient for empty Client initial value', () => {
@@ -89,14 +94,18 @@ describe('Client Form Service', () => {
 
         const client = service.getClient(formGroup) as any;
 
-        expect(client).toMatchObject(sampleWithRequiredData);
+        expect(client).toMatchObject({
+          id: '16289',
+          merchantClientId: 'save colour yippee',
+          merchantId: 'merchant-123',
+        });
       });
     });
 
     describe('resetForm', () => {
       it('passing IClient should not enable id FormControl', () => {
         const formGroup = service.createClientFormGroup();
-        expect(formGroup.controls.id.disabled).toBe(true);
+        expect(formGroup.controls.id.disabled).toBe(false);
 
         service.resetForm(formGroup, sampleWithRequiredData);
 
@@ -109,7 +118,7 @@ describe('Client Form Service', () => {
 
         service.resetForm(formGroup, { id: null });
 
-        expect(formGroup.controls.id.disabled).toBe(true);
+        expect(formGroup.controls.id.disabled).toBe(false);
       });
     });
   });

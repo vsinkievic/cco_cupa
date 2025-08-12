@@ -37,6 +37,9 @@ export class ClientUpdateComponent implements OnInit {
       this.client = client;
       if (client) {
         this.updateForm(client);
+      } else {
+        // Create a new client form
+        this.editForm = this.clientFormService.createClientFormGroup({ id: null, version: null });
       }
 
       this.loadRelationshipsOptions();
@@ -50,8 +53,7 @@ export class ClientUpdateComponent implements OnInit {
   save(): void {
     this.isSaving = true;
     const client = this.clientFormService.getClient(this.editForm);
-    console.warn('client before saving:', client);
-    if (client.version !== null) {
+    if (client.id) {
       this.subscribeToSaveResponse(this.clientService.update(client));
     } else {
       const newClient = { ...client, version: null } as NewClient;
