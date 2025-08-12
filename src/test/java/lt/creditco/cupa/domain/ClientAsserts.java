@@ -47,6 +47,8 @@ public class ClientAsserts {
     public static void assertClientUpdatableFieldsEquals(Client expected, Client actual) {
         assertThat(actual)
             .as("Verify Client relevant properties")
+            .satisfies(a -> assertThat(a.getMerchantClientId()).as("check merchantClientId").isEqualTo(expected.getMerchantClientId()))
+            .satisfies(a -> assertThat(a.getGatewayClientId()).as("check gatewayClientId").isEqualTo(expected.getGatewayClientId()))
             .satisfies(a -> assertThat(a.getName()).as("check name").isEqualTo(expected.getName()))
             .satisfies(a -> assertThat(a.getEmailAddress()).as("check emailAddress").isEqualTo(expected.getEmailAddress()))
             .satisfies(a -> assertThat(a.getMobileNumber()).as("check mobileNumber").isEqualTo(expected.getMobileNumber()))

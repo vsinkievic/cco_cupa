@@ -14,6 +14,12 @@
             <column name="id" type="varchar(50)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
+            <column name="merchant_client_id" type="varchar(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="gateway_client_id" type="varchar(50)">
+                <constraints nullable="true" unique="true" />
+            </column>
             <column name="name" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
@@ -101,6 +107,8 @@
                   tableName="client"
                   usePreparedStatements="true">
             <column name="id" type="string"/>
+            <column name="merchant_client_id" type="string"/>
+            <column name="gateway_client_id" type="string"/>
             <column name="name" type="string"/>
             <column name="email_address" type="string"/>
             <column name="mobile_number" type="string"/>

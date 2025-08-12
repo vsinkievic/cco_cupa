@@ -81,7 +81,7 @@ describe('Client Management Update Component', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IClient>>();
       const client = { id: '26282' };
-      jest.spyOn(clientFormService, 'getClient').mockReturnValue({ id: null });
+      jest.spyOn(clientFormService, 'getClient').mockReturnValue({ id: null, version: null });
       jest.spyOn(clientService, 'create').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ client: null });

@@ -7,6 +7,8 @@ public class ClientTestSamples {
     public static Client getClientSample1() {
         return new Client()
             .id("11111111-1111-1111-1111-111111111111")
+            .merchantClientId("merchantClientId1")
+            .gatewayClientId("gatewayClientId1")
             .name("name1")
             .emailAddress("emailAddress1")
             .mobileNumber("mobileNumber1")
@@ -23,6 +25,8 @@ public class ClientTestSamples {
     public static Client getClientSample2() {
         return new Client()
             .id("22222222-2222-2222-2222-222222222222")
+            .merchantClientId("merchantClientId2")
+            .gatewayClientId("gatewayClientId2")
             .name("name2")
             .emailAddress("emailAddress2")
             .mobileNumber("mobileNumber2")
@@ -39,6 +43,8 @@ public class ClientTestSamples {
     public static Client getClientRandomSampleGenerator() {
         return new Client()
             .id(UUID.randomUUID().toString())
+            .merchantClientId(UUID.randomUUID().toString())
+            .gatewayClientId(UUID.randomUUID().toString())
             .name(UUID.randomUUID().toString())
             .emailAddress(UUID.randomUUID().toString())
             .mobileNumber(UUID.randomUUID().toString())

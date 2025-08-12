@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
@@ -26,8 +27,14 @@ public class Client extends AbstractAuditingEntity<String> implements Serializab
 
     @Id
     @NaturalId
-    @Column(name = "id")
+    @Column(name = "id", nullable = false, unique = true, length = 50)
     private String id;
+
+    @Column(name = "merchant_client_id", nullable = false, unique = false, length = 50)
+    private String merchantClientId;
+
+    @Column(name = "gateway_client_id", nullable = true, unique = true, length = 50)
+    private String gatewayClientId;
 
     @Column(name = "name")
     private String name;
@@ -102,6 +109,32 @@ public class Client extends AbstractAuditingEntity<String> implements Serializab
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getMerchantClientId() {
+        return this.merchantClientId;
+    }
+
+    public Client merchantClientId(String merchantClientId) {
+        this.setMerchantClientId(merchantClientId);
+        return this;
+    }
+
+    public void setMerchantClientId(String merchantClientId) {
+        this.merchantClientId = merchantClientId;
+    }
+
+    public String getGatewayClientId() {
+        return this.gatewayClientId;
+    }
+
+    public Client gatewayClientId(String gatewayClientId) {
+        this.setGatewayClientId(gatewayClientId);
+        return this;
+    }
+
+    public void setGatewayClientId(String gatewayClientId) {
+        this.gatewayClientId = gatewayClientId;
     }
 
     public String getName() {
@@ -388,6 +421,7 @@ public class Client extends AbstractAuditingEntity<String> implements Serializab
     public String toString() {
         return "Client{" +
             "id=" + getId() +
+            ", merchantClientId='" + getMerchantClientId() + "'" +
             ", name='" + getName() + "'" +
             ", emailAddress='" + getEmailAddress() + "'" +
             ", mobileNumber='" + getMobileNumber() + "'" +

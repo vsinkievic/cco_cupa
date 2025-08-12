@@ -50,6 +50,7 @@ export const sampleWithNewData: NewClient = {
   merchantId: 'merchant-new',
   merchantName: 'New Merchant',
   id: null,
+  version: null,
 };
 
 Object.freeze(sampleWithNewData);

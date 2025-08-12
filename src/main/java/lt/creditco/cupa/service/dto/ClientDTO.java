@@ -18,6 +18,10 @@ public class ClientDTO implements Serializable {
 
     private String id;
 
+    private String merchantClientId;
+
+    private String gatewayClientId;
+
     private String name;
 
     @Pattern(regexp = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
@@ -72,6 +76,22 @@ public class ClientDTO implements Serializable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getMerchantClientId() {
+        return merchantClientId;
+    }
+
+    public void setMerchantClientId(String merchantClientId) {
+        this.merchantClientId = merchantClientId;
+    }
+
+    public String getGatewayClientId() {
+        return gatewayClientId;
+    }
+
+    public void setGatewayClientId(String gatewayClientId) {
+        this.gatewayClientId = gatewayClientId;
     }
 
     public String getName() {
