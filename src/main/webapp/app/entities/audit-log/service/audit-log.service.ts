@@ -7,19 +7,13 @@ import dayjs from 'dayjs/esm';
 import { isPresent } from 'app/core/util/operators';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
 import { createRequestOption } from 'app/core/request/request-util';
-import { IAuditLog, NewAuditLog } from '../audit-log.model';
+import { IAuditLog } from '../audit-log.model';
 
-export type PartialUpdateAuditLog = Partial<IAuditLog> & Pick<IAuditLog, 'id'>;
-
-type RestOf<T extends IAuditLog | NewAuditLog> = Omit<T, 'requestTimestamp'> & {
+type RestOf<T extends IAuditLog> = Omit<T, 'requestTimestamp'> & {
   requestTimestamp?: string | null;
 };
 
 export type RestAuditLog = RestOf<IAuditLog>;
-
-export type NewRestAuditLog = RestOf<NewAuditLog>;
-
-export type PartialUpdateRestAuditLog = RestOf<PartialUpdateAuditLog>;
 
 export type EntityResponseType = HttpResponse<IAuditLog>;
 export type EntityArrayResponseType = HttpResponse<IAuditLog[]>;
@@ -30,27 +24,6 @@ export class AuditLogService {
   protected readonly applicationConfigService = inject(ApplicationConfigService);
 
   protected resourceUrl = this.applicationConfigService.getEndpointFor('api/audit-logs');
-
-  create(auditLog: NewAuditLog): Observable<EntityResponseType> {
-    const copy = this.convertDateFromClient(auditLog);
-    return this.http
-      .post<RestAuditLog>(this.resourceUrl, copy, { observe: 'response' })
-      .pipe(map(res => this.convertResponseFromServer(res)));
-  }
-
-  update(auditLog: IAuditLog): Observable<EntityResponseType> {
-    const copy = this.convertDateFromClient(auditLog);
-    return this.http
-      .put<RestAuditLog>(`${this.resourceUrl}/${this.getAuditLogIdentifier(auditLog)}`, copy, { observe: 'response' })
-      .pipe(map(res => this.convertResponseFromServer(res)));
-  }
-
-  partialUpdate(auditLog: PartialUpdateAuditLog): Observable<EntityResponseType> {
-    const copy = this.convertDateFromClient(auditLog);
-    return this.http
-      .patch<RestAuditLog>(`${this.resourceUrl}/${this.getAuditLogIdentifier(auditLog)}`, copy, { observe: 'response' })
-      .pipe(map(res => this.convertResponseFromServer(res)));
-  }
 
   find(id: number): Observable<EntityResponseType> {
     return this.http
@@ -63,10 +36,6 @@ export class AuditLogService {
     return this.http
       .get<RestAuditLog[]>(this.resourceUrl, { params: options, observe: 'response' })
       .pipe(map(res => this.convertResponseArrayFromServer(res)));
-  }
-
-  delete(id: number): Observable<HttpResponse<{}>> {
-    return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
   }
 
   getAuditLogIdentifier(auditLog: Pick<IAuditLog, 'id'>): number {
@@ -97,7 +66,7 @@ export class AuditLogService {
     return auditLogCollection;
   }
 
-  protected convertDateFromClient<T extends IAuditLog | NewAuditLog | PartialUpdateAuditLog>(auditLog: T): RestOf<T> {
+  protected convertDateFromClient<T extends IAuditLog>(auditLog: T): RestOf<T> {
     return {
       ...auditLog,
       requestTimestamp: auditLog.requestTimestamp?.toJSON() ?? null,

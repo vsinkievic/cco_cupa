@@ -15,7 +15,6 @@ import { DataUtils } from 'app/core/util/data-util.service';
 import { IAuditLog } from '../audit-log.model';
 
 import { AuditLogService, EntityArrayResponseType } from '../service/audit-log.service';
-import { AuditLogDeleteDialogComponent } from '../delete/audit-log-delete-dialog.component';
 
 @Component({
   selector: 'jhi-audit-log',
@@ -58,18 +57,6 @@ export class AuditLogComponent implements OnInit {
 
   openFile(base64String: string, contentType: string | null | undefined): void {
     return this.dataUtils.openFile(base64String, contentType);
-  }
-
-  delete(auditLog: IAuditLog): void {
-    const modalRef = this.modalService.open(AuditLogDeleteDialogComponent, { size: 'lg', backdrop: 'static' });
-    modalRef.componentInstance.auditLog = auditLog;
-    // unsubscribe not needed because closed completes on modal close
-    modalRef.closed
-      .pipe(
-        filter(reason => reason === ITEM_DELETED_EVENT),
-        tap(() => this.load()),
-      )
-      .subscribe();
   }
 
   load(): void {

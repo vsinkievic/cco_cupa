@@ -7,16 +7,6 @@
         <fa-icon icon="sync" [animation]="isLoading ? 'spin' : undefined"></fa-icon>
         <span>Refresh list</span>
       </button>
-
-      <button
-        id="jh-create-entity"
-        data-cy="entityCreateButton"
-        class="btn btn-primary jh-create-entity create-audit-log"
-        [routerLink]="['/audit-log/new']"
-      >
-        <fa-icon icon="plus"></fa-icon>
-        <span>Create a new Audit Log</span>
-      </button>
     </div>
   </h2>
 
@@ -132,11 +122,6 @@
                   <a [routerLink]="['/audit-log', auditLog.id, 'view']" class="btn btn-info btn-sm" data-cy="entityDetailsButton">
                     <fa-icon icon="eye"></fa-icon>
                     <span class="d-none d-md-inline">View</span>
-                  </a>
-
-                  <a [routerLink]="['/audit-log', auditLog.id, 'edit']" class="btn btn-primary btn-sm" data-cy="entityEditButton">
-                    <fa-icon icon="pencil-alt"></fa-icon>
-                    <span class="d-none d-md-inline">Edit</span>
                   </a>
                 </div>
               </td>

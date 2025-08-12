@@ -16,5 +16,3 @@ export interface IAuditLog {
   requesterIpAddress?: string | null;
   merchant?: Pick<IMerchant, 'id' | 'name'> | null;
 }
-
-export type NewAuditLog = Omit<IAuditLog, 'id'> & { id: null };

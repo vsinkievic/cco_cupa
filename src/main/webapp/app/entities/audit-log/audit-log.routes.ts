@@ -21,22 +21,6 @@ const auditLogRoute: Routes = [
     },
     canActivate: [UserRouteAccessService],
   },
-  {
-    path: 'new',
-    loadComponent: () => import('./update/audit-log-update.component').then(m => m.AuditLogUpdateComponent),
-    resolve: {
-      auditLog: AuditLogResolve,
-    },
-    canActivate: [UserRouteAccessService],
-  },
-  {
-    path: ':id/edit',
-    loadComponent: () => import('./update/audit-log-update.component').then(m => m.AuditLogUpdateComponent),
-    resolve: {
-      auditLog: AuditLogResolve,
-    },
-    canActivate: [UserRouteAccessService],
-  },
 ];
 
 export default auditLogRoute;
