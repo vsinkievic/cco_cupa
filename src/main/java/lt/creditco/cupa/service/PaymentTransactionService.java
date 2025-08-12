@@ -3,6 +3,7 @@ package lt.creditco.cupa.service;
 import java.util.Optional;
 import java.util.UUID;
 import lt.creditco.cupa.domain.PaymentTransaction;
+import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import lt.creditco.cupa.repository.PaymentTransactionRepository;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
 import lt.creditco.cupa.service.mapper.PaymentTransactionMapper;
@@ -47,6 +48,8 @@ public class PaymentTransactionService {
         if (paymentTransaction.getId() == null) {
             paymentTransaction.setId(UUID.randomUUID().toString());
         }
+
+        paymentTransaction.setStatus(TransactionStatus.RECEIVED);
         paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
         return paymentTransactionMapper.toDto(paymentTransaction);
     }

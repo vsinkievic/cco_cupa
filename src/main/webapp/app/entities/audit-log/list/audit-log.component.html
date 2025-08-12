@@ -47,16 +47,16 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="apiEndpoint">
+            <th scope="col" jhiSortBy="httpMethod">
               <div class="d-flex">
-                <span>Api Endpoint</span>
+                <span>Http Method</span>
 
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="httpMethod">
+            <th scope="col" jhiSortBy="apiEndpoint">
               <div class="d-flex">
-                <span>Http Method</span>
+                <span>Api Endpoint</span>
 
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
@@ -65,6 +65,19 @@
               <div class="d-flex">
                 <span>Http Status Code</span>
 
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="environment">
+              <div class="d-flex">
+                <span>Environment</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="merchant.name">
+              <div class="d-flex">
+                <span>Merchant</span>
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
@@ -82,44 +95,10 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="cupaApiKey">
-              <div class="d-flex">
-                <span>Cupa Api Key</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="environment">
-              <div class="d-flex">
-                <span>Environment</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="requestData">
-              <div class="d-flex">
-                <span>Request Data</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="responseData">
-              <div class="d-flex">
-                <span>Response Data</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
             <th scope="col" jhiSortBy="requesterIpAddress">
               <div class="d-flex">
                 <span>Requester Ip Address</span>
 
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="merchant.name">
-              <div class="d-flex">
-                <span>Merchant</span>
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
@@ -133,15 +112,13 @@
                 <a [routerLink]="['/audit-log', auditLog.id, 'view']">{{ auditLog.id }}</a>
               </td>
               <td>{{ auditLog.requestTimestamp | formatMediumDatetime }}</td>
-              <td>{{ auditLog.apiEndpoint }}</td>
               <td>{{ auditLog.httpMethod }}</td>
+              <td>{{ auditLog.apiEndpoint }}</td>
               <td>{{ auditLog.httpStatusCode }}</td>
+              <td>{{ auditLog.environment }}</td>
+              <td>{{ auditLog.merchant?.name }}</td>
               <td>{{ auditLog.orderId }}</td>
               <td>{{ auditLog.responseDescription }}</td>
-              <td>{{ auditLog.cupaApiKey }}</td>
-              <td>{{ auditLog.environment }}</td>
-              <td>{{ auditLog.requestData }}</td>
-              <td>{{ auditLog.responseData }}</td>
               <td>{{ auditLog.requesterIpAddress }}</td>
               <td>
                 @if (auditLog.merchant) {
@@ -161,11 +138,6 @@
                     <fa-icon icon="pencil-alt"></fa-icon>
                     <span class="d-none d-md-inline">Edit</span>
                   </a>
-
-                  <button type="submit" (click)="delete(auditLog)" class="btn btn-danger btn-sm" data-cy="entityDeleteButton">
-                    <fa-icon icon="times"></fa-icon>
-                    <span class="d-none d-md-inline">Delete</span>
-                  </button>
                 </div>
               </td>
             </tr>

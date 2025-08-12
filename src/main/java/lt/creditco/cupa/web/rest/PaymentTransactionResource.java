@@ -7,7 +7,6 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import lt.creditco.cupa.repository.PaymentTransactionRepository;
 import lt.creditco.cupa.service.PaymentTransactionService;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;

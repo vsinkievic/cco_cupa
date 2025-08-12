@@ -2,9 +2,7 @@ package lt.creditco.cupa.api;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import lombok.Data;
 
-@Data
 public class Payment {
 
     private String orderId;
@@ -13,4 +11,54 @@ public class Payment {
     private String currency;
     private String status;
     private Instant createdAt = Instant.now();
+
+    // Getters
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    // Setters
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
 }
