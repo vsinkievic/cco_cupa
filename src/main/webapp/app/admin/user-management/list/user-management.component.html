@@ -25,10 +25,10 @@
             <th scope="col" jhiSortBy="id"><span>ID</span> <fa-icon icon="sort"></fa-icon></th>
             <th scope="col" jhiSortBy="login"><span>Login</span> <fa-icon icon="sort"></fa-icon></th>
             <th scope="col" jhiSortBy="email"><span>Email</span> <fa-icon icon="sort"></fa-icon></th>
+            <th scope="col"><span>Merchant IDs</span></th>
             <th scope="col"></th>
             <th scope="col"><span>Profiles</span></th>
             <th scope="col" jhiSortBy="createdDate"><span>Created date</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col" jhiSortBy="lastModifiedBy"><span>Modified by</span> <fa-icon icon="sort"></fa-icon></th>
             <th scope="col" jhiSortBy="lastModifiedDate"><span>Modified date</span> <fa-icon icon="sort"></fa-icon></th>
             <th scope="col"></th>
           </tr>
@@ -41,6 +41,7 @@
               </td>
               <td>{{ user.login }}</td>
               <td>{{ user.email }}</td>
+              <td>{{ user.merchantIds }}</td>
               <td>
                 @if (!user.activated) {
                   <button class="btn btn-danger btn-sm" (click)="setActive(user, true)">Deactivated</button>
@@ -61,9 +62,8 @@
                   </div>
                 }
               </td>
-              <td>{{ user.createdDate | date: 'dd/MM/yy HH:mm' }}</td>
-              <td>{{ user.lastModifiedBy }}</td>
-              <td>{{ user.lastModifiedDate | date: 'dd/MM/yy HH:mm' }}</td>
+              <td>{{ user.createdDate | date: 'yyyy-MM-dd HH:mm' }}</td>
+              <td>{{ user.lastModifiedDate | date: 'yyyy-MM-dd HH:mm' }}</td>
               <td class="text-end">
                 <div class="btn-group">
                   <button type="submit" [routerLink]="['./', user.login, 'view']" class="btn btn-info btn-sm">

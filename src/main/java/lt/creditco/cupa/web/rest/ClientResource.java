@@ -59,7 +59,11 @@ public class ClientResource {
     public ResponseEntity<ClientDTO> createClient(@Valid @RequestBody ClientDTO clientDTO) throws URISyntaxException {
         LOG.debug("REST request to save Client : {}", clientDTO);
         if (clientDTO.getId() != null) {
-            throw new BadRequestAlertException("A new client cannot already have an ID", ENTITY_NAME, "idexists");
+            if (clientRepository.existsById(clientDTO.getId())) {
+                throw new BadRequestAlertException("Such ID already exists", ENTITY_NAME, "idexists");
+            }
+        } else {
+            clientDTO.setId(UUID.randomUUID().toString());
         }
         clientDTO = clientService.save(clientDTO);
         return ResponseEntity.created(new URI("/api/clients/" + clientDTO.getId()))

@@ -3,11 +3,15 @@ import { IClient, NewClient } from './client.model';
 export const sampleWithRequiredData: IClient = {
   id: '16289',
   merchantClientId: 'save colour yippee',
+  merchantId: 'merchant-123',
+  merchantName: 'Test Merchant',
 };
 
 export const sampleWithPartialData: IClient = {
   id: '29388',
   merchantClientId: 'blah absent',
+  merchantId: 'merchant-456',
+  merchantName: 'Partial Merchant',
   name: 'magnetize purse',
   emailAddress: '8@J}."~Hi',
   mobileNumber: 'whoever',
@@ -23,6 +27,8 @@ export const sampleWithPartialData: IClient = {
 export const sampleWithFullData: IClient = {
   id: '31496',
   merchantClientId: 'boohoo shipper soggy',
+  merchantId: 'merchant-789',
+  merchantName: 'Full Merchant',
   name: 'that consequently',
   emailAddress: 'V@Fqx=(Z.{Tqn',
   mobileNumber: 'ouch blah',
@@ -41,6 +47,8 @@ export const sampleWithFullData: IClient = {
 
 export const sampleWithNewData: NewClient = {
   merchantClientId: 'seemingly excepting',
+  merchantId: 'merchant-new',
+  merchantName: 'New Merchant',
   id: null,
 };
 

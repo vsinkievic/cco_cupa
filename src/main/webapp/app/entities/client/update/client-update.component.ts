@@ -9,7 +9,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { IMerchant } from 'app/entities/merchant/merchant.model';
 import { MerchantService } from 'app/entities/merchant/service/merchant.service';
-import { IClient } from '../client.model';
+import { IClient, NewClient } from '../client.model';
 import { ClientService } from '../service/client.service';
 import { ClientFormGroup, ClientFormService } from './client-form.service';
 
@@ -32,8 +32,6 @@ export class ClientUpdateComponent implements OnInit {
   // eslint-disable-next-line @typescript-eslint/member-ordering
   editForm: ClientFormGroup = this.clientFormService.createClientFormGroup();
 
-  compareMerchant = (o1: IMerchant | null, o2: IMerchant | null): boolean => this.merchantService.compareMerchant(o1, o2);
-
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(({ client }) => {
       this.client = client;
@@ -52,11 +50,31 @@ export class ClientUpdateComponent implements OnInit {
   save(): void {
     this.isSaving = true;
     const client = this.clientFormService.getClient(this.editForm);
-    if (client.id !== null) {
+    console.warn('client before saving:', client);
+    if (client.version !== null) {
       this.subscribeToSaveResponse(this.clientService.update(client));
     } else {
-      this.subscribeToSaveResponse(this.clientService.create(client));
+      const newClient = { ...client, version: null } as NewClient;
+      this.subscribeToSaveResponse(this.clientService.create(newClient));
     }
+  }
+
+  onMerchantChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const merchantId = target.value;
+
+    if (merchantId) {
+      const merchant = this.merchantsSharedCollection.find(m => m.id === merchantId);
+      if (merchant) {
+        this.editForm.patchValue({ merchantId: merchant.id });
+      }
+    } else {
+      this.editForm.patchValue({ merchantId: null });
+    }
+  }
+
+  trackMerchant(index: number, item: IMerchant): string {
+    return item.id;
   }
 
   protected subscribeToSaveResponse(result: Observable<HttpResponse<IClient>>): void {
@@ -81,20 +99,12 @@ export class ClientUpdateComponent implements OnInit {
   protected updateForm(client: IClient): void {
     this.client = client;
     this.clientFormService.resetForm(this.editForm, client);
-
-    this.merchantsSharedCollection = this.merchantService.addMerchantToCollectionIfMissing<IMerchant>(
-      this.merchantsSharedCollection,
-      client.merchant,
-    );
   }
 
   protected loadRelationshipsOptions(): void {
     this.merchantService
       .query()
       .pipe(map((res: HttpResponse<IMerchant[]>) => res.body ?? []))
-      .pipe(
-        map((merchants: IMerchant[]) => this.merchantService.addMerchantToCollectionIfMissing<IMerchant>(merchants, this.client?.merchant)),
-      )
       .subscribe((merchants: IMerchant[]) => (this.merchantsSharedCollection = merchants));
   }
 }

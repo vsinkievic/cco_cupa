@@ -68,76 +68,6 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="cupaTestApiKey">
-              <div class="d-flex">
-                <span>Cupa Test Api Key</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="cupaProdApiKey">
-              <div class="d-flex">
-                <span>Cupa Prod Api Key</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="remoteTestUrl">
-              <div class="d-flex">
-                <span>Remote Test Url</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="remoteTestMerchantId">
-              <div class="d-flex">
-                <span>Remote Test Merchant Id</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="remoteTestMerchantKey">
-              <div class="d-flex">
-                <span>Remote Test Merchant Key</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="remoteTestApiKey">
-              <div class="d-flex">
-                <span>Remote Test Api Key</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="remoteProdUrl">
-              <div class="d-flex">
-                <span>Remote Prod Url</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="remoteProdMerchantId">
-              <div class="d-flex">
-                <span>Remote Prod Merchant Id</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="remoteProdMerchantKey">
-              <div class="d-flex">
-                <span>Remote Prod Merchant Key</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="remoteProdApiKey">
-              <div class="d-flex">
-                <span>Remote Prod Api Key</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
             <th scope="col"></th>
           </tr>
         </thead>
@@ -151,16 +81,6 @@
               <td>{{ { null: '', TEST: 'TEST', LIVE: 'LIVE' }[merchant.mode ?? 'null'] }}</td>
               <td>{{ { null: '', ACTIVE: 'ACTIVE', INACTIVE: 'INACTIVE' }[merchant.status ?? 'null'] }}</td>
               <td>{{ merchant.balance }}</td>
-              <td>{{ merchant.cupaTestApiKey }}</td>
-              <td>{{ merchant.cupaProdApiKey }}</td>
-              <td>{{ merchant.remoteTestUrl }}</td>
-              <td>{{ merchant.remoteTestMerchantId }}</td>
-              <td>{{ merchant.remoteTestMerchantKey }}</td>
-              <td>{{ merchant.remoteTestApiKey }}</td>
-              <td>{{ merchant.remoteProdUrl }}</td>
-              <td>{{ merchant.remoteProdMerchantId }}</td>
-              <td>{{ merchant.remoteProdMerchantKey }}</td>
-              <td>{{ merchant.remoteProdApiKey }}</td>
               <td class="text-end">
                 <div class="btn-group">
                   <a [routerLink]="['/merchant', merchant.id, 'view']" class="btn btn-info btn-sm" data-cy="entityDetailsButton">

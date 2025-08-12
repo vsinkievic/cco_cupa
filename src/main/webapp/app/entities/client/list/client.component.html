@@ -40,13 +40,6 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="merchantClientId">
-              <div class="d-flex">
-                <span>Merchant Client Id</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
             <th scope="col" jhiSortBy="name">
               <div class="d-flex">
                 <span>Name</span>
@@ -68,58 +61,9 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="clientPhone">
-              <div class="d-flex">
-                <span>Client Phone</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="valid">
-              <div class="d-flex">
-                <span>Valid</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="streetNumber">
-              <div class="d-flex">
-                <span>Street Number</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="streetName">
-              <div class="d-flex">
-                <span>Street Name</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="streetSuffix">
-              <div class="d-flex">
-                <span>Street Suffix</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
             <th scope="col" jhiSortBy="city">
               <div class="d-flex">
                 <span>City</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="state">
-              <div class="d-flex">
-                <span>State</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="postCode">
-              <div class="d-flex">
-                <span>Post Code</span>
 
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
@@ -131,21 +75,14 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="isBlacklisted">
+            <th scope="col" jhiSortBy="merchantId">
               <div class="d-flex">
-                <span>Is Blacklisted</span>
+                <span>Merchant ID</span>
 
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="isCorrelatedBlacklisted">
-              <div class="d-flex">
-                <span>Is Correlated Blacklisted</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="merchant.name">
+            <th scope="col" jhiSortBy="merchantName">
               <div class="d-flex">
                 <span>Merchant</span>
                 <fa-icon class="p-1" icon="sort"></fa-icon>
@@ -160,28 +97,26 @@
               <td>
                 <a [routerLink]="['/client', client.id, 'view']">{{ client.id }}</a>
               </td>
-              <td>{{ client.merchantClientId }}</td>
               <td>{{ client.name }}</td>
               <td>{{ client.emailAddress }}</td>
               <td>{{ client.mobileNumber }}</td>
-              <td>{{ client.clientPhone }}</td>
-              <td>{{ client.valid }}</td>
-              <td>{{ client.streetNumber }}</td>
-              <td>{{ client.streetName }}</td>
-              <td>{{ client.streetSuffix }}</td>
               <td>{{ client.city }}</td>
-              <td>{{ client.state }}</td>
-              <td>{{ client.postCode }}</td>
               <td>{{ client.country }}</td>
-              <td>{{ client.isBlacklisted }}</td>
-              <td>{{ client.isCorrelatedBlacklisted }}</td>
               <td>
-                @if (client.merchant) {
+                @if (client.merchantId) {
                   <div>
-                    <a [routerLink]="['/merchant', client.merchant.id, 'view']">{{ client.merchant.name }}</a>
+                    <a [routerLink]="['/merchant', client.merchantId, 'view']">{{ client.merchantId }}</a>
                   </div>
                 }
               </td>
+              <td>
+                @if (client.merchantName) {
+                  <div>
+                    <a [routerLink]="['/merchant', client.merchantId, 'view']">{{ client.merchantName }}</a>
+                  </div>
+                }
+              </td>
+
               <td class="text-end">
                 <div class="btn-group">
                   <a [routerLink]="['/client', client.id, 'view']" class="btn btn-info btn-sm" data-cy="entityDetailsButton">

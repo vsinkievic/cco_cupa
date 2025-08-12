@@ -21,6 +21,7 @@ describe('Client Form Service', () => {
           expect.objectContaining({
             id: expect.any(Object),
             merchantClientId: expect.any(Object),
+            merchantId: expect.any(Object),
             name: expect.any(Object),
             emailAddress: expect.any(Object),
             mobileNumber: expect.any(Object),
@@ -35,7 +36,6 @@ describe('Client Form Service', () => {
             country: expect.any(Object),
             isBlacklisted: expect.any(Object),
             isCorrelatedBlacklisted: expect.any(Object),
-            merchant: expect.any(Object),
           }),
         );
       });
@@ -47,6 +47,7 @@ describe('Client Form Service', () => {
           expect.objectContaining({
             id: expect.any(Object),
             merchantClientId: expect.any(Object),
+            merchantId: expect.any(Object),
             name: expect.any(Object),
             emailAddress: expect.any(Object),
             mobileNumber: expect.any(Object),
@@ -61,7 +62,6 @@ describe('Client Form Service', () => {
             country: expect.any(Object),
             isBlacklisted: expect.any(Object),
             isCorrelatedBlacklisted: expect.any(Object),
-            merchant: expect.any(Object),
           }),
         );
       });

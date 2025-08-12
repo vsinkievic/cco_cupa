@@ -14,11 +14,13 @@ type PartialWithRequiredKeyOf<T extends { id: unknown }> = Partial<Omit<T, 'id'>
  */
 type ClientFormGroupInput = IClient | PartialWithRequiredKeyOf<NewClient>;
 
-type ClientFormDefaults = Pick<NewClient, 'id' | 'valid' | 'isBlacklisted' | 'isCorrelatedBlacklisted'>;
+type ClientFormDefaults = Pick<NewClient, 'id' | 'valid' | 'isBlacklisted' | 'isCorrelatedBlacklisted' | 'version'>;
 
 type ClientFormGroupContent = {
   id: FormControl<IClient['id'] | NewClient['id']>;
+  version: FormControl<IClient['version']>;
   merchantClientId: FormControl<IClient['merchantClientId']>;
+  merchantId: FormControl<IClient['merchantId']>;
   name: FormControl<IClient['name']>;
   emailAddress: FormControl<IClient['emailAddress']>;
   mobileNumber: FormControl<IClient['mobileNumber']>;
@@ -33,36 +35,44 @@ type ClientFormGroupContent = {
   country: FormControl<IClient['country']>;
   isBlacklisted: FormControl<IClient['isBlacklisted']>;
   isCorrelatedBlacklisted: FormControl<IClient['isCorrelatedBlacklisted']>;
-  merchant: FormControl<IClient['merchant']>;
 };
 
 export type ClientFormGroup = FormGroup<ClientFormGroupContent>;
 
 @Injectable({ providedIn: 'root' })
 export class ClientFormService {
-  createClientFormGroup(client: ClientFormGroupInput = { id: null }): ClientFormGroup {
+  createClientFormGroup(client: ClientFormGroupInput = { id: null, version: null }): ClientFormGroup {
     const clientRawValue = {
       ...this.getFormDefaults(),
       ...client,
     };
+
+    // Determine if this is an existing client with createdInGateway
+    const isExistingClient = Boolean(clientRawValue.id && clientRawValue.createdInGateway);
+
     return new FormGroup<ClientFormGroupContent>({
       id: new FormControl(
-        { value: clientRawValue.id, disabled: true },
+        { value: clientRawValue.id, disabled: isExistingClient },
         {
           nonNullable: true,
           validators: [Validators.required],
         },
       ),
-      merchantClientId: new FormControl(clientRawValue.merchantClientId, {
-        validators: [Validators.required],
-      }),
+      version: new FormControl(clientRawValue.version),
+      merchantClientId: new FormControl({ value: clientRawValue.merchantClientId, disabled: true }),
+      merchantId: new FormControl(
+        { value: clientRawValue.merchantId, disabled: isExistingClient },
+        {
+          validators: [Validators.required],
+        },
+      ),
       name: new FormControl(clientRawValue.name),
       emailAddress: new FormControl(clientRawValue.emailAddress, {
         validators: [Validators.pattern('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')],
       }),
       mobileNumber: new FormControl(clientRawValue.mobileNumber),
       clientPhone: new FormControl(clientRawValue.clientPhone),
-      valid: new FormControl(clientRawValue.valid),
+      valid: new FormControl({ value: clientRawValue.valid, disabled: true }),
       streetNumber: new FormControl(clientRawValue.streetNumber),
       streetName: new FormControl(clientRawValue.streetName),
       streetSuffix: new FormControl(clientRawValue.streetSuffix),
@@ -70,11 +80,8 @@ export class ClientFormService {
       state: new FormControl(clientRawValue.state),
       postCode: new FormControl(clientRawValue.postCode),
       country: new FormControl(clientRawValue.country),
-      isBlacklisted: new FormControl(clientRawValue.isBlacklisted),
-      isCorrelatedBlacklisted: new FormControl(clientRawValue.isCorrelatedBlacklisted),
-      merchant: new FormControl(clientRawValue.merchant, {
-        validators: [Validators.required],
-      }),
+      isBlacklisted: new FormControl({ value: clientRawValue.isBlacklisted, disabled: true }),
+      isCorrelatedBlacklisted: new FormControl({ value: clientRawValue.isCorrelatedBlacklisted, disabled: true }),
     });
   }
 
@@ -84,10 +91,20 @@ export class ClientFormService {
 
   resetForm(form: ClientFormGroup, client: ClientFormGroupInput): void {
     const clientRawValue = { ...this.getFormDefaults(), ...client };
+
+    // Determine if this is an existing client with createdInGateway
+    const isExistingClient = Boolean(clientRawValue.id && clientRawValue.createdInGateway);
+
     form.reset(
       {
         ...clientRawValue,
-        id: { value: clientRawValue.id, disabled: true },
+        id: { value: clientRawValue.id, disabled: isExistingClient },
+        version: clientRawValue.version,
+        merchantClientId: { value: clientRawValue.merchantClientId, disabled: true },
+        merchantId: { value: clientRawValue.merchantId, disabled: isExistingClient },
+        valid: { value: clientRawValue.valid, disabled: true },
+        isBlacklisted: { value: clientRawValue.isBlacklisted, disabled: true },
+        isCorrelatedBlacklisted: { value: clientRawValue.isCorrelatedBlacklisted, disabled: true },
       } as any /* cast to workaround https://github.com/angular/angular/issues/46458 */,
     );
   }
@@ -98,6 +115,7 @@ export class ClientFormService {
       valid: false,
       isBlacklisted: false,
       isCorrelatedBlacklisted: false,
+      version: null,
     };
   }
 }

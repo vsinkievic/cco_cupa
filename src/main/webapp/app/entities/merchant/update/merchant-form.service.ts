@@ -86,7 +86,7 @@ export class MerchantFormService {
       {
         ...merchantRawValue,
         id: { value: merchantRawValue.id, disabled: true },
-        version: { version: merchantRawValue.version },
+        version: merchantRawValue.version,
       } as any /* cast to workaround https://github.com/angular/angular/issues/46458 */,
     );
   }

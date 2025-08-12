@@ -6,31 +6,36 @@
       <div>
         <jhi-alert-error />
 
-        @if (editForm.controls.id.value !== null) {
-          <div class="mb-3">
-            <label class="form-label" for="field_id">ID</label>
-            <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
-          </div>
-        }
-
-        @let merchantClientIdRef = editForm.get('merchantClientId')!;
         <div class="mb-3">
-          <label class="form-label" for="field_merchantClientId">Merchant Client Id</label>
-          <input
-            type="text"
+          <label class="form-label" for="field_id">ID</label>
+          <input type="text" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" />
+          <div *ngIf="editForm.get('id')?.invalid && (editForm.get('id')?.dirty || editForm.get('id')?.touched)">
+            <small class="form-text text-danger" *ngIf="editForm.get('id')?.errors?.required"> This field is required. </small>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_merchantId">Merchant</label>
+          <select
             class="form-control"
-            name="merchantClientId"
-            id="field_merchantClientId"
-            data-cy="merchantClientId"
-            formControlName="merchantClientId"
-          />
-          @if (merchantClientIdRef.invalid && (merchantClientIdRef.dirty || merchantClientIdRef.touched)) {
-            <div>
-              @if (editForm.get('merchantClientId')?.errors?.required) {
-                <small class="form-text text-danger">This field is required.</small>
-              }
-            </div>
-          }
+            id="field_merchantId"
+            data-cy="merchantId"
+            name="merchantId"
+            (change)="onMerchantChange($event)"
+            [disabled]="editForm.get('merchantId')?.disabled"
+          >
+            <option value="">Select a merchant</option>
+            <option
+              *ngFor="let merchantOption of merchantsSharedCollection; trackBy: trackMerchant"
+              [value]="merchantOption.id"
+              [selected]="merchantOption.id === editForm.get('merchantId')?.value"
+            >
+              {{ merchantOption.name }}
+            </option>
+          </select>
+          <div *ngIf="editForm.get('merchantId')?.invalid && (editForm.get('merchantId')?.dirty || editForm.get('merchantId')?.touched)">
+            <small class="form-text text-danger" *ngIf="editForm.get('merchantId')?.errors?.required"> This field is required. </small>
+          </div>
         </div>
 
         <div class="mb-3">
@@ -38,7 +43,6 @@
           <input type="text" class="form-control" name="name" id="field_name" data-cy="name" formControlName="name" />
         </div>
 
-        @let emailAddressRef = editForm.get('emailAddress')!;
         <div class="mb-3">
           <label class="form-label" for="field_emailAddress">Email Address</label>
           <input
@@ -49,13 +53,13 @@
             data-cy="emailAddress"
             formControlName="emailAddress"
           />
-          @if (emailAddressRef.invalid && (emailAddressRef.dirty || emailAddressRef.touched)) {
-            <div>
-              @if (editForm.get('emailAddress')?.errors?.pattern) {
-                <small class="form-text text-danger">This field should follow pattern for Email Address.</small>
-              }
-            </div>
-          }
+          <div
+            *ngIf="editForm.get('emailAddress')?.invalid && (editForm.get('emailAddress')?.dirty || editForm.get('emailAddress')?.touched)"
+          >
+            <small class="form-text text-danger" *ngIf="editForm.get('emailAddress')?.errors?.pattern">
+              This field should follow pattern for Email Address.
+            </small>
+          </div>
         </div>
 
         <div class="mb-3">
@@ -80,11 +84,6 @@
             data-cy="clientPhone"
             formControlName="clientPhone"
           />
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label" for="field_valid">Valid</label>
-          <input type="checkbox" class="form-check" name="valid" id="field_valid" data-cy="valid" formControlName="valid" />
         </div>
 
         <div class="mb-3">
@@ -142,56 +141,6 @@
           <label class="form-label" for="field_country">Country</label>
           <input type="text" class="form-control" name="country" id="field_country" data-cy="country" formControlName="country" />
         </div>
-
-        <div class="mb-3">
-          <label class="form-label" for="field_isBlacklisted">Is Blacklisted</label>
-          <input
-            type="checkbox"
-            class="form-check"
-            name="isBlacklisted"
-            id="field_isBlacklisted"
-            data-cy="isBlacklisted"
-            formControlName="isBlacklisted"
-          />
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label" for="field_isCorrelatedBlacklisted">Is Correlated Blacklisted</label>
-          <input
-            type="checkbox"
-            class="form-check"
-            name="isCorrelatedBlacklisted"
-            id="field_isCorrelatedBlacklisted"
-            data-cy="isCorrelatedBlacklisted"
-            formControlName="isCorrelatedBlacklisted"
-          />
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label" for="field_merchant">Merchant</label>
-          <select
-            class="form-control"
-            id="field_merchant"
-            data-cy="merchant"
-            name="merchant"
-            formControlName="merchant"
-            [compareWith]="compareMerchant"
-          >
-            @if (editForm.get(['merchant'])!.value === null) {
-              <option [ngValue]="null" selected></option>
-            }
-            @for (merchantOption of merchantsSharedCollection; track $index) {
-              <option [ngValue]="merchantOption">{{ merchantOption.name }}</option>
-            }
-          </select>
-        </div>
-        @if (editForm.get(['merchant'])!.invalid && (editForm.get(['merchant'])!.dirty || editForm.get(['merchant'])!.touched)) {
-          <div>
-            @if (editForm.get(['merchant'])?.errors?.required) {
-              <small class="form-text text-danger">This field is required.</small>
-            }
-          </div>
-        }
       </div>
 
       <div>

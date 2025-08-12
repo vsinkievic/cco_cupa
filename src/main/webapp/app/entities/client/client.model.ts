@@ -1,8 +1,8 @@
-import { IMerchant } from 'app/entities/merchant/merchant.model';
-
 export interface IClient {
   id: string;
   merchantClientId?: string | null;
+  merchantId?: string | null;
+  merchantName?: string | null;
   name?: string | null;
   emailAddress?: string | null;
   mobileNumber?: string | null;
@@ -19,7 +19,7 @@ export interface IClient {
   isCorrelatedBlacklisted?: boolean | null;
   createdInGateway?: string | null;
   updatedInGateway?: string | null;
-  merchant?: Pick<IMerchant, 'id' | 'name'> | null;
+  version?: number | null;
 }
 
-export type NewClient = Omit<IClient, 'id'> & { id: null };
+export type NewClient = Omit<IClient, 'id' | 'version'> & { id: null; version: null };

@@ -19,6 +19,22 @@
           <dd>
             <span>{{ clientRef.merchantClientId }}</span>
           </dd>
+          <dt><span>Merchant ID</span></dt>
+          <dd>
+            @if (clientRef.merchantId) {
+              <div>
+                <a [routerLink]="['/merchant', clientRef.merchantId, 'view']">{{ clientRef.merchantId }}</a>
+              </div>
+            }
+          </dd>
+          <dt><span>Merchant Name</span></dt>
+          <dd>
+            @if (clientRef.merchantName) {
+              <div>
+                <a [routerLink]="['/merchant', clientRef.merchantId, 'view']">{{ clientRef.merchantName }}</a>
+              </div>
+            }
+          </dd>
           <dt><span>Name</span></dt>
           <dd>
             <span>{{ clientRef.name }}</span>
@@ -82,14 +98,6 @@
           <dt><span>Updated In Gateway</span></dt>
           <dd>
             <span>{{ clientRef.updatedInGateway | date: 'medium' }}</span>
-          </dd>
-          <dt><span>Merchant</span></dt>
-          <dd>
-            @if (client()!.merchant) {
-              <div>
-                <a [routerLink]="['/merchant', client()!.merchant?.id, 'view']">{{ clientRef.merchant?.name }}</a>
-              </div>
-            }
           </dd>
         </dl>
 

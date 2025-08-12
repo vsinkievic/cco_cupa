@@ -4,8 +4,6 @@ import { FormBuilder } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subject, from, of } from 'rxjs';
 
-import { IMerchant } from 'app/entities/merchant/merchant.model';
-import { MerchantService } from 'app/entities/merchant/service/merchant.service';
 import { ClientService } from '../service/client.service';
 import { IClient } from '../client.model';
 import { ClientFormService } from './client-form.service';
@@ -18,7 +16,6 @@ describe('Client Management Update Component', () => {
   let activatedRoute: ActivatedRoute;
   let clientFormService: ClientFormService;
   let clientService: ClientService;
-  let merchantService: MerchantService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -41,43 +38,17 @@ describe('Client Management Update Component', () => {
     activatedRoute = TestBed.inject(ActivatedRoute);
     clientFormService = TestBed.inject(ClientFormService);
     clientService = TestBed.inject(ClientService);
-    merchantService = TestBed.inject(MerchantService);
 
     comp = fixture.componentInstance;
   });
 
   describe('ngOnInit', () => {
-    it('should call Merchant query and add missing value', () => {
-      const client: IClient = { id: '16836' };
-      const merchant: IMerchant = { id: '23082' };
-      client.merchant = merchant;
-
-      const merchantCollection: IMerchant[] = [{ id: '23082' }];
-      jest.spyOn(merchantService, 'query').mockReturnValue(of(new HttpResponse({ body: merchantCollection })));
-      const additionalMerchants = [merchant];
-      const expectedCollection: IMerchant[] = [...additionalMerchants, ...merchantCollection];
-      jest.spyOn(merchantService, 'addMerchantToCollectionIfMissing').mockReturnValue(expectedCollection);
-
-      activatedRoute.data = of({ client });
-      comp.ngOnInit();
-
-      expect(merchantService.query).toHaveBeenCalled();
-      expect(merchantService.addMerchantToCollectionIfMissing).toHaveBeenCalledWith(
-        merchantCollection,
-        ...additionalMerchants.map(expect.objectContaining),
-      );
-      expect(comp.merchantsSharedCollection).toEqual(expectedCollection);
-    });
-
     it('should update editForm', () => {
       const client: IClient = { id: '16836' };
-      const merchant: IMerchant = { id: '23082' };
-      client.merchant = merchant;
 
       activatedRoute.data = of({ client });
       comp.ngOnInit();
 
-      expect(comp.merchantsSharedCollection).toContainEqual(merchant);
       expect(comp.client).toEqual(client);
     });
   });
@@ -150,15 +121,44 @@ describe('Client Management Update Component', () => {
     });
   });
 
-  describe('Compare relationships', () => {
-    describe('compareMerchant', () => {
-      it('should forward to merchantService', () => {
-        const entity = { id: '23082' };
-        const entity2 = { id: '16734' };
-        jest.spyOn(merchantService, 'compareMerchant');
-        comp.compareMerchant(entity, entity2);
-        expect(merchantService.compareMerchant).toHaveBeenCalledWith(entity, entity2);
-      });
+  describe('onMerchantChange', () => {
+    it('should set merchantId when merchant is selected', () => {
+      // GIVEN
+      const merchant = { id: '123', name: 'Test Merchant' };
+      comp.merchantsSharedCollection = [merchant];
+      const event = { target: { value: '123' } } as any;
+      jest.spyOn(comp.editForm, 'patchValue');
+
+      // WHEN
+      comp.onMerchantChange(event);
+
+      // THEN
+      expect(comp.editForm.patchValue).toHaveBeenCalledWith({ merchantId: '123' });
+    });
+
+    it('should clear merchantId when no merchant is selected', () => {
+      // GIVEN
+      const event = { target: { value: '' } } as any;
+      jest.spyOn(comp.editForm, 'patchValue');
+
+      // WHEN
+      comp.onMerchantChange(event);
+
+      // THEN
+      expect(comp.editForm.patchValue).toHaveBeenCalledWith({ merchantId: null });
+    });
+  });
+
+  describe('trackMerchant', () => {
+    it('should return merchant id', () => {
+      // GIVEN
+      const merchant = { id: '123', name: 'Test Merchant' };
+
+      // WHEN
+      const result = comp.trackMerchant(0, merchant);
+
+      // THEN
+      expect(result).toBe('123');
     });
   });
 });
