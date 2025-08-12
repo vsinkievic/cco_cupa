@@ -255,5 +255,8 @@ class UserServiceIT {
         Optional<AdminUserDTO> updatedUserDTO = userService.updateUser(userDTO);
         assertThat(updatedUserDTO).isPresent();
         assertThat(updatedUserDTO.orElseThrow().getMerchantIds()).isEqualTo("test-merchant-1");
+
+        // Clean up the created user
+        userService.deleteUser("testuser");
     }
 }
