@@ -5,7 +5,7 @@ package lt.creditco.cupa.domain.enumeration;
  * Based on the 'cardType' in the documentation.
  */
 public enum PaymentBrand {
-    UNIONPAY,
-    ALIPAY,
-    WECHAT_PAY,
+    UnionPay,
+    WechatPay,
+    Alipay,
 }

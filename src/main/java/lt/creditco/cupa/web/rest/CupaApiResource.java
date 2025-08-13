@@ -20,6 +20,7 @@ import lt.creditco.cupa.service.mapper.PaymentMapper;
 import lt.creditco.cupa.web.context.CupaApiContext;
 import lt.creditco.cupa.web.rest.util.AccessControlHelper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -85,14 +86,12 @@ public class CupaApiResource {
             context.getEnvironment()
         );
 
-        // Your existing business logic
-        Payment payment = new Payment();
-        payment.setOrderId(request.getOrderId());
-        payment.setClientId(request.getClientId());
-        payment.setAmount(request.getAmount());
-        payment.setCurrency(request.getCurrency().name());
-        payment.setStatus("PENDING");
+        if (request.getMerchantId() != null && !context.canAccessEntity(request)) {
+            throw new AccessDeniedException(String.format("Access denied for merchant: %s", request.getMerchantId()));
+        }
 
-        return ResponseEntity.created(new URI("/api/payments/" + payment.getOrderId())).body(payment);
+        Payment payment = paymentTransactionService.createPayment(request, context);
+
+        return ResponseEntity.created(new URI("/api/v1/payments/" + payment.getOrderId())).body(payment);
     }
 }

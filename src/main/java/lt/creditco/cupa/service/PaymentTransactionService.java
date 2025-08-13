@@ -2,11 +2,19 @@ package lt.creditco.cupa.service;
 
 import java.util.Optional;
 import java.util.UUID;
+import lt.creditco.cupa.api.Payment;
+import lt.creditco.cupa.api.PaymentRequest;
 import lt.creditco.cupa.domain.PaymentTransaction;
+import lt.creditco.cupa.domain.enumeration.Currency;
+import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
+import lt.creditco.cupa.remote.CardType;
+import lt.creditco.cupa.remote.PaymentCurrency;
 import lt.creditco.cupa.repository.PaymentTransactionRepository;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
+import lt.creditco.cupa.service.mapper.PaymentMapper;
 import lt.creditco.cupa.service.mapper.PaymentTransactionMapper;
+import lt.creditco.cupa.web.context.CupaApiContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -27,12 +35,16 @@ public class PaymentTransactionService {
 
     private final PaymentTransactionMapper paymentTransactionMapper;
 
+    private final PaymentMapper paymentMapper;
+
     public PaymentTransactionService(
         PaymentTransactionRepository paymentTransactionRepository,
-        PaymentTransactionMapper paymentTransactionMapper
+        PaymentTransactionMapper paymentTransactionMapper,
+        PaymentMapper paymentMapper
     ) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.paymentTransactionMapper = paymentTransactionMapper;
+        this.paymentMapper = paymentMapper;
     }
 
     /**
@@ -128,5 +140,43 @@ public class PaymentTransactionService {
     public void delete(String id) {
         LOG.debug("Request to delete PaymentTransaction : {}", id);
         paymentTransactionRepository.deleteById(id);
+    }
+
+    public Payment createPayment(PaymentRequest request, CupaApiContext.CupaApiContextData context) {
+        LOG.info(
+            "createPayment({}), executed by {}, merchant: {}, environment: {}",
+            request.getOrderId(),
+            context.getUser().getLogin(),
+            context.getMerchantId(),
+            context.getEnvironment()
+        );
+
+        PaymentTransactionDTO paymentTransactionDTO = new PaymentTransactionDTO();
+        paymentTransactionDTO.setMerchantId(request.getMerchantId() != null ? request.getMerchantId() : context.getMerchantId());
+        paymentTransactionDTO.setOrderId(request.getOrderId());
+        paymentTransactionDTO.setClientId(request.getClientId());
+        paymentTransactionDTO.setAmount(request.getAmount());
+        paymentTransactionDTO.setCurrency(currencyFromPaymentCurrency(request.getCurrency()));
+        paymentTransactionDTO.setPaymentBrand(paymentBrandFromCardType(request.getCardType()));
+
+        paymentTransactionDTO.setStatus(TransactionStatus.RECEIVED);
+
+        paymentTransactionDTO = save(paymentTransactionDTO);
+
+        Payment payment = paymentMapper.toPayment(paymentTransactionDTO);
+
+        return payment;
+    }
+
+    private Currency currencyFromPaymentCurrency(PaymentCurrency paymentCurrency) {
+        return Currency.valueOf(paymentCurrency.name());
+    }
+
+    private PaymentCurrency paymentCurrencyFromCurrency(Currency currency) {
+        return PaymentCurrency.valueOf(currency.name());
+    }
+
+    private PaymentBrand paymentBrandFromCardType(CardType cardType) {
+        return PaymentBrand.valueOf(cardType.name());
     }
 }

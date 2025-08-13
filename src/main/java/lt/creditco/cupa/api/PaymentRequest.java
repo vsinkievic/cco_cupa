@@ -3,12 +3,13 @@ package lt.creditco.cupa.api;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import lombok.Data;
+import lt.creditco.cupa.domain.MerchantOwnedEntity;
 import lt.creditco.cupa.remote.CardType;
 import lt.creditco.cupa.remote.PaymentCurrency;
 
 @Data
 @Schema(description = "Payment request to initiate a new payment")
-public class PaymentRequest {
+public class PaymentRequest implements MerchantOwnedEntity {
 
     @Schema(
         required = true,
