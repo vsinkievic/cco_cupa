@@ -134,7 +134,7 @@ public class AuditLogService {
             auditLog.setRequestData(formatIfJson(apiRequestDetails.getRequestBody()));
             auditLog.setHttpStatusCode(apiRequestDetails.getResponseStatus());
             auditLog.setResponseData(formatIfJson(apiRequestDetails.getResponseBody()));
-            auditLog.setResponseDescription(apiRequestDetails.getResponseDescription());
+            auditLog.setResponseDescription(StringUtils.substring(apiRequestDetails.getResponseDescription(), 0, 255));
             auditLogRepository.save(auditLog);
         }
     }

@@ -169,7 +169,9 @@ public class HttpLoggingFilter implements Filter {
         public void setResponseDetails(BufferedResponseWrapper bufferedResponse) {
             this.responseStatus = bufferedResponse.getStatus();
             this.responseBody = bufferedResponse.getContent();
-            this.responseDescription = getResponseDescription(bufferedResponse.getStatus());
+
+            String errorMessage = bufferedResponse.getHeader("X-Error-Title");
+            this.responseDescription = errorMessage != null ? errorMessage : getResponseDescription(bufferedResponse.getStatus());
         }
 
         private String getResponseDescription(int statusCode) {

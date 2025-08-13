@@ -63,9 +63,20 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler
     public ResponseEntity<Object> handleAnyException(Throwable ex, NativeWebRequest request) {
-        LOG.debug("Converting Exception to Problem Details:", ex);
+        LOG.debug("Converting Exception to Problem Details: {}", ex.getClass().getSimpleName(), ex);
         ProblemDetailWithCause pdCause = wrapAndCustomizeProblem(ex, request);
-        return handleExceptionInternal((Exception) ex, pdCause, buildHeaders(ex), HttpStatusCode.valueOf(pdCause.getStatus()), request);
+        HttpHeaders headers = buildHeaders(ex);
+        LOG.debug("Built headers for {}: {}", ex.getClass().getSimpleName(), headers);
+        return handleExceptionInternal((Exception) ex, pdCause, headers, HttpStatusCode.valueOf(pdCause.getStatus()), request);
+    }
+
+    @ExceptionHandler(BadRequestAlertException.class)
+    public ResponseEntity<Object> handleBadRequestAlertException(BadRequestAlertException ex, NativeWebRequest request) {
+        LOG.debug("Handling BadRequestAlertException specifically: {}", ex.getMessage());
+        ProblemDetailWithCause pdCause = ex.getProblemDetailWithCause();
+        HttpHeaders headers = buildHeaders(ex);
+        LOG.debug("Built headers for BadRequestAlertException: {}", headers);
+        return handleExceptionInternal(ex, pdCause, headers, HttpStatusCode.valueOf(pdCause.getStatus()), request);
     }
 
     @Nullable
@@ -102,6 +113,9 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
                 .withDetail(ex.getMessage())
                 .withProperty("message", "error.validation")
                 .build();
+        }
+        if (ex instanceof BadRequestAlertException badRequestAlertException) {
+            return badRequestAlertException.getProblemDetailWithCause();
         }
 
         if (
@@ -205,6 +219,8 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
             return ErrorConstants.ERR_CONCURRENCY_FAILURE;
         } else if (err instanceof lt.creditco.cupa.service.InvalidMerchantIdsException) {
             return ErrorConstants.ERR_VALIDATION;
+        } else if (err instanceof BadRequestAlertException badRequestAlertException) {
+            return "error." + badRequestAlertException.getErrorKey();
         }
         return null;
     }
@@ -212,6 +228,7 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
     private String getCustomizedTitle(Throwable err) {
         if (err instanceof MethodArgumentNotValidException) return "Method argument not valid";
         if (err instanceof lt.creditco.cupa.service.InvalidMerchantIdsException) return "Invalid merchant IDs";
+        if (err instanceof BadRequestAlertException badRequestAlertException) return badRequestAlertException.getMessage();
         return null;
     }
 
@@ -241,9 +258,17 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
     }
 
     private HttpHeaders buildHeaders(Throwable err) {
-        HttpHeaders headers = null;
+        HttpHeaders headers = new HttpHeaders();
+        LOG.debug("Building headers for exception type: {}", err.getClass().getSimpleName());
 
         if (err instanceof BadRequestAlertException badRequestAlertException) {
+            LOG.debug(
+                "Processing BadRequestAlertException: entityName={}, errorKey={}, message={}",
+                badRequestAlertException.getEntityName(),
+                badRequestAlertException.getErrorKey(),
+                badRequestAlertException.getMessage()
+            );
+
             headers = HeaderUtil.createFailureAlert(
                 applicationName,
                 true,
@@ -254,10 +279,15 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
 
             // Add custom headers for audit logging
             headers.add("X-Error-Key", badRequestAlertException.getErrorKey());
-            headers.add("X-Error-Message", badRequestAlertException.getMessage());
-            headers.add("X-Entity-Name", badRequestAlertException.getEntityName());
-            headers.add("X-Error-Type", "validation");
-            headers.add("X-Error-Code", "error." + badRequestAlertException.getErrorKey());
+            //            headers.add("X-Error-Message", badRequestAlertException.getMessage());
+            headers.add("X-Error-Title", badRequestAlertException.getProblemDetailWithCause().getTitle());
+            //            headers.add("X-Entity-Name", badRequestAlertException.getEntityName());
+            //            headers.add("X-Error-Type", "validation");
+            //            headers.add("X-Error-Code", "error." + badRequestAlertException.getErrorKey());
+
+            LOG.debug("Added custom headers: {}", headers);
+        } else {
+            LOG.debug("Exception is not BadRequestAlertException, no custom headers added");
         }
 
         return headers;
