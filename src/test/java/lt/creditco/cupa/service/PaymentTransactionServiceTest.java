@@ -1,0 +1,211 @@
+package lt.creditco.cupa.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Optional;
+import lt.creditco.cupa.api.Payment;
+import lt.creditco.cupa.api.PaymentRequest;
+import lt.creditco.cupa.domain.PaymentTransaction;
+import lt.creditco.cupa.domain.enumeration.Currency;
+import lt.creditco.cupa.domain.enumeration.PaymentBrand;
+import lt.creditco.cupa.domain.enumeration.TransactionStatus;
+import lt.creditco.cupa.remote.CardType;
+import lt.creditco.cupa.remote.PaymentCurrency;
+import lt.creditco.cupa.repository.ClientRepository;
+import lt.creditco.cupa.repository.MerchantRepository;
+import lt.creditco.cupa.repository.PaymentTransactionRepository;
+import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
+import lt.creditco.cupa.service.mapper.PaymentMapper;
+import lt.creditco.cupa.service.mapper.PaymentTransactionMapper;
+import lt.creditco.cupa.web.context.CupaApiContext;
+import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class PaymentTransactionServiceTest {
+
+    @Mock
+    private PaymentTransactionRepository paymentTransactionRepository;
+
+    @Mock
+    private PaymentTransactionMapper paymentTransactionMapper;
+
+    @Mock
+    private PaymentMapper paymentMapper;
+
+    @Mock
+    private ClientRepository clientRepository;
+
+    @Mock
+    private MerchantRepository merchantRepository;
+
+    @InjectMocks
+    private PaymentTransactionService paymentTransactionService;
+
+    private PaymentTransactionDTO validPaymentTransactionDTO;
+    private PaymentTransaction validPaymentTransaction;
+    private PaymentRequest validPaymentRequest;
+    private CupaApiContext.CupaApiContextData validContext;
+
+    @BeforeEach
+    void setUp() {
+        validPaymentTransactionDTO = new PaymentTransactionDTO();
+        validPaymentTransactionDTO.setId("test-id");
+        validPaymentTransactionDTO.setOrderId("test-order-123");
+        validPaymentTransactionDTO.setClientId("CLN-00001");
+        validPaymentTransactionDTO.setMerchantId("MERCH-00001");
+        validPaymentTransactionDTO.setAmount(new BigDecimal("100.00"));
+        validPaymentTransactionDTO.setCurrency(Currency.USD);
+        validPaymentTransactionDTO.setPaymentBrand(PaymentBrand.UnionPay);
+        validPaymentTransactionDTO.setStatus(TransactionStatus.RECEIVED);
+        validPaymentTransactionDTO.setRequestTimestamp(Instant.now());
+
+        validPaymentTransaction = new PaymentTransaction();
+        validPaymentTransaction.setId("test-id");
+        validPaymentTransaction.setOrderId("test-order-123");
+        validPaymentTransaction.setClientId("CLN-00001");
+        validPaymentTransaction.setMerchantId("MERCH-00001");
+        validPaymentTransaction.setAmount(new BigDecimal("100.00"));
+        validPaymentTransaction.setCurrency(Currency.USD);
+        validPaymentTransaction.setPaymentBrand(PaymentBrand.UnionPay);
+        validPaymentTransaction.setStatus(TransactionStatus.RECEIVED);
+        validPaymentTransaction.setRequestTimestamp(Instant.now());
+
+        validPaymentRequest = new PaymentRequest();
+        validPaymentRequest.setOrderId("test-order-123");
+        validPaymentRequest.setClientId("CLN-00001");
+        validPaymentRequest.setAmount(new BigDecimal("100.00"));
+        validPaymentRequest.setCurrency(PaymentCurrency.USD);
+        validPaymentRequest.setCardType(CardType.UnionPay);
+
+        validContext = CupaApiContext.CupaApiContextData.builder().merchantId("MERCH-00001").environment("TEST").build();
+    }
+
+    @Test
+    void shouldSaveValidPaymentTransaction() {
+        // Given
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+        when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
+
+        // When
+        PaymentTransactionDTO result = paymentTransactionService.save(validPaymentTransactionDTO);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo("test-id");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenClientNotFound() {
+        // Given
+        when(clientRepository.existsById("CLN-00001")).thenReturn(false);
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Client with ID=CLN-00001 not found!");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenMerchantNotFound() {
+        // Given
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(false);
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Merchant with ID=MERCH-00001 not found!");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAmountIsZero() {
+        // Given
+        validPaymentTransactionDTO.setAmount(BigDecimal.ZERO);
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Amount must be greater than zero");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAmountIsNegative() {
+        // Given
+        validPaymentTransactionDTO.setAmount(new BigDecimal("-10.00"));
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Amount must be greater than zero");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCurrencyIsNull() {
+        // Given
+        validPaymentTransactionDTO.setCurrency(null);
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Currency is required");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenPaymentBrandIsNull() {
+        // Given
+        validPaymentTransactionDTO.setPaymentBrand(null);
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Payment brand is required");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenOrderIdIsNull() {
+        // Given
+        validPaymentTransactionDTO.setOrderId(null);
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Order ID is required");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenOrderIdIsEmpty() {
+        // Given
+        validPaymentTransactionDTO.setOrderId("");
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Order ID is required");
+    }
+}
