@@ -51,7 +51,7 @@ public class CupaApiBusinessLogicService {
 
         User user = null;
         if (principal != null) {
-            user = userRepo.findOneByLogin(principal.getName()).orElseThrow(() -> new RuntimeException("User not found"));
+            user = userRepo.findOneWithAuthoritiesByLogin(principal.getName()).orElseThrow(() -> new RuntimeException("User not found"));
             contextBuilder.user(user);
         }
 
@@ -123,7 +123,7 @@ public class CupaApiBusinessLogicService {
             merchant = merchantService.findMerchantByCupaApiKey(requestApiKey);
         }
         if (user != null) {
-            String[] merchantIds = user.getMerchantIds().split(",");
+            String[] merchantIds = user.getMerchantIds() != null ? user.getMerchantIds().split(",") : new String[0];
             if (merchant == null) {
                 if (merchantIds.length == 1) {
                     merchant = merchantService.findMerchantById(merchantIds[0]);
