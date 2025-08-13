@@ -84,7 +84,7 @@ class CupaApiBusinessLogicServiceTest {
         merchant.setMode(MerchantMode.TEST);
         merchant.setStatus(MerchantStatus.ACTIVE);
 
-        when(userRepository.findOneByLogin("test-merchant_test")).thenReturn(Optional.of(user));
+        when(userRepository.findOneWithAuthoritiesByLogin("test-merchant_test")).thenReturn(Optional.of(user));
         when(merchantService.findMerchantByCupaApiKey("test-api-key")).thenReturn(merchant);
         when(objectMapper.writeValueAsString(any())).thenReturn("{\"orderId\":\"test-order-123\"}");
 
@@ -121,7 +121,7 @@ class CupaApiBusinessLogicServiceTest {
         merchant.setMode(MerchantMode.TEST);
         merchant.setStatus(MerchantStatus.ACTIVE);
 
-        when(userRepository.findOneByLogin("test-merchant_test")).thenReturn(Optional.of(user));
+        when(userRepository.findOneWithAuthoritiesByLogin("test-merchant_test")).thenReturn(Optional.of(user));
         when(merchantService.findMerchantByCupaApiKey("test-api-key")).thenReturn(merchant);
 
         // When
@@ -155,7 +155,7 @@ class CupaApiBusinessLogicServiceTest {
         user.setLogin("unknown-merchant_test");
         user.setMerchantIds("unknown-merchant");
 
-        when(userRepository.findOneByLogin("unknown-merchant_test")).thenReturn(Optional.of(user));
+        when(userRepository.findOneWithAuthoritiesByLogin("unknown-merchant_test")).thenReturn(Optional.of(user));
         when(merchantService.findMerchantById("unknown-merchant")).thenReturn(null);
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
@@ -185,7 +185,7 @@ class CupaApiBusinessLogicServiceTest {
         merchant.setMode(MerchantMode.LIVE);
         merchant.setStatus(MerchantStatus.ACTIVE);
 
-        when(userRepository.findOneByLogin("test-merchant_live")).thenReturn(Optional.of(user));
+        when(userRepository.findOneWithAuthoritiesByLogin("test-merchant_live")).thenReturn(Optional.of(user));
         when(merchantService.findMerchantByCupaApiKey("live-api-key")).thenReturn(merchant);
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
@@ -214,7 +214,7 @@ class CupaApiBusinessLogicServiceTest {
         merchant.setMode(MerchantMode.TEST);
         merchant.setStatus(MerchantStatus.ACTIVE);
 
-        when(userRepository.findOneByLogin("test-merchant_test")).thenReturn(Optional.of(user));
+        when(userRepository.findOneWithAuthoritiesByLogin("test-merchant_test")).thenReturn(Optional.of(user));
         when(merchantService.findMerchantByCupaApiKey("test-api-key")).thenReturn(merchant);
 
         // When
