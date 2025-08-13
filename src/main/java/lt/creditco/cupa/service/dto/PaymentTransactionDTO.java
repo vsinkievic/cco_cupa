@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.domain.MerchantOwnedEntity;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
@@ -50,7 +51,7 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
 
     private String echo;
 
-    private Boolean sendEmail;
+    private PaymentFlow paymentFlow;
 
     private String signature;
 
@@ -189,12 +190,12 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
         this.echo = echo;
     }
 
-    public Boolean getSendEmail() {
-        return sendEmail;
+    public PaymentFlow getPaymentFlow() {
+        return paymentFlow;
     }
 
-    public void setSendEmail(Boolean sendEmail) {
-        this.sendEmail = sendEmail;
+    public void setPaymentFlow(PaymentFlow paymentFlow) {
+        this.paymentFlow = paymentFlow;
     }
 
     public String getSignature() {
@@ -371,7 +372,7 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
             ", amount=" + getAmount() +
             ", balance=" + getBalance() +
             ", currency='" + getCurrency() + "'" +
-            ", sendEmail='" + getSendEmail() + "'" +
+            ", paymentFlow='" + getPaymentFlow() + "'" +
             ", requestTimestamp='" + getRequestTimestamp() + "'" +
             "}";
     }

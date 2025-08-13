@@ -18,7 +18,7 @@ export interface IPaymentTransaction {
   replyUrl?: string | null;
   backofficeUrl?: string | null;
   echo?: string | null;
-  sendEmail?: boolean | null;
+  paymentFlow?: string | null;
   signature?: string | null;
   signatureVersion?: string | null;
   requestTimestamp?: dayjs.Dayjs | null;

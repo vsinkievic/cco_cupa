@@ -30,7 +30,7 @@ type NewPaymentTransactionFormRawValue = FormValueOf<NewPaymentTransaction>;
 
 type PaymentTransactionFormDefaults = Pick<
   NewPaymentTransaction,
-  'id' | 'sendEmail' | 'requestTimestamp' | 'callbackTimestamp' | 'version'
+  'id' | 'paymentFlow' | 'requestTimestamp' | 'callbackTimestamp' | 'version'
 >;
 
 type PaymentTransactionFormGroupContent = {
@@ -46,7 +46,7 @@ type PaymentTransactionFormGroupContent = {
   replyUrl: FormControl<PaymentTransactionFormRawValue['replyUrl']>;
   backofficeUrl: FormControl<PaymentTransactionFormRawValue['backofficeUrl']>;
   echo: FormControl<PaymentTransactionFormRawValue['echo']>;
-  sendEmail: FormControl<PaymentTransactionFormRawValue['sendEmail']>;
+  paymentFlow: FormControl<PaymentTransactionFormRawValue['paymentFlow']>;
   signature: FormControl<PaymentTransactionFormRawValue['signature']>;
   signatureVersion: FormControl<PaymentTransactionFormRawValue['signatureVersion']>;
   requestTimestamp: FormControl<PaymentTransactionFormRawValue['requestTimestamp']>;
@@ -98,7 +98,7 @@ export class PaymentTransactionFormService {
       replyUrl: new FormControl(paymentTransactionRawValue.replyUrl),
       backofficeUrl: new FormControl(paymentTransactionRawValue.backofficeUrl),
       echo: new FormControl(paymentTransactionRawValue.echo),
-      sendEmail: new FormControl(paymentTransactionRawValue.sendEmail),
+      paymentFlow: new FormControl(paymentTransactionRawValue.paymentFlow),
       signature: new FormControl(paymentTransactionRawValue.signature),
       signatureVersion: new FormControl(paymentTransactionRawValue.signatureVersion),
       requestTimestamp: new FormControl(paymentTransactionRawValue.requestTimestamp, {
@@ -141,7 +141,7 @@ export class PaymentTransactionFormService {
 
     return {
       id: null,
-      sendEmail: false,
+      paymentFlow: 'EMAIL',
       requestTimestamp: currentTime,
       callbackTimestamp: currentTime,
       version: null,

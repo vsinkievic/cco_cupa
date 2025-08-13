@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
@@ -72,8 +73,8 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
     @Column(name = "echo")
     private String echo;
 
-    @Column(name = "send_email")
-    private Boolean sendEmail;
+    @Column(name = "payment_flow")
+    private PaymentFlow paymentFlow;
 
     @Column(name = "signature")
     private String signature;
@@ -271,17 +272,17 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
         this.echo = echo;
     }
 
-    public Boolean getSendEmail() {
-        return this.sendEmail;
+    public PaymentFlow getPaymentFlow() {
+        return this.paymentFlow;
     }
 
-    public PaymentTransaction sendEmail(Boolean sendEmail) {
-        this.setSendEmail(sendEmail);
+    public PaymentTransaction paymentFlow(PaymentFlow paymentFlow) {
+        this.setPaymentFlow(paymentFlow);
         return this;
     }
 
-    public void setSendEmail(Boolean sendEmail) {
-        this.sendEmail = sendEmail;
+    public void setPaymentFlow(PaymentFlow paymentFlow) {
+        this.paymentFlow = paymentFlow;
     }
 
     public String getSignature() {
@@ -458,7 +459,7 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
             ", replyUrl='" + getReplyUrl() + "'" +
             ", backofficeUrl='" + getBackofficeUrl() + "'" +
             ", echo='" + getEcho() + "'" +
-            ", sendEmail='" + getSendEmail() + "'" +
+            ", paymentFlow='" + getPaymentFlow() + "'" +
             ", signature='" + getSignature() + "'" +
             ", signatureVersion='" + getSignatureVersion() + "'" +
             ", requestTimestamp='" + getRequestTimestamp() + "'" +

@@ -44,7 +44,7 @@ public interface PaymentMapper {
     @Mapping(target = "replyUrl", ignore = true)
     @Mapping(target = "backofficeUrl", ignore = true)
     @Mapping(target = "echo", ignore = true)
-    @Mapping(target = "sendEmail", ignore = true)
+    @Mapping(target = "paymentFlow", ignore = true)
     @Mapping(target = "signature", ignore = true)
     @Mapping(target = "signatureVersion", ignore = true)
     @Mapping(target = "requestTimestamp", ignore = true)

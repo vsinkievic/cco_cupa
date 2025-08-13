@@ -22,6 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import lt.creditco.cupa.IntegrationTest;
+import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.domain.Client;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.PaymentTransaction;
@@ -74,11 +75,14 @@ class PaymentTransactionResourceIT {
     private static final TransactionStatus DEFAULT_STATUS = TransactionStatus.RECEIVED;
     private static final TransactionStatus UPDATED_STATUS = TransactionStatus.SENT_TO_GATEWAY;
 
+    private static final PaymentFlow DEFAULT_PAYMENT_FLOW = PaymentFlow.EMAIL;
+    private static final PaymentFlow UPDATED_PAYMENT_FLOW = PaymentFlow.ONLINE;
+
     private static final String DEFAULT_STATUS_DESCRIPTION = "AAAAAAAAAA";
     private static final String UPDATED_STATUS_DESCRIPTION = "BBBBBBBBBB";
 
-    private static final PaymentBrand DEFAULT_PAYMENT_BRAND = PaymentBrand.UNIONPAY;
-    private static final PaymentBrand UPDATED_PAYMENT_BRAND = PaymentBrand.ALIPAY;
+    private static final PaymentBrand DEFAULT_PAYMENT_BRAND = PaymentBrand.UnionPay;
+    private static final PaymentBrand UPDATED_PAYMENT_BRAND = PaymentBrand.Alipay;
 
     private static final BigDecimal DEFAULT_AMOUNT = new BigDecimal(1);
     private static final BigDecimal UPDATED_AMOUNT = new BigDecimal(2);
@@ -97,9 +101,6 @@ class PaymentTransactionResourceIT {
 
     private static final String DEFAULT_ECHO = "AAAAAAAAAA";
     private static final String UPDATED_ECHO = "BBBBBBBBBB";
-
-    private static final Boolean DEFAULT_SEND_EMAIL = false;
-    private static final Boolean UPDATED_SEND_EMAIL = true;
 
     private static final String DEFAULT_SIGNATURE = "AAAAAAAAAA";
     private static final String UPDATED_SIGNATURE = "BBBBBBBBBB";
@@ -177,7 +178,7 @@ class PaymentTransactionResourceIT {
             .replyUrl(DEFAULT_REPLY_URL)
             .backofficeUrl(DEFAULT_BACKOFFICE_URL)
             .echo(DEFAULT_ECHO)
-            .sendEmail(DEFAULT_SEND_EMAIL)
+            .paymentFlow(DEFAULT_PAYMENT_FLOW)
             .signature(DEFAULT_SIGNATURE)
             .signatureVersion(DEFAULT_SIGNATURE_VERSION)
             .requestTimestamp(DEFAULT_REQUEST_TIMESTAMP)
@@ -211,7 +212,7 @@ class PaymentTransactionResourceIT {
             .replyUrl(UPDATED_REPLY_URL)
             .backofficeUrl(UPDATED_BACKOFFICE_URL)
             .echo(UPDATED_ECHO)
-            .sendEmail(UPDATED_SEND_EMAIL)
+            .paymentFlow(UPDATED_PAYMENT_FLOW)
             .signature(UPDATED_SIGNATURE)
             .signatureVersion(UPDATED_SIGNATURE_VERSION)
             .requestTimestamp(UPDATED_REQUEST_TIMESTAMP)
@@ -391,7 +392,7 @@ class PaymentTransactionResourceIT {
             .andExpect(jsonPath("$.[*].replyUrl").value(hasItem(DEFAULT_REPLY_URL)))
             .andExpect(jsonPath("$.[*].backofficeUrl").value(hasItem(DEFAULT_BACKOFFICE_URL)))
             .andExpect(jsonPath("$.[*].echo").value(hasItem(DEFAULT_ECHO)))
-            .andExpect(jsonPath("$.[*].sendEmail").value(hasItem(DEFAULT_SEND_EMAIL)))
+            .andExpect(jsonPath("$.[*].paymentFlow").value(hasItem(DEFAULT_PAYMENT_FLOW.toString())))
             .andExpect(jsonPath("$.[*].signature").value(hasItem(DEFAULT_SIGNATURE)))
             .andExpect(jsonPath("$.[*].signatureVersion").value(hasItem(DEFAULT_SIGNATURE_VERSION)))
             .andExpect(jsonPath("$.[*].requestTimestamp").value(hasItem(DEFAULT_REQUEST_TIMESTAMP.toString())))
@@ -443,7 +444,7 @@ class PaymentTransactionResourceIT {
             .andExpect(jsonPath("$.replyUrl").value(DEFAULT_REPLY_URL))
             .andExpect(jsonPath("$.backofficeUrl").value(DEFAULT_BACKOFFICE_URL))
             .andExpect(jsonPath("$.echo").value(DEFAULT_ECHO))
-            .andExpect(jsonPath("$.sendEmail").value(DEFAULT_SEND_EMAIL))
+            .andExpect(jsonPath("$.paymentFlow").value(DEFAULT_PAYMENT_FLOW.toString()))
             .andExpect(jsonPath("$.signature").value(DEFAULT_SIGNATURE))
             .andExpect(jsonPath("$.signatureVersion").value(DEFAULT_SIGNATURE_VERSION))
             .andExpect(jsonPath("$.requestTimestamp").value(DEFAULT_REQUEST_TIMESTAMP.toString()))
@@ -487,7 +488,7 @@ class PaymentTransactionResourceIT {
             .replyUrl(UPDATED_REPLY_URL)
             .backofficeUrl(UPDATED_BACKOFFICE_URL)
             .echo(UPDATED_ECHO)
-            .sendEmail(UPDATED_SEND_EMAIL)
+            .paymentFlow(UPDATED_PAYMENT_FLOW)
             .signature(UPDATED_SIGNATURE)
             .signatureVersion(UPDATED_SIGNATURE_VERSION)
             .requestTimestamp(UPDATED_REQUEST_TIMESTAMP)
@@ -593,7 +594,7 @@ class PaymentTransactionResourceIT {
             .status(UPDATED_STATUS)
             .amount(UPDATED_AMOUNT)
             .currency(UPDATED_CURRENCY)
-            .sendEmail(UPDATED_SEND_EMAIL)
+            .paymentFlow(UPDATED_PAYMENT_FLOW)
             .signatureVersion(UPDATED_SIGNATURE_VERSION)
             .requestData(UPDATED_REQUEST_DATA);
 
@@ -640,7 +641,7 @@ class PaymentTransactionResourceIT {
             .replyUrl(UPDATED_REPLY_URL)
             .backofficeUrl(UPDATED_BACKOFFICE_URL)
             .echo(UPDATED_ECHO)
-            .sendEmail(UPDATED_SEND_EMAIL)
+            .paymentFlow(UPDATED_PAYMENT_FLOW)
             .signature(UPDATED_SIGNATURE)
             .signatureVersion(UPDATED_SIGNATURE_VERSION)
             .requestTimestamp(UPDATED_REQUEST_TIMESTAMP)

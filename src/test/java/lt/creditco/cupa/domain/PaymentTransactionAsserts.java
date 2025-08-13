@@ -64,7 +64,7 @@ public class PaymentTransactionAsserts {
             .satisfies(a -> assertThat(a.getReplyUrl()).as("check replyUrl").isEqualTo(expected.getReplyUrl()))
             .satisfies(a -> assertThat(a.getBackofficeUrl()).as("check backofficeUrl").isEqualTo(expected.getBackofficeUrl()))
             .satisfies(a -> assertThat(a.getEcho()).as("check echo").isEqualTo(expected.getEcho()))
-            .satisfies(a -> assertThat(a.getSendEmail()).as("check sendEmail").isEqualTo(expected.getSendEmail()))
+            .satisfies(a -> assertThat(a.getPaymentFlow()).as("check paymentFlow").isEqualTo(expected.getPaymentFlow()))
             .satisfies(a -> assertThat(a.getSignature()).as("check signature").isEqualTo(expected.getSignature()))
             .satisfies(a -> assertThat(a.getSignatureVersion()).as("check signatureVersion").isEqualTo(expected.getSignatureVersion()))
             .satisfies(a -> assertThat(a.getRequestTimestamp()).as("check requestTimestamp").isEqualTo(expected.getRequestTimestamp()))

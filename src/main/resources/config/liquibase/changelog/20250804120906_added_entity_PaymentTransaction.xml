@@ -53,7 +53,7 @@
             <column name="echo" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="send_email" type="boolean">
+            <column name="payment_flow" type="varchar(50)">
                 <constraints nullable="true" />
             </column>
             <column name="signature" type="varchar(255)">
@@ -129,7 +129,7 @@
             <column name="reply_url" type="string"/>
             <column name="backoffice_url" type="string"/>
             <column name="echo" type="string"/>
-            <column name="send_email" type="boolean"/>
+            <column name="payment_flow" type="string"/>
             <column name="signature" type="string"/>
             <column name="signature_version" type="string"/>
             <column name="request_timestamp" type="timestamp with time zone"/>
