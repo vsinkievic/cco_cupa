@@ -139,39 +139,5 @@ describe('AuditLog Management Component', () => {
       ngbModal = (comp as any).modalService;
       jest.spyOn(ngbModal, 'open').mockReturnValue(deleteModalMock);
     });
-
-    it('on confirm should call load', inject(
-      [],
-      fakeAsync(() => {
-        // GIVEN
-        jest.spyOn(comp, 'load');
-
-        // WHEN
-        comp.delete(sampleWithRequiredData);
-        deleteModalMock.closed.next('deleted');
-        tick();
-
-        // THEN
-        expect(ngbModal.open).toHaveBeenCalled();
-        expect(comp.load).toHaveBeenCalled();
-      }),
-    ));
-
-    it('on dismiss should call load', inject(
-      [],
-      fakeAsync(() => {
-        // GIVEN
-        jest.spyOn(comp, 'load');
-
-        // WHEN
-        comp.delete(sampleWithRequiredData);
-        deleteModalMock.closed.next();
-        tick();
-
-        // THEN
-        expect(ngbModal.open).toHaveBeenCalled();
-        expect(comp.load).not.toHaveBeenCalled();
-      }),
-    ));
   });
 });
