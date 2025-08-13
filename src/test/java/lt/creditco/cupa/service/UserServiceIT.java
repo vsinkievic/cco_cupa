@@ -12,6 +12,7 @@ import java.util.Optional;
 import lt.creditco.cupa.IntegrationTest;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.User;
+import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 import lt.creditco.cupa.repository.MerchantRepository;
@@ -223,6 +224,7 @@ class UserServiceIT {
         merchant.setName("Test Merchant 1");
         merchant.setMode(MerchantMode.TEST);
         merchant.setStatus(MerchantStatus.ACTIVE);
+        merchant.setCurrency(Currency.USD);
         merchantRepository.save(merchant);
 
         // Create another test merchant
@@ -231,6 +233,7 @@ class UserServiceIT {
         merchant2.setName("Test Merchant 2");
         merchant2.setMode(MerchantMode.TEST);
         merchant2.setStatus(MerchantStatus.ACTIVE);
+        merchant2.setCurrency(Currency.USD);
         merchantRepository.save(merchant2);
 
         // Create AdminUserDTO with merchant IDs

@@ -46,7 +46,7 @@ public class CupaApiBusinessLogicService {
             .httpMethod(request.getMethod())
             .requesterIpAddress(getClientIpAddress(request));
 
-        String requestApiKey = getApiKeyFromHeaders();
+        String requestApiKey = getApiKeyFromHeaders(request);
         contextBuilder.cupaApiKey(requestApiKey);
 
         User user = null;
@@ -176,13 +176,8 @@ public class CupaApiBusinessLogicService {
             .build();
     }
 
-    private String getApiKeyFromHeaders() {
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attributes != null) {
-            HttpServletRequest request = attributes.getRequest();
-            return request.getHeader("X-API-Key");
-        }
-        return null;
+    private String getApiKeyFromHeaders(HttpServletRequest request) {
+        return request.getHeader("X-API-Key");
     }
 
     private MerchantContext findMerchantByApiKey(String apiKey) {

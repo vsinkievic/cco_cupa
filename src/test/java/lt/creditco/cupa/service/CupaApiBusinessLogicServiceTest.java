@@ -10,9 +10,15 @@ import java.security.Principal;
 import java.util.Optional;
 import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.api.PaymentRequest;
+import lt.creditco.cupa.domain.Merchant;
+import lt.creditco.cupa.domain.User;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
+import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 import lt.creditco.cupa.remote.CardType;
 import lt.creditco.cupa.remote.PaymentCurrency;
+import lt.creditco.cupa.repository.UserRepository;
 import lt.creditco.cupa.service.dto.MerchantDTO;
+import lt.creditco.cupa.service.mapper.MerchantMapper;
 import lt.creditco.cupa.web.context.CupaApiContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +33,12 @@ class CupaApiBusinessLogicServiceTest {
 
     @Mock
     private MerchantService merchantService;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private MerchantMapper merchantMapper;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -59,13 +71,21 @@ class CupaApiBusinessLogicServiceTest {
     @Test
     void shouldExtractBusinessContextFromPaymentRequest() throws Exception {
         // Given
+        request.addHeader("X-API-Key", "test-api-key");
         when(principal.getName()).thenReturn("test-merchant_test");
 
-        MerchantDTO merchant = new MerchantDTO();
+        User user = new User();
+        user.setLogin("test-merchant_test");
+        user.setMerchantIds("test-merchant");
+
+        Merchant merchant = new Merchant();
         merchant.setId("test-merchant");
         merchant.setCupaTestApiKey("test-api-key");
+        merchant.setMode(MerchantMode.TEST);
+        merchant.setStatus(MerchantStatus.ACTIVE);
 
-        when(merchantService.findOne("test-merchant")).thenReturn(Optional.of(merchant));
+        when(userRepository.findOneByLogin("test-merchant_test")).thenReturn(Optional.of(user));
+        when(merchantService.findMerchantByCupaApiKey("test-api-key")).thenReturn(merchant);
         when(objectMapper.writeValueAsString(any())).thenReturn("{\"orderId\":\"test-order-123\"}");
 
         // When
@@ -86,15 +106,23 @@ class CupaApiBusinessLogicServiceTest {
     @Test
     void shouldExtractOrderIdFromPathVariables() throws Exception {
         // Given
-        request.setRequestURI("/api/v1/payments/test-order-from-path");
+        request.setRequestURI("/api/v1/payments/orderId/test-order-from-path");
+        request.setPathInfo("/orderId/test-order-from-path");
+        request.addHeader("X-API-Key", "test-api-key");
         when(principal.getName()).thenReturn("test-merchant_test");
 
-        MerchantDTO merchant = new MerchantDTO();
+        User user = new User();
+        user.setLogin("test-merchant_test");
+        user.setMerchantIds("test-merchant");
+
+        Merchant merchant = new Merchant();
         merchant.setId("test-merchant");
         merchant.setCupaTestApiKey("test-api-key");
+        merchant.setMode(MerchantMode.TEST);
+        merchant.setStatus(MerchantStatus.ACTIVE);
 
-        when(merchantService.findOne("test-merchant")).thenReturn(Optional.of(merchant));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+        when(userRepository.findOneByLogin("test-merchant_test")).thenReturn(Optional.of(user));
+        when(merchantService.findMerchantByCupaApiKey("test-api-key")).thenReturn(merchant);
 
         // When
         CupaApiContext.CupaApiContextData context = businessLogicService.extractBusinessContext(request, null, principal);
@@ -122,7 +150,13 @@ class CupaApiBusinessLogicServiceTest {
     void shouldHandleMerchantNotFound() throws Exception {
         // Given
         when(principal.getName()).thenReturn("unknown-merchant_test");
-        when(merchantService.findOne("unknown-merchant")).thenReturn(Optional.empty());
+
+        User user = new User();
+        user.setLogin("unknown-merchant_test");
+        user.setMerchantIds("unknown-merchant");
+
+        when(userRepository.findOneByLogin("unknown-merchant_test")).thenReturn(Optional.of(user));
+        when(merchantService.findMerchantById("unknown-merchant")).thenReturn(null);
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         // When
@@ -138,13 +172,21 @@ class CupaApiBusinessLogicServiceTest {
     @Test
     void shouldHandleLiveEnvironment() throws Exception {
         // Given
+        request.addHeader("X-API-Key", "live-api-key");
         when(principal.getName()).thenReturn("test-merchant_live");
 
-        MerchantDTO merchant = new MerchantDTO();
+        User user = new User();
+        user.setLogin("test-merchant_live");
+        user.setMerchantIds("test-merchant");
+
+        Merchant merchant = new Merchant();
         merchant.setId("test-merchant");
         merchant.setCupaProdApiKey("live-api-key");
+        merchant.setMode(MerchantMode.LIVE);
+        merchant.setStatus(MerchantStatus.ACTIVE);
 
-        when(merchantService.findOne("test-merchant")).thenReturn(Optional.of(merchant));
+        when(userRepository.findOneByLogin("test-merchant_live")).thenReturn(Optional.of(user));
+        when(merchantService.findMerchantByCupaApiKey("live-api-key")).thenReturn(merchant);
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         // When
@@ -158,14 +200,22 @@ class CupaApiBusinessLogicServiceTest {
     @Test
     void shouldHandleRequestDataExtractionError() throws Exception {
         // Given
+        request.addHeader("X-API-Key", "test-api-key");
         when(principal.getName()).thenReturn("test-merchant_test");
         when(objectMapper.writeValueAsString(any())).thenThrow(new RuntimeException("JSON error"));
 
-        MerchantDTO merchant = new MerchantDTO();
+        User user = new User();
+        user.setLogin("test-merchant_test");
+        user.setMerchantIds("test-merchant");
+
+        Merchant merchant = new Merchant();
         merchant.setId("test-merchant");
         merchant.setCupaTestApiKey("test-api-key");
+        merchant.setMode(MerchantMode.TEST);
+        merchant.setStatus(MerchantStatus.ACTIVE);
 
-        when(merchantService.findOne("test-merchant")).thenReturn(Optional.of(merchant));
+        when(userRepository.findOneByLogin("test-merchant_test")).thenReturn(Optional.of(user));
+        when(merchantService.findMerchantByCupaApiKey("test-api-key")).thenReturn(merchant);
 
         // When
         CupaApiContext.CupaApiContextData context = businessLogicService.extractBusinessContext(request, paymentRequest, principal);

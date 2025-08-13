@@ -28,8 +28,9 @@ public class AccessControlHelper {
         }
 
         try {
-            context.checkAccessToEntity(entity.get());
-            return ResponseEntity.ok(entity.get());
+            T entityValue = entity.orElseThrow();
+            context.checkAccessToEntity(entityValue);
+            return ResponseEntity.ok(entityValue);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -53,8 +54,9 @@ public class AccessControlHelper {
         }
 
         try {
-            context.checkAccessToEntity(entity.get());
-            return ResponseEntity.ok(converter.apply(entity.get()));
+            T entityValue = entity.orElseThrow();
+            context.checkAccessToEntity(entityValue);
+            return ResponseEntity.ok(converter.apply(entityValue));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
