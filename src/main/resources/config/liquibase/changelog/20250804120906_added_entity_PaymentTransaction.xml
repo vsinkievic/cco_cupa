@@ -14,7 +14,16 @@
             <column name="id" type="varchar(50)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="gateway_transaction_id" type="varchar(255)">
+            <column name="order_id" type="varchar(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="gateway_transaction_id" type="varchar(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="merchant_id" type="varchar(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="client_id" type="varchar(50)">
                 <constraints nullable="true" />
             </column>
             <column name="status" type="varchar(50)">
@@ -71,12 +80,6 @@
             <column name="last_query_data" type="${clobType}">
                 <constraints nullable="true" />
             </column>
-            <column name="client_id" type="varchar(50)">
-                <constraints nullable="true" />
-            </column>
-            <column name="merchant_id" type="varchar(50)">
-                <constraints nullable="false" />
-            </column>
             <column name="version" type="bigint">
                 <constraints nullable="false" />
             </column>
@@ -115,6 +118,7 @@
                   tableName="payment_transaction"
                   usePreparedStatements="true">
             <column name="id" type="string"/>
+            <column name="order_id" type="string"/>
             <column name="gateway_transaction_id" type="string"/>
             <column name="status" type="string"/>
             <column name="status_description" type="string"/>

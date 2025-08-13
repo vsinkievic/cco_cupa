@@ -54,9 +54,30 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="gatewayTransactionId">
+            <th scope="col" jhiSortBy="paymentBrand">
               <div class="d-flex">
-                <span>Gateway Transaction Id</span>
+                <span>Payment Brand</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="amount">
+              <div class="d-flex">
+                <span>Amount</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="currency">
+              <div class="d-flex">
+                <span>Currency</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="requestTimestamp">
+              <div class="d-flex">
+                <span>Request Timestamp</span>
 
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
@@ -75,130 +96,6 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="paymentBrand">
-              <div class="d-flex">
-                <span>Payment Brand</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="amount">
-              <div class="d-flex">
-                <span>Amount</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="balance">
-              <div class="d-flex">
-                <span>Balance</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="currency">
-              <div class="d-flex">
-                <span>Currency</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="replyUrl">
-              <div class="d-flex">
-                <span>Reply Url</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="backofficeUrl">
-              <div class="d-flex">
-                <span>Backoffice Url</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="echo">
-              <div class="d-flex">
-                <span>Echo</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="sendEmail">
-              <div class="d-flex">
-                <span>Send Email</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="signature">
-              <div class="d-flex">
-                <span>Signature</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="signatureVersion">
-              <div class="d-flex">
-                <span>Signature Version</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="requestTimestamp">
-              <div class="d-flex">
-                <span>Request Timestamp</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="requestData">
-              <div class="d-flex">
-                <span>Request Data</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="initialResponseData">
-              <div class="d-flex">
-                <span>Initial Response Data</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="callbackTimestamp">
-              <div class="d-flex">
-                <span>Callback Timestamp</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="callbackData">
-              <div class="d-flex">
-                <span>Callback Data</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="lastQueryData">
-              <div class="d-flex">
-                <span>Last Query Data</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="client.merchantClientId">
-              <div class="d-flex">
-                <span>Client</span>
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
-            <th scope="col" jhiSortBy="merchant.name">
-              <div class="d-flex">
-                <span>Merchant</span>
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
             <th scope="col"></th>
           </tr>
         </thead>
@@ -210,30 +107,12 @@
               </td>
               <td>{{ paymentTransaction.orderId }}</td>
               <td>{{ paymentTransaction.cupaTransactionId }}</td>
-              <td>{{ paymentTransaction.gatewayTransactionId }}</td>
-              <td>
-                {{
-                  {
-                    null: '',
-                    RECEIVED: 'RECEIVED',
-                    SENT_TO_GATEWAY: 'SENT_TO_GATEWAY',
-                    AWAITING_CALLBACK: 'AWAITING_CALLBACK',
-                    SUCCESS: 'SUCCESS',
-                    FAILED: 'FAILED',
-                    CANCELLED: 'CANCELLED',
-                    REFUNDED: 'REFUNDED',
-                    QUERY_SUCCESS: 'QUERY_SUCCESS',
-                  }[paymentTransaction.status ?? 'null']
-                }}
-              </td>
-              <td>{{ paymentTransaction.statusDescription }}</td>
               <td>
                 {{
                   { null: '', UNIONPAY: 'UNIONPAY', ALIPAY: 'ALIPAY', WECHAT_PAY: 'WECHAT_PAY' }[paymentTransaction.paymentBrand ?? 'null']
                 }}
               </td>
               <td>{{ paymentTransaction.amount }}</td>
-              <td>{{ paymentTransaction.balance }}</td>
               <td>
                 {{
                   {
@@ -255,32 +134,23 @@
                   }[paymentTransaction.currency ?? 'null']
                 }}
               </td>
-              <td>{{ paymentTransaction.replyUrl }}</td>
-              <td>{{ paymentTransaction.backofficeUrl }}</td>
-              <td>{{ paymentTransaction.echo }}</td>
-              <td>{{ paymentTransaction.sendEmail }}</td>
-              <td>{{ paymentTransaction.signature }}</td>
-              <td>{{ paymentTransaction.signatureVersion }}</td>
               <td>{{ paymentTransaction.requestTimestamp | formatMediumDatetime }}</td>
-              <td>{{ paymentTransaction.requestData }}</td>
-              <td>{{ paymentTransaction.initialResponseData }}</td>
-              <td>{{ paymentTransaction.callbackTimestamp | formatMediumDatetime }}</td>
-              <td>{{ paymentTransaction.callbackData }}</td>
-              <td>{{ paymentTransaction.lastQueryData }}</td>
               <td>
-                @if (paymentTransaction.client) {
-                  <div>
-                    <a [routerLink]="['/client', paymentTransaction.client.id, 'view']">{{ paymentTransaction.client.merchantClientId }}</a>
-                  </div>
-                }
+                {{
+                  {
+                    null: '',
+                    RECEIVED: 'RECEIVED',
+                    SENT_TO_GATEWAY: 'SENT_TO_GATEWAY',
+                    AWAITING_CALLBACK: 'AWAITING_CALLBACK',
+                    SUCCESS: 'SUCCESS',
+                    FAILED: 'FAILED',
+                    CANCELLED: 'CANCELLED',
+                    REFUNDED: 'REFUNDED',
+                    QUERY_SUCCESS: 'QUERY_SUCCESS',
+                  }[paymentTransaction.status ?? 'null']
+                }}
               </td>
-              <td>
-                @if (paymentTransaction.merchant) {
-                  <div>
-                    <a [routerLink]="['/merchant', paymentTransaction.merchant.id, 'view']">{{ paymentTransaction.merchant.name }}</a>
-                  </div>
-                }
-              </td>
+              <td>{{ paymentTransaction.statusDescription }}</td>
               <td class="text-end">
                 <div class="btn-group">
                   <a

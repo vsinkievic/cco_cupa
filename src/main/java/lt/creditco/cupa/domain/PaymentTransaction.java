@@ -29,10 +29,13 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
 
     @Id
     @NaturalId
-    @Column(name = "id")
+    @Column(name = "id", length = 50, nullable = false)
     private String id;
 
-    @Column(name = "gateway_transaction_id")
+    @Column(name = "order_id", length = 50, nullable = false)
+    private String orderId;
+
+    @Column(name = "gateway_transaction_id", length = 50)
     private String gatewayTransactionId;
 
     @NotNull
@@ -123,6 +126,19 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getOrderId() {
+        return this.orderId;
+    }
+
+    public PaymentTransaction orderId(String orderId) {
+        this.setOrderId(orderId);
+        return this;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 
     public String getGatewayTransactionId() {
