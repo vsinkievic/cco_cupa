@@ -18,6 +18,7 @@ import lt.creditco.cupa.service.PaymentTransactionService;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
 import lt.creditco.cupa.service.mapper.PaymentMapper;
 import lt.creditco.cupa.web.context.CupaApiContext;
+import lt.creditco.cupa.web.rest.util.AccessControlHelper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,10 +60,7 @@ public class CupaApiResource {
         );
 
         Optional<PaymentTransactionDTO> paymentTransaction = paymentTransactionService.findOne(orderId);
-        if (paymentTransaction.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(paymentMapper.toPayment(paymentTransaction.get()));
+        return AccessControlHelper.checkAccessAndReturn(paymentTransaction, context, paymentMapper::toPayment);
     }
 
     @Tag(name = "Payments")

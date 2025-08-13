@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lt.creditco.cupa.domain.MerchantOwnedEntity;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
@@ -19,9 +20,11 @@ import lt.creditco.cupa.domain.enumeration.TransactionStatus;
     description = "Represents a single payment transaction from start to finish.\nThis entity acts as a comprehensive audit log, storing the request,\nresponse, and status at each step of the process."
 )
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class PaymentTransactionDTO implements Serializable {
+public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity {
 
     private String id;
+
+    private String orderId;
 
     private String gatewayTransactionId;
 
@@ -96,6 +99,14 @@ public class PaymentTransactionDTO implements Serializable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 
     public String getGatewayTransactionId() {
@@ -348,6 +359,7 @@ public class PaymentTransactionDTO implements Serializable {
     public String toString() {
         return "PaymentTransactionDTO{" +
             "id=" + getId() +
+            ", orderId='" + getOrderId() + "'" +
             ", clientId='" + getClientId() + "'" +
             ", merchantId='" + getMerchantId() + "'" +
             ", clientName='" + getClientName() + "'" +

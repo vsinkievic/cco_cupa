@@ -49,8 +49,14 @@ public class CupaApiBusinessLogicService {
         String requestApiKey = getApiKeyFromHeaders();
         contextBuilder.cupaApiKey(requestApiKey);
 
+        User user = null;
+        if (principal != null) {
+            user = userRepo.findOneByLogin(principal.getName()).orElseThrow(() -> new RuntimeException("User not found"));
+            contextBuilder.user(user);
+        }
+
         // Determine merchant and environment based on authentication
-        MerchantContext merchantContext = determineMerchantContext(requestApiKey, principal);
+        MerchantContext merchantContext = determineMerchantContext(requestApiKey, user);
         contextBuilder.merchantId(merchantContext.getMerchantId()).environment(merchantContext.getEnvironment());
 
         // Extract orderId from path variables or request body
@@ -106,8 +112,8 @@ public class CupaApiBusinessLogicService {
         return null;
     }
 
-    private MerchantContext determineMerchantContext(String requestApiKey, Principal principal) {
-        if (requestApiKey == null && principal == null) {
+    private MerchantContext determineMerchantContext(String requestApiKey, User user) {
+        if (requestApiKey == null && user == null) {
             log.warn("No API key or principal available for merchant context determination");
             return getDefaultMerchantContext();
         }
@@ -116,9 +122,7 @@ public class CupaApiBusinessLogicService {
         if (requestApiKey != null) {
             merchant = merchantService.findMerchantByCupaApiKey(requestApiKey);
         }
-
-        if (principal != null) {
-            User user = userRepo.findOneByLogin(principal.getName()).orElseThrow(() -> new RuntimeException("User not found"));
+        if (user != null) {
             String[] merchantIds = user.getMerchantIds().split(",");
             if (merchant == null) {
                 if (merchantIds.length == 1) {
@@ -126,14 +130,14 @@ public class CupaApiBusinessLogicService {
                 } else {
                     log.warn(
                         "No merchant found for user: {}, merchantIds: {}, returning null values",
-                        principal.getName(),
+                        user.getLogin(),
                         user.getMerchantIds()
                     );
                     return getDefaultMerchantContext();
                 }
             } else {
                 if (!StringUtils.containsAny(merchant.getId(), merchantIds)) {
-                    throw new RuntimeException("Merchant (API key) not allowed to use with user " + principal.getName());
+                    throw new RuntimeException("Merchant (API key) not allowed to use with user " + user.getLogin());
                 }
             }
         }

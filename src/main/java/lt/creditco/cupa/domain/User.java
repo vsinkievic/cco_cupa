@@ -8,10 +8,13 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lt.creditco.cupa.config.Constants;
+import lt.creditco.cupa.security.AuthoritiesConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -95,6 +98,37 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @BatchSize(size = 20)
     private Set<Authority> authorities = new HashSet<>();
+
+    public boolean canAccessEntity(MerchantOwnedEntity entity) {
+        if (entity == null) {
+            return false;
+        }
+
+        // Admin users can access all entities
+        if (hasAuthority(AuthoritiesConstants.ADMIN)) {
+            return true;
+        }
+
+        // Regular users can only access entities of their assigned merchants
+        String entityMerchantId = entity.getMerchantId();
+        if (entityMerchantId == null) {
+            return false;
+        }
+
+        return getMerchantIdsSet().contains(entityMerchantId);
+    }
+
+    private Set<String> getMerchantIdsSet() {
+        if (merchantIds == null || merchantIds.trim().isEmpty()) {
+            return Set.of();
+        }
+
+        return Arrays.stream(merchantIds.split(",")).map(String::trim).filter(id -> !id.isEmpty()).collect(Collectors.toSet());
+    }
+
+    public boolean hasAuthority(String authority) {
+        return authorities.stream().anyMatch(auth -> auth.getName().equals(authority));
+    }
 
     public Long getId() {
         return id;
