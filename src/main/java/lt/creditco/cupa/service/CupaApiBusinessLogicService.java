@@ -2,21 +2,22 @@ package lt.creditco.cupa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.security.Principal;
 import java.time.Instant;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.api.PaymentRequest;
+import lt.creditco.cupa.domain.Merchant;
+import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
-import lt.creditco.cupa.service.dto.MerchantDTO;
+import lt.creditco.cupa.domain.enumeration.MerchantStatus;
+import lt.creditco.cupa.repository.UserRepository;
 import lt.creditco.cupa.web.context.CupaApiContext;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -31,6 +32,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 public class CupaApiBusinessLogicService {
 
     private final MerchantService merchantService;
+    private final UserRepository userRepo;
     private final ObjectMapper objectMapper;
 
     /**
@@ -44,6 +46,13 @@ public class CupaApiBusinessLogicService {
             .httpMethod(request.getMethod())
             .requesterIpAddress(getClientIpAddress(request));
 
+        String requestApiKey = getApiKeyFromHeaders();
+        contextBuilder.cupaApiKey(requestApiKey);
+
+        // Determine merchant and environment based on authentication
+        MerchantContext merchantContext = determineMerchantContext(requestApiKey, principal);
+        contextBuilder.merchantId(merchantContext.getMerchantId()).environment(merchantContext.getEnvironment());
+
         // Extract orderId from path variables or request body
         String orderId = extractOrderId(request, requestBody);
         contextBuilder.orderId(orderId);
@@ -51,13 +60,6 @@ public class CupaApiBusinessLogicService {
         // Extract clientId from request body
         String clientId = extractClientId(requestBody);
         contextBuilder.clientId(clientId);
-
-        // Determine merchant and environment based on authentication
-        MerchantContext merchantContext = determineMerchantContext(principal);
-        contextBuilder
-            .merchantId(merchantContext.getMerchantId())
-            .environment(merchantContext.getEnvironment())
-            .cupaApiKey(merchantContext.getCupaApiKey());
 
         // Extract request data
         String requestData = extractRequestData(request, requestBody);
@@ -92,6 +94,7 @@ public class CupaApiBusinessLogicService {
         // This is a simplified implementation
         // In a real scenario, you might need to parse the path more carefully
         String pathInfo = request.getPathInfo();
+        log.debug("Path info: {}", pathInfo);
         if (pathInfo != null && pathInfo.contains("/" + variableName + "/")) {
             String[] pathParts = pathInfo.split("/");
             for (int i = 0; i < pathParts.length - 1; i++) {
@@ -103,44 +106,70 @@ public class CupaApiBusinessLogicService {
         return null;
     }
 
-    private MerchantContext determineMerchantContext(Principal principal) {
-        if (principal == null) {
-            log.warn("No principal available for merchant context determination");
+    private MerchantContext determineMerchantContext(String requestApiKey, Principal principal) {
+        if (requestApiKey == null && principal == null) {
+            log.warn("No API key or principal available for merchant context determination");
             return getDefaultMerchantContext();
         }
 
-        String username = principal.getName();
-        log.debug("Determining merchant context for user: {}", username);
+        Merchant merchant = null;
+        if (requestApiKey != null) {
+            merchant = merchantService.findMerchantByCupaApiKey(requestApiKey);
+        }
 
-        // Option 1: Extract from username format (e.g., "merchant1_test")
-        if (username.contains("_")) {
-            String[] parts = username.split("_");
-            if (parts.length >= 2) {
-                String merchantId = parts[0];
-                String environment = parts[1].toUpperCase();
-
-                // Get merchant details from database
-                Optional<MerchantDTO> merchant = merchantService.findOne(merchantId);
-                if (merchant.isPresent()) {
-                    String apiKey = "TEST".equals(environment) ? merchant.get().getCupaTestApiKey() : merchant.get().getCupaProdApiKey();
-
-                    return MerchantContext.builder().merchantId(merchantId).environment(environment).cupaApiKey(apiKey).build();
+        if (principal != null) {
+            User user = userRepo.findOneByLogin(principal.getName()).orElseThrow(() -> new RuntimeException("User not found"));
+            String[] merchantIds = user.getMerchantIds().split(",");
+            if (merchant == null) {
+                if (merchantIds.length == 1) {
+                    merchant = merchantService.findMerchantById(merchantIds[0]);
                 } else {
-                    log.debug("Merchant with ID '{}' not found, returning null values", merchantId);
+                    log.warn(
+                        "No merchant found for user: {}, merchantIds: {}, returning null values",
+                        principal.getName(),
+                        user.getMerchantIds()
+                    );
+                    return getDefaultMerchantContext();
+                }
+            } else {
+                if (!StringUtils.containsAny(merchant.getId(), merchantIds)) {
+                    throw new RuntimeException("Merchant (API key) not allowed to use with user " + principal.getName());
                 }
             }
         }
 
-        // Option 2: Try to find merchant by API key from headers
-        String apiKeyFromHeader = getApiKeyFromHeaders();
-        if (StringUtils.hasText(apiKeyFromHeader)) {
-            // You would implement a method to find merchant by API key
-            // For now, we'll use a simplified approach
-            return findMerchantByApiKey(apiKeyFromHeader);
+        if (merchant == null) {
+            log.warn("No merchant found for API key: {}, returning null values", requestApiKey);
+            return getDefaultMerchantContext();
         }
 
-        // Option 3: Default fallback
-        return getDefaultMerchantContext();
+        String gatewayUrl = null;
+        String gatewayMerchantId = null;
+        String gatewayMerchantKey = null;
+        String gatewayApiKey = null;
+
+        if (merchant.getMode() == MerchantMode.LIVE) {
+            gatewayUrl = merchant.getRemoteProdUrl();
+            gatewayMerchantId = merchant.getRemoteProdMerchantId();
+            gatewayMerchantKey = merchant.getRemoteProdMerchantKey();
+            gatewayApiKey = merchant.getRemoteProdApiKey();
+        } else {
+            gatewayUrl = merchant.getRemoteTestUrl();
+            gatewayMerchantId = merchant.getRemoteTestMerchantId();
+            gatewayMerchantKey = merchant.getRemoteTestMerchantKey();
+            gatewayApiKey = merchant.getRemoteTestApiKey();
+        }
+        return MerchantContext.builder()
+            .merchantId(merchant.getId())
+            .environment(merchant.getMode().name())
+            .cupaApiKey(requestApiKey)
+            .mode(merchant.getMode())
+            .status(merchant.getStatus())
+            .gatewayUrl(gatewayUrl)
+            .gatewayMerchantId(gatewayMerchantId)
+            .gatewayMerchantKey(gatewayMerchantKey)
+            .gatewayApiKey(gatewayApiKey)
+            .build();
     }
 
     private String getApiKeyFromHeaders() {
@@ -184,7 +213,7 @@ public class CupaApiBusinessLogicService {
 
             // If no request body, try to extract from query parameters
             String queryString = request.getQueryString();
-            if (StringUtils.hasText(queryString)) {
+            if (StringUtils.isNotBlank(queryString)) {
                 return "Query: " + queryString;
             }
 
@@ -197,12 +226,12 @@ public class CupaApiBusinessLogicService {
 
     private String getClientIpAddress(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (StringUtils.hasText(xForwardedFor)) {
+        if (StringUtils.isNotBlank(xForwardedFor)) {
             return xForwardedFor.split(",")[0].trim();
         }
 
         String xRealIp = request.getHeader("X-Real-IP");
-        if (StringUtils.hasText(xRealIp)) {
+        if (StringUtils.isNotBlank(xRealIp)) {
             return xRealIp;
         }
 
@@ -216,5 +245,11 @@ public class CupaApiBusinessLogicService {
         private String merchantId;
         private String environment;
         private String cupaApiKey;
+        private MerchantMode mode;
+        private MerchantStatus status;
+        private String gatewayUrl;
+        private String gatewayMerchantId;
+        private String gatewayMerchantKey;
+        private String gatewayApiKey;
     }
 }

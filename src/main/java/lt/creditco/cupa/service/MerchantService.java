@@ -2,6 +2,7 @@ package lt.creditco.cupa.service;
 
 import java.util.Optional;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.service.dto.MerchantDTO;
@@ -18,9 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional
+@Slf4j
 public class MerchantService {
-
-    private static final Logger LOG = LoggerFactory.getLogger(MerchantService.class);
 
     private final MerchantRepository merchantRepository;
 
@@ -38,7 +38,7 @@ public class MerchantService {
      * @return the persisted entity.
      */
     public MerchantDTO save(MerchantDTO merchantDTO) {
-        LOG.debug("Request to save Merchant : {}", merchantDTO);
+        log.debug("Request to save Merchant : {}", merchantDTO);
         Merchant merchant = merchantMapper.toEntity(merchantDTO);
         merchant = merchantRepository.save(merchant);
         return merchantMapper.toDto(merchant);
@@ -51,7 +51,7 @@ public class MerchantService {
      * @return the persisted entity.
      */
     public MerchantDTO update(MerchantDTO merchantDTO) {
-        LOG.debug("Request to update Merchant : {}", merchantDTO);
+        log.debug("Request to update Merchant : {}", merchantDTO);
         Merchant merchant = merchantMapper.toEntity(merchantDTO);
         merchant = merchantRepository.save(merchant);
         return merchantMapper.toDto(merchant);
@@ -64,7 +64,7 @@ public class MerchantService {
      * @return the persisted entity.
      */
     public Optional<MerchantDTO> partialUpdate(MerchantDTO merchantDTO) {
-        LOG.debug("Request to partially update Merchant : {}", merchantDTO);
+        log.debug("Request to partially update Merchant : {}", merchantDTO);
 
         return merchantRepository
             .findById(merchantDTO.getId())
@@ -85,7 +85,7 @@ public class MerchantService {
      */
     @Transactional(readOnly = true)
     public Page<MerchantDTO> findAll(Pageable pageable) {
-        LOG.debug("Request to get all Merchants");
+        log.debug("Request to get all Merchants");
         return merchantRepository.findAll(pageable).map(merchantMapper::toDto);
     }
 
@@ -97,7 +97,7 @@ public class MerchantService {
      */
     @Transactional(readOnly = true)
     public Optional<MerchantDTO> findOne(String id) {
-        LOG.debug("Request to get Merchant : {}", id);
+        log.debug("Request to get Merchant : {}", id);
         return merchantRepository.findById(id).map(merchantMapper::toDto);
     }
 
@@ -107,7 +107,27 @@ public class MerchantService {
      * @param id the id of the entity.
      */
     public void delete(String id) {
-        LOG.debug("Request to delete Merchant : {}", id);
+        log.debug("Request to delete Merchant : {}", id);
         merchantRepository.deleteById(id);
+    }
+
+    /**
+     * Find a merchant by CUPA test API key.
+     *
+     * @param cupaApiKey the test API key
+     * @return the merchant if found
+     */
+    @Transactional(readOnly = true)
+    public Merchant findMerchantByCupaApiKey(String cupaApiKey) {
+        log.debug("findMerchantByCupaApiKey({})", cupaApiKey);
+        return merchantRepository
+            .findOneByCupaProdApiKey(cupaApiKey)
+            .orElse(merchantRepository.findOneByCupaTestApiKey(cupaApiKey).orElse(null));
+    }
+
+    @Transactional(readOnly = true)
+    public Merchant findMerchantById(String merchantId) {
+        log.debug("findMerchantById({})", merchantId);
+        return merchantRepository.findById(merchantId).orElse(null);
     }
 }
