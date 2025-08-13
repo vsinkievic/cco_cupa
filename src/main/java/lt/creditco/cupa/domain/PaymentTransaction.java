@@ -73,6 +73,7 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
     @Column(name = "echo")
     private String echo;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_flow")
     private PaymentFlow paymentFlow;
 

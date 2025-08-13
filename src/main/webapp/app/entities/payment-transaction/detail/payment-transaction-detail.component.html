@@ -25,19 +25,7 @@
           </dd>
           <dt><span>Status</span></dt>
           <dd>
-            <span>{{
-              {
-                null: '',
-                RECEIVED: 'RECEIVED',
-                SENT_TO_GATEWAY: 'SENT_TO_GATEWAY',
-                AWAITING_CALLBACK: 'AWAITING_CALLBACK',
-                SUCCESS: 'SUCCESS',
-                FAILED: 'FAILED',
-                CANCELLED: 'CANCELLED',
-                REFUNDED: 'REFUNDED',
-                QUERY_SUCCESS: 'QUERY_SUCCESS',
-              }[paymentTransactionRef.status ?? 'null']
-            }}</span>
+            <span>{{ paymentTransactionRef.status }}</span>
           </dd>
           <dt><span>Status Description</span></dt>
           <dd>
@@ -45,9 +33,7 @@
           </dd>
           <dt><span>Payment Brand</span></dt>
           <dd>
-            <span>{{
-              { null: '', UNIONPAY: 'UNIONPAY', ALIPAY: 'ALIPAY', WECHAT_PAY: 'WECHAT_PAY' }[paymentTransactionRef.paymentBrand ?? 'null']
-            }}</span>
+            <span>{{ paymentTransactionRef.paymentBrand }}</span>
           </dd>
           <dt><span>Amount</span></dt>
           <dd>
@@ -59,25 +45,7 @@
           </dd>
           <dt><span>Currency</span></dt>
           <dd>
-            <span>{{
-              {
-                null: '',
-                AUD: 'AUD',
-                USD: 'USD',
-                HKD: 'HKD',
-                CAD: 'CAD',
-                CHF: 'CHF',
-                CNY: 'CNY',
-                EUR: 'EUR',
-                GBP: 'GBP',
-                JPY: 'JPY',
-                KRW: 'KRW',
-                MOP: 'MOP',
-                RUB: 'RUB',
-                SGD: 'SGD',
-                TWD: 'TWD',
-              }[paymentTransactionRef.currency ?? 'null']
-            }}</span>
+            <span>{{ paymentTransactionRef.currency }}</span>
           </dd>
           <dt><span>Reply Url</span></dt>
           <dd>

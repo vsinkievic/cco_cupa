@@ -1,7 +1,7 @@
 export enum PaymentBrand {
-  UNIONPAY = 'UNIONPAY',
+  UnionPay = 'UnionPay',
 
-  ALIPAY = 'ALIPAY',
+  Alipay = 'Alipay',
 
-  WECHAT_PAY = 'WECHAT_PAY',
+  WeechatPay = 'WeechatPay',
 }

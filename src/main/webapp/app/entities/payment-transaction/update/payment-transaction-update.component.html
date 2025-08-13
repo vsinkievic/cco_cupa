@@ -89,7 +89,7 @@
             <option [ngValue]="null"></option>
             @for (paymentBrand of paymentBrandValues; track $index) {
               <option [value]="paymentBrand">
-                {{ { null: '', UNIONPAY: 'UNIONPAY', ALIPAY: 'ALIPAY', WECHAT_PAY: 'WECHAT_PAY' }[paymentBrand] }}
+                {{ { null: '', UnionPay: 'UnionPay', Alipay: 'Alipay', WeechatPay: 'WeechatPay' }[paymentBrand] }}
               </option>
             }
           </select>
