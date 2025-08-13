@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { UserRouteAccessService } from 'app/core/auth/user-route-access.service';
-import { ASC } from 'app/config/navigation.constants';
+import { DESC } from 'app/config/navigation.constants';
 import AuditLogResolve from './route/audit-log-routing-resolve.service';
 
 const auditLogRoute: Routes = [
@@ -9,7 +9,7 @@ const auditLogRoute: Routes = [
     path: '',
     loadComponent: () => import('./list/audit-log.component').then(m => m.AuditLogComponent),
     data: {
-      defaultSort: `id,${ASC}`,
+      defaultSort: `id,${DESC}`,
     },
     canActivate: [UserRouteAccessService],
   },
