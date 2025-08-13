@@ -36,7 +36,6 @@ type PaymentTransactionFormDefaults = Pick<
 type PaymentTransactionFormGroupContent = {
   id: FormControl<PaymentTransactionFormRawValue['id'] | NewPaymentTransaction['id']>;
   orderId: FormControl<PaymentTransactionFormRawValue['orderId']>;
-  cupaTransactionId: FormControl<PaymentTransactionFormRawValue['cupaTransactionId']>;
   gatewayTransactionId: FormControl<PaymentTransactionFormRawValue['gatewayTransactionId']>;
   status: FormControl<PaymentTransactionFormRawValue['status']>;
   statusDescription: FormControl<PaymentTransactionFormRawValue['statusDescription']>;
@@ -79,9 +78,6 @@ export class PaymentTransactionFormService {
         },
       ),
       orderId: new FormControl(paymentTransactionRawValue.orderId, {
-        validators: [Validators.required],
-      }),
-      cupaTransactionId: new FormControl(paymentTransactionRawValue.cupaTransactionId, {
         validators: [Validators.required],
       }),
       gatewayTransactionId: new FormControl(paymentTransactionRawValue.gatewayTransactionId),

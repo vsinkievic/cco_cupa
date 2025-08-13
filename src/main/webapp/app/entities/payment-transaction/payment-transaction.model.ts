@@ -8,7 +8,6 @@ import { Currency } from 'app/entities/enumerations/currency.model';
 export interface IPaymentTransaction {
   id: string;
   orderId?: string | null;
-  cupaTransactionId?: string | null;
   gatewayTransactionId?: string | null;
   status?: keyof typeof TransactionStatus | null;
   statusDescription?: string | null;

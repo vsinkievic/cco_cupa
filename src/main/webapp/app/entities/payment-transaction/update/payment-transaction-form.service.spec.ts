@@ -21,7 +21,6 @@ describe('PaymentTransaction Form Service', () => {
           expect.objectContaining({
             id: expect.any(Object),
             orderId: expect.any(Object),
-            cupaTransactionId: expect.any(Object),
             gatewayTransactionId: expect.any(Object),
             status: expect.any(Object),
             statusDescription: expect.any(Object),
@@ -54,7 +53,6 @@ describe('PaymentTransaction Form Service', () => {
           expect.objectContaining({
             id: expect.any(Object),
             orderId: expect.any(Object),
-            cupaTransactionId: expect.any(Object),
             gatewayTransactionId: expect.any(Object),
             status: expect.any(Object),
             statusDescription: expect.any(Object),

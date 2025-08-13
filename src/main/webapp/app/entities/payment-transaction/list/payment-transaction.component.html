@@ -47,13 +47,6 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="cupaTransactionId">
-              <div class="d-flex">
-                <span>Cupa Transaction Id</span>
-
-                <fa-icon class="p-1" icon="sort"></fa-icon>
-              </div>
-            </th>
             <th scope="col" jhiSortBy="paymentBrand">
               <div class="d-flex">
                 <span>Payment Brand</span>
@@ -106,12 +99,7 @@
                 <a [routerLink]="['/payment-transaction', paymentTransaction.id, 'view']">{{ paymentTransaction.id }}</a>
               </td>
               <td>{{ paymentTransaction.orderId }}</td>
-              <td>{{ paymentTransaction.cupaTransactionId }}</td>
-              <td>
-                {{
-                  { null: '', UNIONPAY: 'UNIONPAY', ALIPAY: 'ALIPAY', WECHAT_PAY: 'WECHAT_PAY' }[paymentTransaction.paymentBrand ?? 'null']
-                }}
-              </td>
+              <td>{{ paymentTransaction.paymentBrand }}</td>
               <td>{{ paymentTransaction.amount }}</td>
               <td>
                 {{
@@ -135,21 +123,7 @@
                 }}
               </td>
               <td>{{ paymentTransaction.requestTimestamp | formatMediumDatetime }}</td>
-              <td>
-                {{
-                  {
-                    null: '',
-                    RECEIVED: 'RECEIVED',
-                    SENT_TO_GATEWAY: 'SENT_TO_GATEWAY',
-                    AWAITING_CALLBACK: 'AWAITING_CALLBACK',
-                    SUCCESS: 'SUCCESS',
-                    FAILED: 'FAILED',
-                    CANCELLED: 'CANCELLED',
-                    REFUNDED: 'REFUNDED',
-                    QUERY_SUCCESS: 'QUERY_SUCCESS',
-                  }[paymentTransaction.status ?? 'null']
-                }}
-              </td>
+              <td>{{ paymentTransaction.status }}</td>
               <td>{{ paymentTransaction.statusDescription }}</td>
               <td class="text-end">
                 <div class="btn-group">

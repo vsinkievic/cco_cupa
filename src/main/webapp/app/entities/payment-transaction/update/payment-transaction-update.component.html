@@ -26,26 +26,6 @@
           }
         </div>
 
-        @let cupaTransactionIdRef = editForm.get('cupaTransactionId')!;
-        <div class="mb-3">
-          <label class="form-label" for="field_cupaTransactionId">Cupa Transaction Id</label>
-          <input
-            type="text"
-            class="form-control"
-            name="cupaTransactionId"
-            id="field_cupaTransactionId"
-            data-cy="cupaTransactionId"
-            formControlName="cupaTransactionId"
-          />
-          @if (cupaTransactionIdRef.invalid && (cupaTransactionIdRef.dirty || cupaTransactionIdRef.touched)) {
-            <div>
-              @if (editForm.get('cupaTransactionId')?.errors?.required) {
-                <small class="form-text text-danger">This field is required.</small>
-              }
-            </div>
-          }
-        </div>
-
         <div class="mb-3">
           <label class="form-label" for="field_gatewayTransactionId">Gateway Transaction Id</label>
           <input
