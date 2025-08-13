@@ -31,13 +31,25 @@
           <dd>
             <span>{{ auditLogRef.httpStatusCode }}</span>
           </dd>
-          <dt><span>Order Id</span></dt>
-          <dd>
-            <span>{{ auditLogRef.orderId }}</span>
-          </dd>
           <dt><span>Response Description</span></dt>
           <dd>
             <span>{{ auditLogRef.responseDescription }}</span>
+          </dd>
+          <dt><span>Requester Ip Address</span></dt>
+          <dd>
+            <span>{{ auditLogRef.requesterIpAddress }}</span>
+          </dd>
+          <dt><span>Merchant</span></dt>
+          <dd>
+            @if (auditLog()!.merchantId) {
+              <div>
+                <a [routerLink]="['/merchant', auditLogRef.merchantId, 'view']">{{ auditLogRef.merchantId }}</a>
+              </div>
+            }
+          </dd>
+          <dt><span>Order Id</span></dt>
+          <dd>
+            <span>{{ auditLogRef.orderId }}</span>
           </dd>
           <dt><span>Cupa Api Key</span></dt>
           <dd>
@@ -49,23 +61,11 @@
           </dd>
           <dt><span>Request Data</span></dt>
           <dd>
-            <span>{{ auditLogRef.requestData }}</span>
+            <pre>{{ auditLogRef.requestData }}</pre>
           </dd>
           <dt><span>Response Data</span></dt>
           <dd>
-            <span>{{ auditLogRef.responseData }}</span>
-          </dd>
-          <dt><span>Requester Ip Address</span></dt>
-          <dd>
-            <span>{{ auditLogRef.requesterIpAddress }}</span>
-          </dd>
-          <dt><span>Merchant</span></dt>
-          <dd>
-            @if (auditLog()!.merchant) {
-              <div>
-                <a [routerLink]="['/merchant', auditLog()!.merchant?.id, 'view']">{{ auditLogRef.merchant?.name }}</a>
-              </div>
-            }
+            <pre>{{ auditLogRef.responseData }}</pre>
           </dd>
         </dl>
 

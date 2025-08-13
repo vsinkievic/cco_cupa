@@ -14,5 +14,5 @@ export interface IAuditLog {
   requestData?: string | null;
   responseData?: string | null;
   requesterIpAddress?: string | null;
-  merchant?: Pick<IMerchant, 'id' | 'name'> | null;
+  merchantId?: string | null;
 }

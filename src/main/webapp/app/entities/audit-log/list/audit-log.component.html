@@ -106,17 +106,17 @@
               <td>{{ auditLog.apiEndpoint }}</td>
               <td>{{ auditLog.httpStatusCode }}</td>
               <td>{{ auditLog.environment }}</td>
-              <td>{{ auditLog.merchant?.name }}</td>
-              <td>{{ auditLog.orderId }}</td>
-              <td>{{ auditLog.responseDescription }}</td>
-              <td>{{ auditLog.requesterIpAddress }}</td>
               <td>
-                @if (auditLog.merchant) {
+                @if (auditLog.merchantId) {
                   <div>
-                    <a [routerLink]="['/merchant', auditLog.merchant.id, 'view']">{{ auditLog.merchant.name }}</a>
+                    <a [routerLink]="['/merchant', auditLog.merchantId, 'view']">{{ auditLog.merchantId }}</a>
                   </div>
                 }
               </td>
+              <td>{{ auditLog.orderId }}</td>
+              <td>{{ auditLog.responseDescription }}</td>
+              <td>{{ auditLog.requesterIpAddress }}</td>
+
               <td class="text-end">
                 <div class="btn-group">
                   <a [routerLink]="['/audit-log', auditLog.id, 'view']" class="btn btn-info btn-sm" data-cy="entityDetailsButton">
