@@ -48,6 +48,8 @@ public class CupaApiAuditInterceptor implements HandlerInterceptor {
             AuditLogDTO auditLog = createInitialAuditLog(context);
             AuditLogDTO savedLog = auditLogService.save(auditLog);
 
+            response.setHeader("X-Response-Id", savedLog.getId().toString());
+
             // Store audit log ID in context
             context.setAuditLogId(savedLog.getId());
             CupaApiContext.setContext(context);
@@ -68,7 +70,7 @@ public class CupaApiAuditInterceptor implements HandlerInterceptor {
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) {
-        updateAuditLogWithResponse(response);
+        //       updateAuditLogWithResponse(response);
     }
 
     @Override
@@ -76,6 +78,9 @@ public class CupaApiAuditInterceptor implements HandlerInterceptor {
         try {
             if (ex != null) {
                 updateAuditLogWithException(ex);
+            } else {
+                // Capture response for all scenarios (200, 400, 500, etc.)
+                //     updateAuditLogWithResponse(response);
             }
         } finally {
             // Always clear the context
@@ -120,7 +125,7 @@ public class CupaApiAuditInterceptor implements HandlerInterceptor {
                 AuditLogDTO auditLog = auditLogService.findOne(context.getAuditLogId()).orElse(null);
                 if (auditLog != null) {
                     auditLog.setHttpStatusCode(response.getStatus());
-                    auditLog.setResponseDescription(getResponseDescription(response.getStatus()));
+                    //                   auditLog.setResponseDescription(getResponseDescription(response.getStatus()));
 
                     // Note: Response body capture would require a response wrapper
                     // This is a simplified version
@@ -151,18 +156,5 @@ public class CupaApiAuditInterceptor implements HandlerInterceptor {
                 log.error("Error updating audit log with exception", e);
             }
         }
-    }
-
-    private String getResponseDescription(int statusCode) {
-        return switch (statusCode) {
-            case 200 -> "OK";
-            case 201 -> "Created";
-            case 400 -> "Bad Request";
-            case 401 -> "Unauthorized";
-            case 403 -> "Forbidden";
-            case 404 -> "Not Found";
-            case 500 -> "Internal Server Error";
-            default -> "Status " + statusCode;
-        };
     }
 }

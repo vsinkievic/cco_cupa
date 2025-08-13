@@ -1,14 +1,19 @@
 package lt.creditco.cupa.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import java.util.Optional;
 import lt.creditco.cupa.domain.AuditLog;
 import lt.creditco.cupa.repository.AuditLogRepository;
 import lt.creditco.cupa.service.dto.AuditLogDTO;
 import lt.creditco.cupa.service.mapper.AuditLogMapper;
+import lt.creditco.cupa.web.filter.HttpLoggingFilter.ApiRequestDetails;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,12 +27,14 @@ public class AuditLogService {
     private static final Logger LOG = LoggerFactory.getLogger(AuditLogService.class);
 
     private final AuditLogRepository auditLogRepository;
+    private final ObjectMapper objectMapper;
 
     private final AuditLogMapper auditLogMapper;
 
-    public AuditLogService(AuditLogRepository auditLogRepository, AuditLogMapper auditLogMapper) {
+    public AuditLogService(AuditLogRepository auditLogRepository, AuditLogMapper auditLogMapper, ObjectMapper objectMapper) {
         this.auditLogRepository = auditLogRepository;
         this.auditLogMapper = auditLogMapper;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -117,5 +124,40 @@ public class AuditLogService {
     public void delete(Long id) {
         LOG.debug("Request to delete AuditLog : {}", id);
         auditLogRepository.deleteById(id);
+    }
+
+    public void updateAuditLogWithResponse(Long requestId, ApiRequestDetails apiRequestDetails) {
+        LOG.debug("Request to update AuditLog with response : {}", requestId);
+
+        AuditLog auditLog = auditLogRepository.findById(requestId).orElse(null);
+        if (auditLog != null) {
+            auditLog.setRequestData(formatIfJson(apiRequestDetails.getRequestBody()));
+            auditLog.setHttpStatusCode(apiRequestDetails.getResponseStatus());
+            auditLog.setResponseData(formatIfJson(apiRequestDetails.getResponseBody()));
+            auditLog.setResponseDescription(apiRequestDetails.getResponseDescription());
+            auditLogRepository.save(auditLog);
+        }
+    }
+
+    /**
+     * Attempts to format JSON string with proper indentation if it's valid JSON.
+     */
+    private String formatIfJson(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            return content;
+        }
+
+        String trimmed = content.trim();
+        // Quick check if it looks like JSON
+        if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+            try {
+                Object json = objectMapper.readValue(trimmed, Object.class);
+                return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+            } catch (Exception e) {
+                // Not valid JSON, return original
+                return content;
+            }
+        }
+        return content;
     }
 }

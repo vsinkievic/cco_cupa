@@ -241,15 +241,26 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
     }
 
     private HttpHeaders buildHeaders(Throwable err) {
-        return err instanceof BadRequestAlertException badRequestAlertException
-            ? HeaderUtil.createFailureAlert(
+        HttpHeaders headers = null;
+
+        if (err instanceof BadRequestAlertException badRequestAlertException) {
+            headers = HeaderUtil.createFailureAlert(
                 applicationName,
                 true,
                 badRequestAlertException.getEntityName(),
                 badRequestAlertException.getErrorKey(),
                 badRequestAlertException.getMessage()
-            )
-            : null;
+            );
+
+            // Add custom headers for audit logging
+            headers.add("X-Error-Key", badRequestAlertException.getErrorKey());
+            headers.add("X-Error-Message", badRequestAlertException.getMessage());
+            headers.add("X-Entity-Name", badRequestAlertException.getEntityName());
+            headers.add("X-Error-Type", "validation");
+            headers.add("X-Error-Code", "error." + badRequestAlertException.getErrorKey());
+        }
+
+        return headers;
     }
 
     public Optional<ProblemDetailWithCause> buildCause(final Throwable throwable, NativeWebRequest request) {

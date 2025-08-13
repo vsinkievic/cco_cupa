@@ -9,6 +9,7 @@ import { IAuditLog } from '../audit-log.model';
 @Component({
   selector: 'jhi-audit-log-detail',
   templateUrl: './audit-log-detail.component.html',
+  styleUrls: ['./audit-log-detail.component.scss'],
   imports: [SharedModule, RouterModule, FormatMediumDatetimePipe],
 })
 export class AuditLogDetailComponent {
