@@ -65,8 +65,10 @@ public class HttpLoggingFilter implements Filter {
         if (servletPath.matches("/api/account(.*)")) return true;
         if (servletPath.matches("/api/admin(.*)")) return true;
         if (servletPath.matches("/api/users(.*)")) return true;
-        if (servletPath.matches("/api/action-logs(.*)")) return true;
-        if (servletPath.matches("/api/endpoint-wirings(.*)")) return true;
+        if (servletPath.matches("/api/audit-logs(.*)")) return true;
+        if (servletPath.matches("/api/clients(.*)")) return true;
+        if (servletPath.matches("/api/payment-transactions(.*)")) return true;
+        if (servletPath.matches("/api/merchants(.*)")) return true;
         if (servletPath.matches("/bower_components/(.*)")) return true;
         if (servletPath.matches("/v3/api-docs/(.*)")) return true;
         return false;

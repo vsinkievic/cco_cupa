@@ -147,7 +147,7 @@ public class MerchantResource {
      */
     @GetMapping("")
     public ResponseEntity<List<MerchantDTO>> getAllMerchants(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
-        LOG.debug("REST request to get a page of Merchants");
+        //        LOG.debug("REST request to get a page of Merchants");
         Page<MerchantDTO> page = merchantService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
@@ -161,7 +161,7 @@ public class MerchantResource {
      */
     @GetMapping("/{id}")
     public ResponseEntity<MerchantDTO> getMerchant(@PathVariable("id") String id) {
-        LOG.debug("REST request to get Merchant : {}", id);
+        //        LOG.debug("REST request to get Merchant : {}", id);
         Optional<MerchantDTO> merchantDTO = merchantService.findOne(id);
         return ResponseUtil.wrapOrNotFound(merchantDTO);
     }
