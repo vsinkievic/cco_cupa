@@ -26,7 +26,7 @@ export class JsonHighlightService {
     const preElements = document.querySelectorAll('pre.wrapped-pre');
 
     preElements.forEach(preElement => {
-      const text = preElement.textContent || '';
+      const text = preElement.textContent ?? '';
 
       // Check if content looks like JSON
       if (this.isJsonContent(text)) {
@@ -34,6 +34,17 @@ export class JsonHighlightService {
         this.highlightJsonContent(preElement, text);
       }
     });
+  }
+
+  /**
+   * Manually apply highlighting to a specific element
+   */
+  highlightElement(element: Element): void {
+    const text = element.textContent ?? '';
+    if (this.isJsonContent(text)) {
+      element.classList.add('json-highlight');
+      this.highlightJsonContent(element, text);
+    }
   }
 
   /**
@@ -80,41 +91,36 @@ export class JsonHighlightService {
   private highlightJsonSyntax(jsonText: string): string {
     return (
       jsonText
-        // Highlight property names (keys)
+        // Highlight property names (keys) - look for quoted strings followed by colon
         .replace(/"([^"]+)"\s*:/g, '<span class="json-key">"$1"</span><span class="json-punctuation">:</span>')
 
-        // Highlight string values
-        .replace(/:\s*"([^"]*)"/g, '<span class="json-punctuation">:</span> <span class="json-string">"$1"</span>')
+        // Highlight string values - look for highlighted colon followed by quoted string
+        .replace(
+          /<span class="json-punctuation">:<\/span>\s*"([^"]*)"/g,
+          '<span class="json-punctuation">:</span> <span class="json-string">"$1"</span>',
+        )
 
-        // Highlight numbers
-        .replace(/:\s*(-?\d+\.?\d*)/g, '<span class="json-punctuation">:</span> <span class="json-number">$1</span>')
+        // Highlight numbers - look for highlighted colon followed by number
+        .replace(
+          /<span class="json-punctuation">:<\/span>\s*(-?\d+\.?\d*)/g,
+          '<span class="json-punctuation">:</span> <span class="json-number">$1</span>',
+        )
 
-        // Highlight booleans
-        .replace(/:\s*(true|false)/g, '<span class="json-punctuation">:</span> <span class="json-boolean">$1</span>')
+        // Highlight booleans - look for highlighted colon followed by true/false
+        .replace(
+          /<span class="json-punctuation">:<\/span>\s*(true|false)/g,
+          '<span class="json-punctuation">:</span> <span class="json-boolean">$1</span>',
+        )
 
-        // Highlight null
-        .replace(/:\s*(null)/g, '<span class="json-punctuation">:</span> <span class="json-null">$1</span>')
+        // Highlight null - look for highlighted colon followed by null
+        .replace(
+          /<span class="json-punctuation">:<\/span>\s*(null)/g,
+          '<span class="json-punctuation">:</span> <span class="json-null">$1</span>',
+        )
 
-        // Highlight punctuation (braces, brackets, commas)
+        // Highlight punctuation (braces, brackets, commas) - but avoid double highlighting
         .replace(/([{}[\]])/g, '<span class="json-punctuation">$1</span>')
         .replace(/,/g, '<span class="json-punctuation">,</span>')
-
-        // Handle nested objects and arrays
-        .replace(/<span class="json-punctuation">\{<\/span>/g, '<span class="json-punctuation">{</span>')
-        .replace(/<span class="json-punctuation">\}<\/span>/g, '<span class="json-punctuation">}</span>')
-        .replace(/<span class="json-punctuation">\[<\/span>/g, '<span class="json-punctuation">[</span>')
-        .replace(/<span class="json-punctuation">\]<\/span>/g, '<span class="json-punctuation">]</span>')
     );
-  }
-
-  /**
-   * Manually apply highlighting to a specific element
-   */
-  highlightElement(element: Element): void {
-    const text = element.textContent || '';
-    if (this.isJsonContent(text)) {
-      element.classList.add('json-highlight');
-      this.highlightJsonContent(element, text);
-    }
   }
 }
