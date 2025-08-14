@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { UserRouteAccessService } from 'app/core/auth/user-route-access.service';
-import { ASC } from 'app/config/navigation.constants';
+import { DESC } from 'app/config/navigation.constants';
 import PaymentTransactionResolve from './route/payment-transaction-routing-resolve.service';
 
 const paymentTransactionRoute: Routes = [
@@ -9,7 +9,7 @@ const paymentTransactionRoute: Routes = [
     path: '',
     loadComponent: () => import('./list/payment-transaction.component').then(m => m.PaymentTransactionComponent),
     data: {
-      defaultSort: `id,${ASC}`,
+      defaultSort: `requestTimestamp,${DESC}`,
     },
     canActivate: [UserRouteAccessService],
   },
