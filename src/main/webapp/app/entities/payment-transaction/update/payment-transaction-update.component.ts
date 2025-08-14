@@ -28,6 +28,7 @@ import { PaymentTransactionFormGroup, PaymentTransactionFormService } from './pa
 })
 export class PaymentTransactionUpdateComponent implements OnInit {
   isSaving = false;
+  isNewMode = true;
   paymentTransaction: IPaymentTransaction | null = null;
   transactionStatusValues = Object.keys(TransactionStatus);
   paymentBrandValues = Object.keys(PaymentBrand);
@@ -55,6 +56,7 @@ export class PaymentTransactionUpdateComponent implements OnInit {
     this.activatedRoute.data.subscribe(({ paymentTransaction }) => {
       this.paymentTransaction = paymentTransaction;
       if (paymentTransaction) {
+        this.isNewMode = false;
         this.updateForm(paymentTransaction);
       }
 
@@ -84,6 +86,7 @@ export class PaymentTransactionUpdateComponent implements OnInit {
   save(): void {
     this.isSaving = true;
     const paymentTransaction = this.paymentTransactionFormService.getPaymentTransaction(this.editForm);
+    console.warn('paymentTransaction before save:', paymentTransaction);
     if (paymentTransaction.id !== null) {
       this.subscribeToSaveResponse(this.paymentTransactionService.update(paymentTransaction));
     } else {

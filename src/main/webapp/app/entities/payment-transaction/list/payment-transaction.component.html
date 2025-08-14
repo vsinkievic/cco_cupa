@@ -136,14 +136,16 @@
                     <span class="d-none d-md-inline">View</span>
                   </a>
 
-                  <a
-                    [routerLink]="['/payment-transaction', paymentTransaction.id, 'edit']"
-                    class="btn btn-primary btn-sm"
-                    data-cy="entityEditButton"
-                  >
-                    <fa-icon icon="pencil-alt"></fa-icon>
-                    <span class="d-none d-md-inline">Edit</span>
-                  </a>
+                  @if (isEditEnabled) {
+                    <a
+                      [routerLink]="['/payment-transaction', paymentTransaction.id, 'edit']"
+                      class="btn btn-primary btn-sm"
+                      data-cy="entityEditButton"
+                    >
+                      <fa-icon icon="pencil-alt"></fa-icon>
+                      <span class="d-none d-md-inline">Edit</span>
+                    </a>
+                  }
                 </div>
               </td>
             </tr>

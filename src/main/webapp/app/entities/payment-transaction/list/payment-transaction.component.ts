@@ -25,6 +25,7 @@ export class PaymentTransactionComponent implements OnInit {
   subscription: Subscription | null = null;
   paymentTransactions = signal<IPaymentTransaction[]>([]);
   isLoading = false;
+  isEditEnabled = false;
 
   sortState = sortStateSignal({});
 

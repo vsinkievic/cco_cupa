@@ -30,7 +30,7 @@ type NewPaymentTransactionFormRawValue = FormValueOf<NewPaymentTransaction>;
 
 type PaymentTransactionFormDefaults = Pick<
   NewPaymentTransaction,
-  'id' | 'paymentFlow' | 'requestTimestamp' | 'callbackTimestamp' | 'version'
+  'id' | 'paymentFlow' | 'currency' | 'requestTimestamp' | 'callbackTimestamp' | 'version'
 >;
 
 type PaymentTransactionFormGroupContent = {
@@ -64,7 +64,7 @@ export type PaymentTransactionFormGroup = FormGroup<PaymentTransactionFormGroupC
 
 @Injectable({ providedIn: 'root' })
 export class PaymentTransactionFormService {
-  createPaymentTransactionFormGroup(paymentTransaction: PaymentTransactionFormGroupInput = { id: '' }): PaymentTransactionFormGroup {
+  createPaymentTransactionFormGroup(paymentTransaction: PaymentTransactionFormGroupInput = { id: null }): PaymentTransactionFormGroup {
     const paymentTransactionRawValue = this.convertPaymentTransactionToPaymentTransactionRawValue({
       ...this.getFormDefaults(),
       ...paymentTransaction,
@@ -81,9 +81,7 @@ export class PaymentTransactionFormService {
         validators: [Validators.required],
       }),
       gatewayTransactionId: new FormControl(paymentTransactionRawValue.gatewayTransactionId),
-      status: new FormControl(paymentTransactionRawValue.status, {
-        validators: [Validators.required],
-      }),
+      status: new FormControl(paymentTransactionRawValue.status),
       statusDescription: new FormControl(paymentTransactionRawValue.statusDescription),
       paymentBrand: new FormControl(paymentTransactionRawValue.paymentBrand, {
         validators: [Validators.required],
@@ -101,15 +99,15 @@ export class PaymentTransactionFormService {
       paymentFlow: new FormControl(paymentTransactionRawValue.paymentFlow),
       signature: new FormControl(paymentTransactionRawValue.signature),
       signatureVersion: new FormControl(paymentTransactionRawValue.signatureVersion),
-      requestTimestamp: new FormControl(paymentTransactionRawValue.requestTimestamp, {
-        validators: [Validators.required],
-      }),
+      requestTimestamp: new FormControl(paymentTransactionRawValue.requestTimestamp),
       requestData: new FormControl(paymentTransactionRawValue.requestData),
       initialResponseData: new FormControl(paymentTransactionRawValue.initialResponseData),
       callbackTimestamp: new FormControl(paymentTransactionRawValue.callbackTimestamp),
       callbackData: new FormControl(paymentTransactionRawValue.callbackData),
       lastQueryData: new FormControl(paymentTransactionRawValue.lastQueryData),
-      client: new FormControl(paymentTransactionRawValue.client),
+      client: new FormControl(paymentTransactionRawValue.client, {
+        validators: [Validators.required],
+      }),
       merchant: new FormControl(paymentTransactionRawValue.merchant, {
         validators: [Validators.required],
       }),
@@ -142,6 +140,7 @@ export class PaymentTransactionFormService {
     return {
       id: null,
       paymentFlow: 'EMAIL',
+      currency: 'USD',
       requestTimestamp: currentTime,
       callbackTimestamp: currentTime,
       version: null,
