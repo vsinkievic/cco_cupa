@@ -56,8 +56,8 @@ public class CupaApiBusinessLogicService {
         }
 
         // Determine merchant and environment based on authentication
-        MerchantContext merchantContext = determineMerchantContext(requestApiKey, user);
-        contextBuilder.merchantId(merchantContext.getMerchantId()).environment(merchantContext.getEnvironment());
+        CupaApiContext.MerchantContext merchantContext = determineMerchantContext(requestApiKey, user);
+        contextBuilder.merchantContext(merchantContext);
 
         // Extract orderId from path variables or request body
         String orderId = extractOrderId(request, requestBody);
@@ -112,7 +112,7 @@ public class CupaApiBusinessLogicService {
         return null;
     }
 
-    private MerchantContext determineMerchantContext(String requestApiKey, User user) {
+    private CupaApiContext.MerchantContext determineMerchantContext(String requestApiKey, User user) {
         if (requestApiKey == null && user == null) {
             log.warn("No API key or principal available for merchant context determination");
             return getDefaultMerchantContext();
@@ -163,7 +163,7 @@ public class CupaApiBusinessLogicService {
             gatewayMerchantKey = merchant.getRemoteTestMerchantKey();
             gatewayApiKey = merchant.getRemoteTestApiKey();
         }
-        return MerchantContext.builder()
+        return CupaApiContext.MerchantContext.builder()
             .merchantId(merchant.getId())
             .environment(merchant.getMode().name())
             .cupaApiKey(requestApiKey)
@@ -180,24 +180,24 @@ public class CupaApiBusinessLogicService {
         return request.getHeader("X-API-Key");
     }
 
-    private MerchantContext findMerchantByApiKey(String apiKey) {
+    private CupaApiContext.MerchantContext findMerchantByApiKey(String apiKey) {
         // This is a simplified implementation
         // In a real scenario, you would query the database to find the merchant by API key
         log.debug("Looking up merchant by API key: {}", apiKey);
 
         // For now, we'll check if the API key matches any known test keys
         if ("test_key_123".equals(apiKey)) {
-            return MerchantContext.builder().merchantId("MERCH001").environment("TEST").cupaApiKey(apiKey).build();
+            return CupaApiContext.MerchantContext.builder().merchantId("MERCH001").environment("TEST").cupaApiKey(apiKey).build();
         } else if ("test_key_456".equals(apiKey)) {
-            return MerchantContext.builder().merchantId("MERCH002").environment("TEST").cupaApiKey(apiKey).build();
+            return CupaApiContext.MerchantContext.builder().merchantId("MERCH002").environment("TEST").cupaApiKey(apiKey).build();
         }
 
         log.debug("No merchant found for API key: {}, returning null values", apiKey);
         return getDefaultMerchantContext();
     }
 
-    private MerchantContext getDefaultMerchantContext() {
-        return MerchantContext.builder()
+    private CupaApiContext.MerchantContext getDefaultMerchantContext() {
+        return CupaApiContext.MerchantContext.builder()
             .merchantId(null) // Don't set default values when we can't determine them
             .environment(null)
             .cupaApiKey(null)
@@ -235,20 +235,5 @@ public class CupaApiBusinessLogicService {
         }
 
         return request.getRemoteAddr();
-    }
-
-    @Data
-    @Builder
-    public static class MerchantContext {
-
-        private String merchantId;
-        private String environment;
-        private String cupaApiKey;
-        private MerchantMode mode;
-        private MerchantStatus status;
-        private String gatewayUrl;
-        private String gatewayMerchantId;
-        private String gatewayMerchantKey;
-        private String gatewayApiKey;
     }
 }

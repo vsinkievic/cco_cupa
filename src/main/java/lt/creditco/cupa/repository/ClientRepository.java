@@ -34,4 +34,10 @@ public interface ClientRepository extends JpaRepository<Client, String> {
 
     @Query("select client from Client client where client.id =:id")
     Optional<Client> findOneWithToOneRelationships(@Param("id") String id);
+
+    @Query("select client from Client client where client.merchantClientId =:merchantClientId")
+    Optional<Client> findByMerchantClientId(@Param("merchantClientId") String merchantClientId);
+
+    @Query("select count(client) > 0 from Client client where client.merchantClientId =:merchantClientId")
+    boolean existsByMerchantClientId(@Param("merchantClientId") String merchantClientId);
 }

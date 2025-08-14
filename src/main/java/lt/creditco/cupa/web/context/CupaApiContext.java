@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lt.creditco.cupa.domain.MerchantOwnedEntity;
 import lt.creditco.cupa.domain.User;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
+import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
@@ -34,8 +36,8 @@ public class CupaApiContext {
     public static class CupaApiContextData {
 
         private String merchantId;
-        private String environment;
         private String cupaApiKey;
+        private MerchantContext merchantContext;
         private String orderId;
         private String clientId;
         private String requestData;
@@ -45,6 +47,10 @@ public class CupaApiContext {
         private Instant requestTimestamp;
         private Long auditLogId;
         private User user;
+
+        public String getEnvironment() {
+            return merchantContext != null && merchantContext.getMode() != null ? merchantContext.getMode().name() : null;
+        }
 
         public boolean canAccessEntity(MerchantOwnedEntity entity) {
             if (entity == null) {
@@ -72,5 +78,20 @@ public class CupaApiContext {
                 );
             }
         }
+    }
+
+    @Data
+    @Builder
+    public static class MerchantContext {
+
+        private String merchantId;
+        private String environment;
+        private String cupaApiKey;
+        private MerchantMode mode;
+        private MerchantStatus status;
+        private String gatewayUrl;
+        private String gatewayMerchantId;
+        private String gatewayMerchantKey;
+        private String gatewayApiKey;
     }
 }

@@ -10,6 +10,7 @@ import java.util.Optional;
 import lt.creditco.cupa.repository.PaymentTransactionRepository;
 import lt.creditco.cupa.service.PaymentTransactionService;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
+import lt.creditco.cupa.web.context.CupaApiContext;
 import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +65,8 @@ public class PaymentTransactionResource {
         if (paymentTransactionDTO.getId() != null) {
             throw new BadRequestAlertException("A new paymentTransaction cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        paymentTransactionDTO = paymentTransactionService.save(paymentTransactionDTO);
+        CupaApiContext.CupaApiContextData context = CupaApiContext.getContext();
+        paymentTransactionDTO = paymentTransactionService.save(paymentTransactionDTO, context);
         return ResponseEntity.created(new URI("/api/payment-transactions/" + paymentTransactionDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, paymentTransactionDTO.getId().toString()))
             .body(paymentTransactionDTO);

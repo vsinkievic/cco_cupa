@@ -112,7 +112,9 @@ public class CupaApiAuditInterceptor implements HandlerInterceptor {
         auditLog.setRequestData(context.getRequestData());
         auditLog.setOrderId(context.getOrderId());
         auditLog.setMerchantId(context.getMerchantId());
-        auditLog.setEnvironment(context.getEnvironment());
+        if (context.getMerchantContext() != null) {
+            auditLog.setEnvironment(context.getMerchantContext().getMode().name());
+        }
         auditLog.setCupaApiKey(context.getCupaApiKey());
 
         return auditLog;

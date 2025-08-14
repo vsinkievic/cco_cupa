@@ -7,12 +7,18 @@ import java.util.Optional;
 import java.util.UUID;
 import lt.creditco.cupa.api.Payment;
 import lt.creditco.cupa.api.PaymentRequest;
+import lt.creditco.cupa.domain.Client;
 import lt.creditco.cupa.domain.PaymentTransaction;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import lt.creditco.cupa.remote.CardType;
+import lt.creditco.cupa.remote.ClientDetails;
+import lt.creditco.cupa.remote.GatewayConfig;
+import lt.creditco.cupa.remote.GatewayResponse;
 import lt.creditco.cupa.remote.PaymentCurrency;
+import lt.creditco.cupa.remote.PaymentReply;
+import lt.creditco.cupa.remote.UpGatewayClient;
 import lt.creditco.cupa.repository.ClientRepository;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.repository.PaymentTransactionRepository;
@@ -47,18 +53,22 @@ public class PaymentTransactionService {
 
     private final MerchantRepository merchantRepository;
 
+    private final UpGatewayClient upGatewayClient;
+
     public PaymentTransactionService(
         PaymentTransactionRepository paymentTransactionRepository,
         PaymentTransactionMapper paymentTransactionMapper,
         PaymentMapper paymentMapper,
         ClientRepository clientRepository,
-        MerchantRepository merchantRepository
+        MerchantRepository merchantRepository,
+        UpGatewayClient upGatewayClient
     ) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.paymentTransactionMapper = paymentTransactionMapper;
         this.paymentMapper = paymentMapper;
         this.clientRepository = clientRepository;
         this.merchantRepository = merchantRepository;
+        this.upGatewayClient = upGatewayClient;
     }
 
     /**
@@ -69,16 +79,29 @@ public class PaymentTransactionService {
      */
     private void validatePaymentTransaction(PaymentTransactionDTO paymentTransactionDTO) {
         // Validate client exists
-        if (paymentTransactionDTO.getClientId() != null && !clientRepository.existsById(paymentTransactionDTO.getClientId())) {
-            throw new BadRequestAlertException(
-                "Client with ID=" + paymentTransactionDTO.getClientId() + " not found!",
-                "PaymentTransaction",
-                "clientNotFound"
-            );
+
+        if (paymentTransactionDTO.getClientId() == null) {
+            throw new BadRequestAlertException("Client ID is required", "PaymentTransaction", "clientIdRequired");
+        }
+
+        if (!clientRepository.existsById(paymentTransactionDTO.getClientId())) {
+            Client client = clientRepository.findByMerchantClientId(paymentTransactionDTO.getClientId()).orElse(null);
+            if (client == null) {
+                throw new BadRequestAlertException(
+                    "Client with ID=" + paymentTransactionDTO.getClientId() + " not found!",
+                    "PaymentTransaction",
+                    "clientNotFound"
+                );
+            }
+            paymentTransactionDTO.setClientId(client.getId());
         }
 
         // Validate merchant exists
-        if (paymentTransactionDTO.getMerchantId() != null && !merchantRepository.existsById(paymentTransactionDTO.getMerchantId())) {
+        if (paymentTransactionDTO.getMerchantId() == null) {
+            throw new BadRequestAlertException("Merchant ID is required", "PaymentTransaction", "merchantIdRequired");
+        }
+
+        if (!merchantRepository.existsById(paymentTransactionDTO.getMerchantId())) {
             throw new BadRequestAlertException(
                 "Merchant with ID=" + paymentTransactionDTO.getMerchantId() + " not found!",
                 "PaymentTransaction",
@@ -113,7 +136,7 @@ public class PaymentTransactionService {
      * @param paymentTransactionDTO the entity to save.
      * @return the persisted entity.
      */
-    public PaymentTransactionDTO save(PaymentTransactionDTO paymentTransactionDTO) {
+    public PaymentTransactionDTO save(PaymentTransactionDTO paymentTransactionDTO, CupaApiContext.CupaApiContextData context) {
         LOG.debug("Request to save PaymentTransaction : {}", paymentTransactionDTO);
 
         // Validate before saving
@@ -127,6 +150,8 @@ public class PaymentTransactionService {
 
         paymentTransaction.setStatus(TransactionStatus.RECEIVED);
         paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
+
+        placePayment(paymentTransaction, context);
         return paymentTransactionMapper.toDto(paymentTransaction);
     }
 
@@ -145,6 +170,69 @@ public class PaymentTransactionService {
         PaymentTransaction paymentTransaction = paymentTransactionMapper.toEntity(paymentTransactionDTO);
         paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
         return paymentTransactionMapper.toDto(paymentTransaction);
+    }
+
+    private void placePayment(PaymentTransaction paymentTransaction, CupaApiContext.CupaApiContextData context) {
+        GatewayConfig config = getGatewayConfig(context, paymentTransaction);
+
+        lt.creditco.cupa.remote.PaymentRequest upPaymentRequest = upPaymentRequestFrom(paymentTransaction);
+        GatewayResponse<PaymentReply> upResponse = upGatewayClient.placeTransaction(upPaymentRequest, config);
+
+        if (upResponse.getResponse().getStatusCode() == 200) {
+            paymentTransaction.setStatus(TransactionStatus.SUCCESS);
+        } else {
+            paymentTransaction.setStatus(TransactionStatus.FAILED);
+        }
+
+        paymentTransactionRepository.save(paymentTransaction);
+    }
+
+    private lt.creditco.cupa.remote.PaymentRequest upPaymentRequestFrom(PaymentTransaction paymentTransaction) {
+        lt.creditco.cupa.remote.PaymentRequest upPaymentRequest = new lt.creditco.cupa.remote.PaymentRequest();
+        upPaymentRequest.setOrderId(paymentTransaction.getOrderId());
+        upPaymentRequest.setAmount(paymentTransaction.getAmount());
+        upPaymentRequest.setCurrency(paymentTransaction.getCurrency().name());
+        upPaymentRequest.setCardType(cardTypeFromPaymentBrand(paymentTransaction.getPaymentBrand()));
+
+        upPaymentRequest.setReplyUrl(paymentTransaction.getReplyUrl());
+        upPaymentRequest.setBackofficeUrl(paymentTransaction.getBackofficeUrl());
+        upPaymentRequest.setEcho(paymentTransaction.getEcho());
+
+        Client client = clientRepository
+            .findById(paymentTransaction.getClientId())
+            .orElseThrow(() -> new BadRequestAlertException("Client not found", "PaymentTransaction", "clientNotFound"));
+        upPaymentRequest.setClientId(client.getMerchantClientId());
+        upPaymentRequest.setClient(upClientFrom(client));
+
+        return upPaymentRequest;
+    }
+
+    private ClientDetails upClientFrom(Client client) {
+        ClientDetails clientDetails = new ClientDetails();
+        clientDetails.setClientId(client.getMerchantClientId());
+        clientDetails.setEmailAddress(client.getEmailAddress());
+        clientDetails.setMobileNumber(client.getMobileNumber());
+        clientDetails.setName(client.getName());
+        clientDetails.setClientPhone(client.getClientPhone());
+
+        return clientDetails;
+    }
+
+    private GatewayConfig getGatewayConfig(CupaApiContext.CupaApiContextData context, PaymentTransaction paymentTransaction) {
+        if (context.getMerchantContext() == null) {
+            throw new BadRequestAlertException("Merchant context is required", "PaymentTransaction", "merchantContextRequired");
+        }
+
+        return GatewayConfig.builder()
+            .merchantMid(context.getMerchantContext().getGatewayMerchantId())
+            .merchantKey(context.getMerchantContext().getGatewayMerchantKey())
+            .apiKey(context.getMerchantContext().getGatewayApiKey())
+            .baseUrl(context.getMerchantContext().getGatewayUrl())
+            .replyUrl(context.getMerchantContext().getGatewayUrl())
+            .backofficeUrl(context.getMerchantContext().getGatewayUrl())
+            .merchantCurrency(paymentTransaction.getCurrency().name())
+            .paymentType(paymentTransaction.getPaymentBrand().name())
+            .build();
     }
 
     /**
@@ -216,7 +304,9 @@ public class PaymentTransactionService {
             request.getOrderId(),
             context.getUser().getLogin(),
             context.getMerchantId(),
-            context.getEnvironment()
+            context.getMerchantContext() != null && context.getMerchantContext().getMode() != null
+                ? context.getMerchantContext().getMode().name()
+                : null
         );
 
         PaymentTransactionDTO paymentTransactionDTO = new PaymentTransactionDTO();
@@ -230,7 +320,7 @@ public class PaymentTransactionService {
 
         paymentTransactionDTO.setStatus(TransactionStatus.RECEIVED);
 
-        paymentTransactionDTO = save(paymentTransactionDTO);
+        paymentTransactionDTO = save(paymentTransactionDTO, context);
 
         Payment payment = paymentMapper.toPayment(paymentTransactionDTO);
 
@@ -247,5 +337,9 @@ public class PaymentTransactionService {
 
     private PaymentBrand paymentBrandFromCardType(CardType cardType) {
         return PaymentBrand.valueOf(cardType.name());
+    }
+
+    private CardType cardTypeFromPaymentBrand(PaymentBrand paymentBrand) {
+        return CardType.valueOf(paymentBrand.name());
     }
 }
