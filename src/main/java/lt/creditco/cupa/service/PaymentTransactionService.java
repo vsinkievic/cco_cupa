@@ -15,9 +15,11 @@ import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import lt.creditco.cupa.remote.CardType;
 import lt.creditco.cupa.remote.ClientDetails;
 import lt.creditco.cupa.remote.GatewayConfig;
+import lt.creditco.cupa.remote.GatewayMessage;
 import lt.creditco.cupa.remote.GatewayResponse;
 import lt.creditco.cupa.remote.PaymentCurrency;
 import lt.creditco.cupa.remote.PaymentReply;
+import lt.creditco.cupa.remote.RestTemplateBodyInterceptor;
 import lt.creditco.cupa.remote.UpGatewayClient;
 import lt.creditco.cupa.repository.ClientRepository;
 import lt.creditco.cupa.repository.MerchantRepository;
@@ -55,13 +57,16 @@ public class PaymentTransactionService {
 
     private final UpGatewayClient upGatewayClient;
 
+    private final RestTemplateBodyInterceptor bodyInterceptor;
+
     public PaymentTransactionService(
         PaymentTransactionRepository paymentTransactionRepository,
         PaymentTransactionMapper paymentTransactionMapper,
         PaymentMapper paymentMapper,
         ClientRepository clientRepository,
         MerchantRepository merchantRepository,
-        UpGatewayClient upGatewayClient
+        UpGatewayClient upGatewayClient,
+        RestTemplateBodyInterceptor bodyInterceptor
     ) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.paymentTransactionMapper = paymentTransactionMapper;
@@ -69,6 +74,7 @@ public class PaymentTransactionService {
         this.clientRepository = clientRepository;
         this.merchantRepository = merchantRepository;
         this.upGatewayClient = upGatewayClient;
+        this.bodyInterceptor = bodyInterceptor;
     }
 
     /**
@@ -174,16 +180,37 @@ public class PaymentTransactionService {
 
     private void placePayment(PaymentTransaction paymentTransaction, CupaApiContext.CupaApiContextData context) {
         GatewayConfig config = getGatewayConfig(context, paymentTransaction);
+        bodyInterceptor.clear();
 
         lt.creditco.cupa.remote.PaymentRequest upPaymentRequest = upPaymentRequestFrom(paymentTransaction);
-        GatewayResponse<PaymentReply> upResponse = upGatewayClient.placeTransaction(upPaymentRequest, config);
 
-        if (upResponse.getResponse().getStatusCode() == 200) {
-            paymentTransaction.setStatus(TransactionStatus.SUCCESS);
-        } else {
-            paymentTransaction.setStatus(TransactionStatus.FAILED);
+        GatewayResponse<PaymentReply> upResponse = null;
+        String statusDescription = null;
+        try {
+            upResponse = upGatewayClient.placeTransaction(upPaymentRequest, config);
+        } catch (Exception e) {
+            LOG.error("Error placing payment", e);
         }
 
+        RestTemplateBodyInterceptor.Trace trace = bodyInterceptor.getLastTrace();
+        if (trace != null) {
+            paymentTransaction.setRequestData(trace.getRequestBody());
+            paymentTransaction.setInitialResponseData(trace.getResponseBody());
+        }
+        if (upResponse != null) {
+            if (upResponse.getResponse() == null) {
+                paymentTransaction.setStatus(TransactionStatus.FAILED);
+                statusDescription = "ERROR: Gateway response is null";
+            } else if (upResponse.getResponse().getStatusCode() == 200 || upResponse.getResponse().getStatusCode() == 201) {
+                paymentTransaction.setStatus(TransactionStatus.SENT_TO_GATEWAY);
+                statusDescription = prepareStatusDescription(upResponse.getResponse());
+                //                paymentTransaction.setTransactionId(upResponse.getResponse().ge
+            } else {
+                paymentTransaction.setStatus(TransactionStatus.FAILED);
+                statusDescription = prepareStatusDescription(upResponse.getResponse());
+            }
+        }
+        paymentTransaction.setStatusDescription(statusDescription);
         paymentTransactionRepository.save(paymentTransaction);
     }
 
@@ -309,6 +336,13 @@ public class PaymentTransactionService {
                 : null
         );
 
+        LOG.debug("createPayment()....: request={}", request);
+        LOG.debug("createPayment()....: context={}", context);
+        LOG.debug(
+            "createPayment()....: request.getMerchantId()={}, context.getMerchantId()={}",
+            request.getMerchantId(),
+            context.getMerchantId()
+        );
         PaymentTransactionDTO paymentTransactionDTO = new PaymentTransactionDTO();
         paymentTransactionDTO.setMerchantId(request.getMerchantId() != null ? request.getMerchantId() : context.getMerchantId());
         paymentTransactionDTO.setRequestTimestamp(Instant.now().truncatedTo(ChronoUnit.MILLIS));
@@ -317,6 +351,7 @@ public class PaymentTransactionService {
         paymentTransactionDTO.setAmount(request.getAmount());
         paymentTransactionDTO.setCurrency(currencyFromPaymentCurrency(request.getCurrency()));
         paymentTransactionDTO.setPaymentBrand(paymentBrandFromCardType(request.getCardType()));
+        paymentTransactionDTO.setPaymentFlow(request.getPaymentFlow());
 
         paymentTransactionDTO.setStatus(TransactionStatus.RECEIVED);
 
@@ -341,5 +376,51 @@ public class PaymentTransactionService {
 
     private CardType cardTypeFromPaymentBrand(PaymentBrand paymentBrand) {
         return CardType.valueOf(paymentBrand.name());
+    }
+
+    /**
+     * Prepares a status description from the gateway response message.
+     *
+     * Priority order:
+     * 1. If both detail and reason exist: detail + " " + reason
+     * 2. If only detail exists: detail
+     * 3. If only reason exists: reason
+     * 4. If neither exists: message
+     * 5. If message is null: "No status description available"
+     *
+     * @param response the gateway response message
+     * @return the prepared status description
+     */
+    private String prepareStatusDescription(GatewayMessage response) {
+        if (response == null) {
+            return "No status description available";
+        }
+
+        String detail = response.getDetail();
+        String reason = response.getReason();
+        String message = response.getMessage();
+
+        // Check if both detail and reason exist
+        if (detail != null && !detail.trim().isEmpty() && reason != null && !reason.trim().isEmpty()) {
+            return detail.trim() + ". " + reason.trim();
+        }
+
+        // Check if only detail exists
+        if (detail != null && !detail.trim().isEmpty()) {
+            return detail.trim();
+        }
+
+        // Check if only reason exists
+        if (reason != null && !reason.trim().isEmpty()) {
+            return reason.trim();
+        }
+
+        // Fall back to message
+        if (message != null && !message.trim().isEmpty()) {
+            return message.trim();
+        }
+
+        // Final fallback
+        return "No status description available";
     }
 }

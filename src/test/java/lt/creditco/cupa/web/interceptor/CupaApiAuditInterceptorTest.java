@@ -60,7 +60,7 @@ class CupaApiAuditInterceptorTest {
         // Setup context data
         contextData = CupaApiContext.CupaApiContextData.builder()
             .merchantId("test-merchant")
-            .environment("TEST")
+            //            .environment("TEST")
             .cupaApiKey("test-api-key")
             .orderId("test-order-id")
             .clientId("test-client")

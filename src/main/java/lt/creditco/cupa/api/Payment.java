@@ -10,6 +10,7 @@ public class Payment {
     private BigDecimal amount;
     private String currency;
     private String status;
+    private String statusDescription;
     private Instant createdAt = Instant.now();
 
     // Getters
@@ -56,6 +57,14 @@ public class Payment {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public void setStatusDescription(String statusDescription) {
+        this.statusDescription = statusDescription;
+    }
+
+    public String getStatusDescription() {
+        return statusDescription;
     }
 
     public void setCreatedAt(Instant createdAt) {

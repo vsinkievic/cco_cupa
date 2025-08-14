@@ -52,6 +52,10 @@ public class CupaApiContext {
             return merchantContext != null && merchantContext.getMode() != null ? merchantContext.getMode().name() : null;
         }
 
+        public String getMerchantId() {
+            return merchantContext != null && merchantContext.getMerchantId() != null ? merchantContext.getMerchantId() : merchantId;
+        }
+
         public boolean canAccessEntity(MerchantOwnedEntity entity) {
             if (entity == null) {
                 return false;
