@@ -28,7 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(
     classes = {
         UpGatewayClient.class,
-        TestTracingInterceptor.class,
+        RestTemplateBodyInterceptor.class,
         RemoteClientConfig.class,
         JacksonConfiguration.class,
         JacksonAutoConfiguration.class,
@@ -44,7 +44,7 @@ class UpGatewayClientIT {
     private UpGatewayClient upGatewayClient;
 
     @Autowired
-    private TestTracingInterceptor testTracingInterceptor;
+    private RestTemplateBodyInterceptor restTemplateBodyInterceptor;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -53,7 +53,7 @@ class UpGatewayClientIT {
 
     @BeforeEach
     void setUp() throws IOException {
-        testTracingInterceptor.clear();
+        restTemplateBodyInterceptor.clear();
         gatewayConfig = loadGatewayConfig();
     }
 
@@ -92,7 +92,7 @@ class UpGatewayClientIT {
         GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.placeTransaction(request, gatewayConfig);
 
         // Then
-        TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
+        RestTemplateBodyInterceptor.Trace trace = restTemplateBodyInterceptor.getLastTrace();
         log.info("Request Body: {}", trace.getRequestBody());
         log.info("Response Body: {}", trace.getResponseBody());
         log.info("Transaction Response: {}", objectMapper.writeValueAsString(transactionResponse));
@@ -123,7 +123,7 @@ class UpGatewayClientIT {
         GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.placeTransaction(request, gatewayConfig);
 
         // Then
-        TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
+        RestTemplateBodyInterceptor.Trace trace = restTemplateBodyInterceptor.getLastTrace();
         log.info("Request Body: {}", trace.getRequestBody());
         log.info("Response Body: {}", trace.getResponseBody());
         log.info("Transaction Response: {}", objectMapper.writeValueAsString(transactionResponse));
@@ -164,7 +164,7 @@ class UpGatewayClientIT {
         GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.placeTransaction(request, gatewayConfig);
 
         // Then
-        TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
+        RestTemplateBodyInterceptor.Trace trace = restTemplateBodyInterceptor.getLastTrace();
         log.info("Request Body: {}", trace.getRequestBody());
         log.info("Response Body: {}", trace.getResponseBody());
         log.info("Transaction Response: {}", objectMapper.writeValueAsString(transactionResponse));
@@ -187,7 +187,7 @@ class UpGatewayClientIT {
         GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.queryTransaction(orderId, gatewayConfig);
 
         // Then
-        TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
+        RestTemplateBodyInterceptor.Trace trace = restTemplateBodyInterceptor.getLastTrace();
         log.info("Request Body: {}", trace.getRequestBody());
         log.info("Response Body: {}", trace.getResponseBody());
         log.info("Transaction Response: {}", objectMapper.writeValueAsString(transactionResponse));
@@ -211,7 +211,7 @@ class UpGatewayClientIT {
         }
 
         // Then
-        TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
+        RestTemplateBodyInterceptor.Trace trace = restTemplateBodyInterceptor.getLastTrace();
         log.info("Request Body: {}", trace.getRequestBody());
         log.info("Response Body: {}", trace.getResponseBody());
         assertNotNull(clientDetailsResponse);
@@ -233,7 +233,7 @@ class UpGatewayClientIT {
         }
 
         // Then
-        TestTracingInterceptor.Trace trace = testTracingInterceptor.getLastTrace();
+        RestTemplateBodyInterceptor.Trace trace = restTemplateBodyInterceptor.getLastTrace();
         log.info("Request Body: {}", trace.getRequestBody());
         log.info("Response Body: {}", trace.getResponseBody());
         assertNotNull(clientListResponse);

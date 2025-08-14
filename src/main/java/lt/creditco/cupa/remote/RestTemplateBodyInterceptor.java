@@ -12,7 +12,7 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TestTracingInterceptor implements ClientHttpRequestInterceptor {
+public class RestTemplateBodyInterceptor implements ClientHttpRequestInterceptor {
 
     private final ThreadLocal<Trace> lastTrace = new ThreadLocal<>();
 
