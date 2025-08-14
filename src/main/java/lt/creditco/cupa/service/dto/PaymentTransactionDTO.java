@@ -76,6 +76,8 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
 
     private String clientId;
 
+    private String merchantClientId;
+
     @NotNull
     private String merchantId;
 
@@ -268,6 +270,14 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
+
+    public String getMerchantClientId() {
+        return merchantClientId;
+    }
+
+    public void setMerchantClientId(String merchantClientId) {
+        this.merchantClientId = merchantClientId;
     }
 
     public String getMerchantId() {

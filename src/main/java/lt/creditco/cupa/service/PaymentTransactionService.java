@@ -3,6 +3,7 @@ package lt.creditco.cupa.service;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lt.creditco.cupa.api.Payment;
@@ -158,7 +159,7 @@ public class PaymentTransactionService {
         paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
 
         placePayment(paymentTransaction, context);
-        return paymentTransactionMapper.toDto(paymentTransaction);
+        return enrichWithRelatedData(paymentTransactionMapper.toDto(paymentTransaction));
     }
 
     /**
@@ -175,7 +176,7 @@ public class PaymentTransactionService {
 
         PaymentTransaction paymentTransaction = paymentTransactionMapper.toEntity(paymentTransactionDTO);
         paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
-        return paymentTransactionMapper.toDto(paymentTransaction);
+        return enrichWithRelatedData(paymentTransactionMapper.toDto(paymentTransaction));
     }
 
     private void placePayment(PaymentTransaction paymentTransaction, CupaApiContext.CupaApiContextData context) {
@@ -279,7 +280,8 @@ public class PaymentTransactionService {
                 return existingPaymentTransaction;
             })
             .map(paymentTransactionRepository::save)
-            .map(paymentTransactionMapper::toDto);
+            .map(paymentTransactionMapper::toDto)
+            .map(this::enrichWithRelatedData);
     }
 
     /**
@@ -291,7 +293,7 @@ public class PaymentTransactionService {
     @Transactional(readOnly = true)
     public Page<PaymentTransactionDTO> findAll(Pageable pageable) {
         LOG.debug("Request to get all PaymentTransactions");
-        return paymentTransactionRepository.findAll(pageable).map(paymentTransactionMapper::toDto);
+        return paymentTransactionRepository.findAll(pageable).map(paymentTransactionMapper::toDto).map(this::enrichWithRelatedData);
     }
 
     /**
@@ -300,7 +302,10 @@ public class PaymentTransactionService {
      * @return the list of entities.
      */
     public Page<PaymentTransactionDTO> findAllWithEagerRelationships(Pageable pageable) {
-        return paymentTransactionRepository.findAllWithEagerRelationships(pageable).map(paymentTransactionMapper::toDto);
+        return paymentTransactionRepository
+            .findAllWithEagerRelationships(pageable)
+            .map(paymentTransactionMapper::toDto)
+            .map(this::enrichWithRelatedData);
     }
 
     /**
@@ -312,7 +317,10 @@ public class PaymentTransactionService {
     @Transactional(readOnly = true)
     public Optional<PaymentTransactionDTO> findOne(String id) {
         LOG.debug("Request to get PaymentTransaction : {}", id);
-        return paymentTransactionRepository.findOneWithEagerRelationships(id).map(paymentTransactionMapper::toDto);
+        return paymentTransactionRepository
+            .findOneWithEagerRelationships(id)
+            .map(paymentTransactionMapper::toDto)
+            .map(this::enrichWithRelatedData);
     }
 
     /**
@@ -323,6 +331,70 @@ public class PaymentTransactionService {
     public void delete(String id) {
         LOG.debug("Request to delete PaymentTransaction : {}", id);
         paymentTransactionRepository.deleteById(id);
+    }
+
+    /**
+     * Enrich PaymentTransactionDTO with related entity data.
+     * This method loads the Client and Merchant entities to populate
+     * merchantClientId, clientName, and merchantName fields.
+     *
+     * @param dto the DTO to enrich
+     * @return the enriched DTO
+     */
+    private PaymentTransactionDTO enrichWithRelatedData(PaymentTransactionDTO dto) {
+        if (dto == null) {
+            return dto;
+        }
+
+        // Load and set client data
+        if (dto.getClientId() != null) {
+            clientRepository
+                .findById(dto.getClientId())
+                .ifPresent(client -> {
+                    dto.setMerchantClientId(client.getMerchantClientId());
+                    dto.setClientName(client.getName());
+                });
+        }
+
+        // Load and set merchant data
+        if (dto.getMerchantId() != null) {
+            merchantRepository
+                .findById(dto.getMerchantId())
+                .ifPresent(merchant -> {
+                    dto.setMerchantName(merchant.getName());
+                });
+        }
+
+        return dto;
+    }
+
+    /**
+     * Enrich a list of PaymentTransactionDTOs with related entity data.
+     *
+     * @param dtoList the list of DTOs to enrich
+     * @return the enriched list
+     */
+    private List<PaymentTransactionDTO> enrichWithRelatedData(List<PaymentTransactionDTO> dtoList) {
+        if (dtoList == null) {
+            return dtoList;
+        }
+
+        return dtoList.stream().map(this::enrichWithRelatedData).toList();
+    }
+
+    /**
+     * Enrich a page of PaymentTransactionDTOs with related entity data.
+     *
+     * @param dtoPage the page of DTOs to enrich
+     * @return the enriched page
+     */
+    private Page<PaymentTransactionDTO> enrichWithRelatedData(Page<PaymentTransactionDTO> dtoPage) {
+        if (dtoPage == null) {
+            return dtoPage;
+        }
+
+        List<PaymentTransactionDTO> enrichedContent = enrichWithRelatedData(dtoPage.getContent());
+        return dtoPage.map(dto -> enrichWithRelatedData(dto));
     }
 
     public Payment createPayment(PaymentRequest request, CupaApiContext.CupaApiContextData context) {

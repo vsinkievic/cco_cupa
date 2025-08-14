@@ -3,13 +3,15 @@ package lt.creditco.cupa.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
 import lt.creditco.cupa.api.Payment;
 import lt.creditco.cupa.api.PaymentRequest;
+import lt.creditco.cupa.domain.Client;
+import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.PaymentTransaction;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
@@ -58,6 +60,8 @@ class PaymentTransactionServiceTest {
     private PaymentTransaction validPaymentTransaction;
     private PaymentRequest validPaymentRequest;
     private CupaApiContext.CupaApiContextData validContext;
+    private Client client;
+    private Merchant merchant;
 
     @BeforeEach
     void setUp() {
@@ -91,6 +95,16 @@ class PaymentTransactionServiceTest {
         validPaymentRequest.setCardType(CardType.UnionPay);
 
         validContext = CupaApiContext.CupaApiContextData.builder().merchantId("MERCH-00001")/* .environment("TEST")*/.build();
+
+        // Setup test data for enrichment tests
+        client = new Client();
+        client.setId("test-client-id");
+        client.setMerchantClientId("merchant-client-id");
+        client.setName("Test Client Name");
+
+        merchant = new Merchant();
+        merchant.setId("test-merchant-id");
+        merchant.setName("Test Merchant Name");
     }
 
     @Test
@@ -209,5 +223,29 @@ class PaymentTransactionServiceTest {
         assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO, validContext))
             .isInstanceOf(BadRequestAlertException.class)
             .hasMessageContaining("Order ID is required");
+    }
+
+    @Test
+    void shouldEnrichDTOWhenFindingOne() {
+        // Given
+        PaymentTransactionDTO testDTO = new PaymentTransactionDTO();
+        testDTO.setId("test-id");
+        testDTO.setClientId("test-client-id");
+        testDTO.setMerchantId("test-merchant-id");
+
+        when(paymentTransactionRepository.findOneWithEagerRelationships("test-id")).thenReturn(Optional.of(validPaymentTransaction));
+        when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(testDTO);
+        when(clientRepository.findById("test-client-id")).thenReturn(Optional.of(client));
+        when(merchantRepository.findById("test-merchant-id")).thenReturn(Optional.of(merchant));
+
+        // When
+        Optional<PaymentTransactionDTO> result = paymentTransactionService.findOne("test-id");
+
+        // Then
+        assertThat(result).isPresent();
+        PaymentTransactionDTO enrichedDTO = result.get();
+        assertThat(enrichedDTO.getMerchantClientId()).isEqualTo("merchant-client-id");
+        assertThat(enrichedDTO.getClientName()).isEqualTo("Test Client Name");
+        assertThat(enrichedDTO.getMerchantName()).isEqualTo("Test Merchant Name");
     }
 }

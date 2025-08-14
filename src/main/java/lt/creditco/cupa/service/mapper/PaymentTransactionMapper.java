@@ -11,6 +11,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 public interface PaymentTransactionMapper extends EntityMapper<PaymentTransactionDTO, PaymentTransaction> {
     @Override
+    @Mapping(target = "merchantClientId", ignore = true)
     @Mapping(target = "clientName", ignore = true)
     @Mapping(target = "merchantName", ignore = true)
     PaymentTransactionDTO toDto(PaymentTransaction entity);
