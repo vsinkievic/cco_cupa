@@ -233,4 +233,66 @@ angular-cli removes postcss-rtl processed inline css, processed rules must be ad
     }
   }
 }
+/* ==========================================================================
+utility classes
+========================================================================== */
+
+.wrapped-pre {
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+
+  /* JSON Syntax Highlighting */
+  &.json-highlight {
+    /* JSON Keys (property names) */
+    .json-key {
+      color: #0066cc;
+      font-weight: 600;
+    }
+
+    /* JSON String values */
+    .json-string {
+      color: #008800;
+    }
+
+    /* JSON Number values */
+    .json-number {
+      color: #cc6600;
+      font-weight: 500;
+    }
+
+    /* JSON Boolean values */
+    .json-boolean {
+      color: #cc0066;
+      font-weight: 600;
+    }
+
+    /* JSON Null values */
+    .json-null {
+      color: #999999;
+      font-style: italic;
+    }
+
+    /* JSON Punctuation (braces, brackets, colons, commas) */
+    .json-punctuation {
+      color: #666666;
+    }
+
+    /* Add subtle hover effect for better UX */
+    &:hover {
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+  }
+}
+
 /* jhipster-needle-scss-add-main JHipster will add new css style */

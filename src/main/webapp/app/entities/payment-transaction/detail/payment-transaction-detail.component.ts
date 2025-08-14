@@ -4,12 +4,14 @@ import { RouterModule } from '@angular/router';
 import SharedModule from 'app/shared/shared.module';
 import { FormatMediumDatetimePipe } from 'app/shared/date';
 import { DataUtils } from 'app/core/util/data-util.service';
+import { JsonHighlightDirective } from 'app/shared/directive/json-highlight.directive';
 import { IPaymentTransaction } from '../payment-transaction.model';
 
 @Component({
   selector: 'jhi-payment-transaction-detail',
   templateUrl: './payment-transaction-detail.component.html',
-  imports: [SharedModule, RouterModule, FormatMediumDatetimePipe],
+  styleUrls: ['./payment-transaction-detail.component.scss'],
+  imports: [SharedModule, RouterModule, FormatMediumDatetimePipe, JsonHighlightDirective],
 })
 export class PaymentTransactionDetailComponent {
   paymentTransaction = input<IPaymentTransaction | null>(null);
