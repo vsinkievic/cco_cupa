@@ -35,7 +35,7 @@
           <tr jhiSort [(sortState)]="sortState" (sortChange)="navigateToWithComponentValues($event)">
             <th scope="col" jhiSortBy="id">
               <div class="d-flex">
-                <span>ID</span>
+                <span>Merchant Client Id</span>
 
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
@@ -95,7 +95,7 @@
           @for (client of clients(); track trackId(client)) {
             <tr data-cy="entityTable">
               <td>
-                <a [routerLink]="['/client', client.id, 'view']">{{ client.id }}</a>
+                <a [routerLink]="['/client', client.id, 'view']">{{ client.merchantClientId }}</a>
               </td>
               <td>{{ client.name }}</td>
               <td>{{ client.emailAddress }}</td>

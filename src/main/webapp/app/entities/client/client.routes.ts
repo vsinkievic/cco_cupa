@@ -9,7 +9,7 @@ const clientRoute: Routes = [
     path: '',
     loadComponent: () => import('./list/client.component').then(m => m.ClientComponent),
     data: {
-      defaultSort: `id,${ASC}`,
+      defaultSort: `merchantClientId,${ASC}`,
     },
     canActivate: [UserRouteAccessService],
   },
