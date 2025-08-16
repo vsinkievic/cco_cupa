@@ -1,8 +1,10 @@
 package lt.creditco.cupa.service;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lt.creditco.cupa.domain.ClientCard;
+import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.repository.ClientCardRepository;
 import lt.creditco.cupa.service.dto.ClientCardDTO;
 import lt.creditco.cupa.service.mapper.ClientCardMapper;
@@ -118,5 +120,88 @@ public class ClientCardService {
     public void delete(String id) {
         LOG.debug("Request to delete ClientCard : {}", id);
         clientCardRepository.deleteById(id);
+    }
+
+    /**
+     * Get all the client cards with access control based on user's merchant access.
+     *
+     * @param pageable the pagination information.
+     * @param user the authenticated user.
+     * @return the list of entities filtered by user's merchant access.
+     */
+    @Transactional(readOnly = true)
+    public Page<ClientCardDTO> findAllWithAccessControl(Pageable pageable, User user) {
+        if (user == null) {
+            LOG.warn("Anonymous user access attempt - returning empty results");
+            return Page.empty(pageable);
+        }
+
+        LOG.debug("Request to get all ClientCards with access control for user: {}", user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findAll(pageable);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return clientCardRepository.findAllByMerchantIds(merchantIds, pageable).map(clientCardMapper::toDto);
+    }
+
+    /**
+     * Get all the client cards with eager load of many-to-many relationships and access control.
+     *
+     * @param pageable the pagination information.
+     * @param user the authenticated user.
+     * @return the list of entities filtered by user's merchant access.
+     */
+    public Page<ClientCardDTO> findAllWithEagerRelationshipsWithAccessControl(Pageable pageable, User user) {
+        if (user == null) {
+            LOG.warn("Anonymous user access attempt - returning empty results");
+            return Page.empty(pageable);
+        }
+
+        LOG.debug("Request to get all ClientCards with eager relationships and access control for user: {}", user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findAllWithEagerRelationships(pageable);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return clientCardRepository.findAllByMerchantIds(merchantIds, pageable).map(clientCardMapper::toDto);
+    }
+
+    /**
+     * Get the "id" client card with access control.
+     *
+     * @param id the id of the entity.
+     * @param user the authenticated user.
+     * @return the entity if accessible.
+     */
+    @Transactional(readOnly = true)
+    public Optional<ClientCardDTO> findOneWithAccessControl(String id, User user) {
+        if (user == null) {
+            LOG.warn("Anonymous user access attempt for ClientCard ID: {} - returning empty result", id);
+            return Optional.empty();
+        }
+
+        LOG.debug("Request to get ClientCard : {} with access control for user: {}", id, user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findOne(id);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return clientCardRepository.findByIdAndMerchantIds(id, merchantIds).map(clientCardMapper::toDto);
     }
 }

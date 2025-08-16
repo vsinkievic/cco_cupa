@@ -4,10 +4,13 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.repository.ClientCardRepository;
+import lt.creditco.cupa.repository.UserRepository;
 import lt.creditco.cupa.service.ClientCardService;
 import lt.creditco.cupa.service.dto.ClientCardDTO;
 import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
@@ -42,9 +45,38 @@ public class ClientCardResource {
 
     private final ClientCardRepository clientCardRepository;
 
-    public ClientCardResource(ClientCardService clientCardService, ClientCardRepository clientCardRepository) {
+    private final UserRepository userRepository;
+
+    public ClientCardResource(
+        ClientCardService clientCardService,
+        ClientCardRepository clientCardRepository,
+        UserRepository userRepository
+    ) {
         this.clientCardService = clientCardService;
         this.clientCardRepository = clientCardRepository;
+        this.userRepository = userRepository;
+    }
+
+    /**
+     * Get the current authenticated user from the principal.
+     *
+     * @param principal the authenticated principal
+     * @return the current user, or null if anonymous
+     */
+    private User getCurrentUser(Principal principal) {
+        if (principal == null) {
+            LOG.warn("Anonymous user access attempt - returning empty results");
+            return null;
+        }
+
+        // Try to find user by login (principal.getName()) with authorities eagerly loaded
+        Optional<User> userOpt = userRepository.findOneWithAuthoritiesByLogin(principal.getName());
+        if (userOpt.isPresent()) {
+            return userOpt.get();
+        }
+
+        LOG.warn("User not found for principal: {} - returning empty results", principal.getName());
+        return null;
     }
 
     /**
@@ -140,19 +172,30 @@ public class ClientCardResource {
      *
      * @param pageable the pagination information.
      * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
+     * @param principal the authenticated principal
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of clientCards in body.
      */
     @GetMapping("")
     public ResponseEntity<List<ClientCardDTO>> getAllClientCards(
         @org.springdoc.core.annotations.ParameterObject Pageable pageable,
-        @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
+        @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload,
+        Principal principal
     ) {
         LOG.debug("REST request to get a page of ClientCards");
+        User currentUser = getCurrentUser(principal);
+
+        if (currentUser == null) {
+            // Return empty page for anonymous users
+            Page<ClientCardDTO> emptyPage = Page.empty(pageable);
+            HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), emptyPage);
+            return ResponseEntity.ok().headers(headers).body(emptyPage.getContent());
+        }
+
         Page<ClientCardDTO> page;
         if (eagerload) {
-            page = clientCardService.findAllWithEagerRelationships(pageable);
+            page = clientCardService.findAllWithEagerRelationshipsWithAccessControl(pageable, currentUser);
         } else {
-            page = clientCardService.findAll(pageable);
+            page = clientCardService.findAllWithAccessControl(pageable, currentUser);
         }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
@@ -162,12 +205,20 @@ public class ClientCardResource {
      * {@code GET  /client-cards/:id} : get the "id" clientCard.
      *
      * @param id the id of the clientCardDTO to retrieve.
+     * @param principal the authenticated principal
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the clientCardDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ClientCardDTO> getClientCard(@PathVariable("id") String id) {
+    public ResponseEntity<ClientCardDTO> getClientCard(@PathVariable("id") String id, Principal principal) {
         LOG.debug("REST request to get ClientCard : {}", id);
-        Optional<ClientCardDTO> clientCardDTO = clientCardService.findOne(id);
+        User currentUser = getCurrentUser(principal);
+
+        if (currentUser == null) {
+            // Return 404 for anonymous users
+            return ResponseEntity.notFound().build();
+        }
+
+        Optional<ClientCardDTO> clientCardDTO = clientCardService.findOneWithAccessControl(id, currentUser);
         return ResponseUtil.wrapOrNotFound(clientCardDTO);
     }
 

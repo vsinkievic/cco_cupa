@@ -4,10 +4,13 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.repository.MerchantRepository;
+import lt.creditco.cupa.repository.UserRepository;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.MerchantDTO;
 import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
@@ -43,9 +46,34 @@ public class MerchantResource {
 
     private final MerchantRepository merchantRepository;
 
-    public MerchantResource(MerchantService merchantService, MerchantRepository merchantRepository) {
+    private final UserRepository userRepository;
+
+    public MerchantResource(MerchantService merchantService, MerchantRepository merchantRepository, UserRepository userRepository) {
         this.merchantService = merchantService;
         this.merchantRepository = merchantRepository;
+        this.userRepository = userRepository;
+    }
+
+    /**
+     * Get the current authenticated user from the principal.
+     *
+     * @param principal the authenticated principal
+     * @return the current user
+     */
+    private User getCurrentUser(Principal principal) {
+        if (principal == null) {
+            LOG.warn("Anonymous user access attempt - returning empty results");
+            return null;
+        }
+
+        // Try to find user by login (principal.getName()) with authorities eagerly loaded
+        Optional<User> userOpt = userRepository.findOneWithAuthoritiesByLogin(principal.getName());
+        if (userOpt.isPresent()) {
+            return userOpt.get();
+        }
+
+        LOG.warn("User not found for principal: {} - returning empty results", principal.getName());
+        return null;
     }
 
     /**
@@ -143,12 +171,25 @@ public class MerchantResource {
      * {@code GET  /merchants} : get all the merchants.
      *
      * @param pageable the pagination information.
+     * @param principal the authenticated principal
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of merchants in body.
      */
     @GetMapping("")
-    public ResponseEntity<List<MerchantDTO>> getAllMerchants(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+    public ResponseEntity<List<MerchantDTO>> getAllMerchants(
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable,
+        Principal principal
+    ) {
         //        LOG.debug("REST request to get a page of Merchants");
-        Page<MerchantDTO> page = merchantService.findAll(pageable);
+        User currentUser = getCurrentUser(principal);
+
+        if (currentUser == null) {
+            // Return empty page for anonymous users
+            Page<MerchantDTO> emptyPage = Page.empty(pageable);
+            HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), emptyPage);
+            return ResponseEntity.ok().headers(headers).body(emptyPage.getContent());
+        }
+
+        Page<MerchantDTO> page = merchantService.findAllWithAccessControl(pageable, currentUser);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -157,12 +198,20 @@ public class MerchantResource {
      * {@code GET  /merchants/:id} : get the "id" merchant.
      *
      * @param id the id of the merchantDTO to retrieve.
+     * @param principal the authenticated principal
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the merchantDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<MerchantDTO> getMerchant(@PathVariable("id") String id) {
+    public ResponseEntity<MerchantDTO> getMerchant(@PathVariable("id") String id, Principal principal) {
         //        LOG.debug("REST request to get Merchant : {}", id);
-        Optional<MerchantDTO> merchantDTO = merchantService.findOne(id);
+        User currentUser = getCurrentUser(principal);
+
+        if (currentUser == null) {
+            // Return 404 for anonymous users
+            return ResponseEntity.notFound().build();
+        }
+
+        Optional<MerchantDTO> merchantDTO = merchantService.findOneWithAccessControl(id, currentUser);
         return ResponseUtil.wrapOrNotFound(merchantDTO);
     }
 

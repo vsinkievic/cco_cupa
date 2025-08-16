@@ -4,11 +4,14 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.repository.ClientRepository;
+import lt.creditco.cupa.repository.UserRepository;
 import lt.creditco.cupa.service.ClientService;
 import lt.creditco.cupa.service.dto.ClientDTO;
 import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
@@ -43,9 +46,34 @@ public class ClientResource {
 
     private final ClientRepository clientRepository;
 
-    public ClientResource(ClientService clientService, ClientRepository clientRepository) {
+    private final UserRepository userRepository;
+
+    public ClientResource(ClientService clientService, ClientRepository clientRepository, UserRepository userRepository) {
         this.clientService = clientService;
         this.clientRepository = clientRepository;
+        this.userRepository = userRepository;
+    }
+
+    /**
+     * Get the current authenticated user from the principal.
+     *
+     * @param principal the authenticated principal
+     * @return the current user, or null if anonymous
+     */
+    private User getCurrentUser(Principal principal) {
+        if (principal == null) {
+            LOG.warn("Anonymous user access attempt - returning empty results");
+            return null;
+        }
+
+        // Try to find user by login (principal.getName()) with authorities eagerly loaded
+        Optional<User> userOpt = userRepository.findOneWithAuthoritiesByLogin(principal.getName());
+        if (userOpt.isPresent()) {
+            return userOpt.get();
+        }
+
+        LOG.warn("User not found for principal: {} - returning empty results", principal.getName());
+        return null;
     }
 
     /**
@@ -145,19 +173,30 @@ public class ClientResource {
      *
      * @param pageable the pagination information.
      * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
+     * @param principal the authenticated principal
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of clients in body.
      */
     @GetMapping("")
     public ResponseEntity<List<ClientDTO>> getAllClients(
         @org.springdoc.core.annotations.ParameterObject Pageable pageable,
-        @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
+        @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload,
+        Principal principal
     ) {
         LOG.debug("REST request to get a page of Clients");
+        User currentUser = getCurrentUser(principal);
+
+        if (currentUser == null) {
+            // Return empty page for anonymous users
+            Page<ClientDTO> emptyPage = Page.empty(pageable);
+            HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), emptyPage);
+            return ResponseEntity.ok().headers(headers).body(emptyPage.getContent());
+        }
+
         Page<ClientDTO> page;
         if (eagerload) {
-            page = clientService.findAllWithEagerRelationships(pageable);
+            page = clientService.findAllWithEagerRelationshipsWithAccessControl(pageable, currentUser);
         } else {
-            page = clientService.findAll(pageable);
+            page = clientService.findAllWithAccessControl(pageable, currentUser);
         }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
@@ -167,12 +206,20 @@ public class ClientResource {
      * {@code GET  /clients/:id} : get the "id" client.
      *
      * @param id the id of the clientDTO to retrieve.
+     * @param principal the authenticated principal
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the clientDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ClientDTO> getClient(@PathVariable("id") String id) {
+    public ResponseEntity<ClientDTO> getClient(@PathVariable("id") String id, Principal principal) {
         LOG.debug("REST request to get Client : {}", id);
-        Optional<ClientDTO> clientDTO = clientService.findOne(id);
+        User currentUser = getCurrentUser(principal);
+
+        if (currentUser == null) {
+            // Return 404 for anonymous users
+            return ResponseEntity.notFound().build();
+        }
+
+        Optional<ClientDTO> clientDTO = clientService.findOneWithAccessControl(id, currentUser);
         return ResponseUtil.wrapOrNotFound(clientDTO);
     }
 

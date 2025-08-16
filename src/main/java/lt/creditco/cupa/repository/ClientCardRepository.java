@@ -2,6 +2,7 @@ package lt.creditco.cupa.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lt.creditco.cupa.domain.ClientCard;
 import org.springframework.data.domain.Page;
@@ -36,6 +37,15 @@ public interface ClientCardRepository extends JpaRepository<ClientCard, String> 
     @Query("select clientCard from ClientCard clientCard left join fetch clientCard.client")
     List<ClientCard> findAllWithToOneRelationships();
 
-    @Query("select clientCard from ClientCard clientCard left join fetch clientCard.client where clientCard.id =:id")
+    @Query("select clientCard from ClientCard clientCard where clientCard.id =:id")
     Optional<ClientCard> findOneWithToOneRelationships(@Param("id") String id);
+
+    @Query("select clientCard from ClientCard clientCard where clientCard.client.merchantId in :merchantIds")
+    Page<ClientCard> findAllByMerchantIds(@Param("merchantIds") Set<String> merchantIds, Pageable pageable);
+
+    @Query("select clientCard from ClientCard clientCard where clientCard.client.merchantId in :merchantIds")
+    List<ClientCard> findAllByMerchantIds(@Param("merchantIds") Set<String> merchantIds);
+
+    @Query("select clientCard from ClientCard clientCard where clientCard.id = :id and clientCard.client.merchantId in :merchantIds")
+    Optional<ClientCard> findByIdAndMerchantIds(@Param("id") String id, @Param("merchantIds") Set<String> merchantIds);
 }

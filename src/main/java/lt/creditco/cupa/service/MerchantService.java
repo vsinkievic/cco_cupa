@@ -1,9 +1,11 @@
 package lt.creditco.cupa.service;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.domain.Merchant;
+import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.service.dto.MerchantDTO;
 import lt.creditco.cupa.service.mapper.MerchantMapper;
@@ -129,5 +131,61 @@ public class MerchantService {
     public Merchant findMerchantById(String merchantId) {
         log.debug("findMerchantById({})", merchantId);
         return merchantRepository.findById(merchantId).orElse(null);
+    }
+
+    /**
+     * Get all the merchants with access control based on user's merchant access.
+     *
+     * @param pageable the pagination information.
+     * @param user the authenticated user.
+     * @return the list of entities filtered by user's merchant access.
+     */
+    @Transactional(readOnly = true)
+    public Page<MerchantDTO> findAllWithAccessControl(Pageable pageable, User user) {
+        if (user == null) {
+            log.warn("Anonymous user access attempt - returning empty results");
+            return Page.empty(pageable);
+        }
+
+        log.debug("Request to get all Merchants with access control for user: {}", user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findAll(pageable);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return merchantRepository.findAllByMerchantIds(merchantIds, pageable).map(merchantMapper::toDto);
+    }
+
+    /**
+     * Get the "id" merchant with access control.
+     *
+     * @param id the id of the entity.
+     * @param user the authenticated user.
+     * @return the entity if accessible.
+     */
+    @Transactional(readOnly = true)
+    public Optional<MerchantDTO> findOneWithAccessControl(String id, User user) {
+        if (user == null) {
+            log.warn("Anonymous user access attempt for Merchant ID: {} - returning empty result", id);
+            return Optional.empty();
+        }
+
+        log.debug("Request to get Merchant : {} with access control for user: {}", id, user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findOne(id);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return merchantRepository.findByIdAndMerchantIds(id, merchantIds).map(merchantMapper::toDto);
     }
 }

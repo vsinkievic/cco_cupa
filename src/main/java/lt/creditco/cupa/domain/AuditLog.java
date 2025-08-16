@@ -1,5 +1,6 @@
 package lt.creditco.cupa.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
@@ -14,7 +15,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Table(name = "audit_log")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class AuditLog extends AbstractAuditingEntity<Long> implements Serializable {
+public class AuditLog extends AbstractAuditingEntity<Long> implements Serializable, MerchantOwnedEntity {
 
     private static final long serialVersionUID = 1L;
 

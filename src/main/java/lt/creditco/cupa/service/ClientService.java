@@ -1,11 +1,14 @@
 package lt.creditco.cupa.service;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lt.creditco.cupa.domain.Client;
+import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.repository.ClientRepository;
 import lt.creditco.cupa.service.dto.ClientDTO;
 import lt.creditco.cupa.service.mapper.ClientMapper;
+import lt.creditco.cupa.web.context.CupaApiContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -90,12 +93,67 @@ public class ClientService {
     }
 
     /**
+     * Get all the clients with access control based on user's merchant access.
+     *
+     * @param pageable the pagination information.
+     * @param user the authenticated user.
+     * @return the list of entities filtered by user's merchant access.
+     */
+    @Transactional(readOnly = true)
+    public Page<ClientDTO> findAllWithAccessControl(Pageable pageable, User user) {
+        if (user == null) {
+            LOG.warn("Anonymous user access attempt - returning empty results");
+            return Page.empty(pageable);
+        }
+
+        LOG.debug("Request to get all Clients with access control for user: {}", user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findAll(pageable);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return clientRepository.findAllByMerchantIds(merchantIds, pageable).map(clientMapper::toDto);
+    }
+
+    /**
      * Get all the clients with eager load of many-to-many relationships.
      *
      * @return the list of entities.
      */
     public Page<ClientDTO> findAllWithEagerRelationships(Pageable pageable) {
         return clientRepository.findAllWithEagerRelationships(pageable).map(clientMapper::toDto);
+    }
+
+    /**
+     * Get all the clients with eager load of many-to-many relationships and access control.
+     *
+     * @param pageable the pagination information.
+     * @param user the authenticated user.
+     * @return the list of entities filtered by user's merchant access.
+     */
+    public Page<ClientDTO> findAllWithEagerRelationshipsWithAccessControl(Pageable pageable, User user) {
+        if (user == null) {
+            LOG.warn("Anonymous user access attempt - returning empty results");
+            return Page.empty(pageable);
+        }
+
+        LOG.debug("Request to get all Clients with eager relationships and access control for user: {}", user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findAllWithEagerRelationships(pageable);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return clientRepository.findAllByMerchantIds(merchantIds, pageable).map(clientMapper::toDto);
     }
 
     /**
@@ -118,5 +176,33 @@ public class ClientService {
     public void delete(String id) {
         LOG.debug("Request to delete Client : {}", id);
         clientRepository.deleteById(id);
+    }
+
+    /**
+     * Get the "id" client with access control.
+     *
+     * @param id the id of the entity.
+     * @param user the authenticated user.
+     * @return the entity if accessible.
+     */
+    @Transactional(readOnly = true)
+    public Optional<ClientDTO> findOneWithAccessControl(String id, User user) {
+        if (user == null) {
+            LOG.warn("Anonymous user access attempt for Client ID: {} - returning empty result", id);
+            return Optional.empty();
+        }
+
+        LOG.debug("Request to get Client : {} with access control for user: {}", id, user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findOne(id);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return clientRepository.findByIdAndMerchantIds(id, merchantIds).map(clientMapper::toDto);
     }
 }

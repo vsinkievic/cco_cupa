@@ -118,7 +118,7 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
         return getMerchantIdsSet().contains(entityMerchantId);
     }
 
-    private Set<String> getMerchantIdsSet() {
+    public Set<String> getMerchantIdsSet() {
         if (merchantIds == null || merchantIds.trim().isEmpty()) {
             return Set.of();
         }

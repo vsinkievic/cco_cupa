@@ -24,7 +24,7 @@ import org.hibernate.annotations.NaturalId;
 @Table(name = "merchant")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class Merchant extends AbstractAuditingEntity<String> implements Serializable {
+public class Merchant extends AbstractAuditingEntity<String> implements Serializable, MerchantOwnedEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -306,6 +306,11 @@ public class Merchant extends AbstractAuditingEntity<String> implements Serializ
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
+
+    @Override
+    public String getMerchantId() {
+        return this.id;
+    }
 
     @Override
     public boolean equals(Object o) {

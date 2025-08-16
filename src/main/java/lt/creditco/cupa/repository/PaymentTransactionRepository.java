@@ -2,6 +2,7 @@ package lt.creditco.cupa.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lt.creditco.cupa.domain.PaymentTransaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,4 +38,15 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
 
     @Query("select paymentTransaction from PaymentTransaction paymentTransaction where paymentTransaction.id =:id")
     Optional<PaymentTransaction> findOneWithToOneRelationships(@Param("id") String id);
+
+    @Query("select paymentTransaction from PaymentTransaction paymentTransaction where paymentTransaction.merchantId in :merchantIds")
+    Page<PaymentTransaction> findAllByMerchantIds(@Param("merchantIds") Set<String> merchantIds, Pageable pageable);
+
+    @Query("select paymentTransaction from PaymentTransaction paymentTransaction where paymentTransaction.merchantId in :merchantIds")
+    List<PaymentTransaction> findAllByMerchantIds(@Param("merchantIds") Set<String> merchantIds);
+
+    @Query(
+        "select paymentTransaction from PaymentTransaction paymentTransaction where paymentTransaction.id = :id and paymentTransaction.merchantId in :merchantIds"
+    )
+    Optional<PaymentTransaction> findByIdAndMerchantIds(@Param("id") String id, @Param("merchantIds") Set<String> merchantIds);
 }

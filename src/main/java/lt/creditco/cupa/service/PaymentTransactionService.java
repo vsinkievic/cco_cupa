@@ -5,11 +5,13 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lt.creditco.cupa.api.Payment;
 import lt.creditco.cupa.api.PaymentRequest;
 import lt.creditco.cupa.domain.Client;
 import lt.creditco.cupa.domain.PaymentTransaction;
+import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
@@ -144,7 +146,7 @@ public class PaymentTransactionService {
      * @return the persisted entity.
      */
     public PaymentTransactionDTO save(PaymentTransactionDTO paymentTransactionDTO, CupaApiContext.CupaApiContextData context) {
-        LOG.debug("Request to save PaymentTransaction : {}", paymentTransactionDTO);
+        LOG.debug("Request to save PaymentTransaction : {}, context: {}", paymentTransactionDTO, context);
 
         // Validate before saving
         validatePaymentTransaction(paymentTransactionDTO);
@@ -494,5 +496,73 @@ public class PaymentTransactionService {
 
         // Final fallback
         return "No status description available";
+    }
+
+    /**
+     * Get all the payment transactions with access control based on user's merchant access.
+     *
+     * @param pageable the pagination information.
+     * @param user the authenticated user.
+     * @return the list of entities filtered by user's merchant access.
+     */
+    @Transactional(readOnly = true)
+    public Page<PaymentTransactionDTO> findAllWithAccessControl(Pageable pageable, User user) {
+        LOG.debug("Request to get all PaymentTransactions with access control for user: {}", user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findAll(pageable);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return paymentTransactionRepository.findAllByMerchantIds(merchantIds, pageable).map(paymentTransactionMapper::toDto);
+    }
+
+    /**
+     * Get all the payment transactions with eager load of many-to-many relationships and access control.
+     *
+     * @param pageable the pagination information.
+     * @param user the authenticated user.
+     * @return the list of entities filtered by user's merchant access.
+     */
+    public Page<PaymentTransactionDTO> findAllWithEagerRelationshipsWithAccessControl(Pageable pageable, User user) {
+        LOG.debug("Request to get all PaymentTransactions with eager relationships and access control for user: {}", user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findAllWithEagerRelationships(pageable);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return paymentTransactionRepository.findAllByMerchantIds(merchantIds, pageable).map(paymentTransactionMapper::toDto);
+    }
+
+    /**
+     * Get the "id" payment transaction with access control.
+     *
+     * @param id the id of the entity.
+     * @param user the authenticated user.
+     * @return the entity if accessible.
+     */
+    @Transactional(readOnly = true)
+    public Optional<PaymentTransactionDTO> findOneWithAccessControl(String id, User user) {
+        LOG.debug("Request to get PaymentTransaction : {} with access control for user: {}", id, user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findOne(id);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return paymentTransactionRepository.findByIdAndMerchantIds(id, merchantIds).map(paymentTransactionMapper::toDto);
     }
 }

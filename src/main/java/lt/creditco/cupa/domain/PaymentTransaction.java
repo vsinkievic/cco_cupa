@@ -24,7 +24,7 @@ import org.hibernate.annotations.NaturalId;
 @Table(name = "payment_transaction")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class PaymentTransaction extends AbstractAuditingEntity<String> implements Serializable {
+public class PaymentTransaction extends AbstractAuditingEntity<String> implements Serializable, MerchantOwnedEntity {
 
     private static final long serialVersionUID = 1L;
 

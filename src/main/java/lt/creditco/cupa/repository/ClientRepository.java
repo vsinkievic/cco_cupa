@@ -2,6 +2,7 @@ package lt.creditco.cupa.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lt.creditco.cupa.domain.Client;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,4 +41,13 @@ public interface ClientRepository extends JpaRepository<Client, String> {
 
     @Query("select count(client) > 0 from Client client where client.merchantClientId =:merchantClientId")
     boolean existsByMerchantClientId(@Param("merchantClientId") String merchantClientId);
+
+    @Query("select client from Client client where client.merchantId in :merchantIds")
+    Page<Client> findAllByMerchantIds(@Param("merchantIds") Set<String> merchantIds, Pageable pageable);
+
+    @Query("select client from Client client where client.merchantId in :merchantIds")
+    List<Client> findAllByMerchantIds(@Param("merchantIds") Set<String> merchantIds);
+
+    @Query("select client from Client client where client.id = :id and client.merchantId in :merchantIds")
+    Optional<Client> findByIdAndMerchantIds(@Param("id") String id, @Param("merchantIds") Set<String> merchantIds);
 }

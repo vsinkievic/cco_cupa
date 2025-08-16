@@ -17,7 +17,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Table(name = "client_card")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class ClientCard extends AbstractAuditingEntity<String> implements Serializable {
+public class ClientCard extends AbstractAuditingEntity<String> implements Serializable, MerchantOwnedEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -165,6 +165,11 @@ public class ClientCard extends AbstractAuditingEntity<String> implements Serial
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
+
+    @Override
+    public String getMerchantId() {
+        return client != null ? client.getMerchantId() : null;
+    }
 
     @Override
     public boolean equals(Object o) {

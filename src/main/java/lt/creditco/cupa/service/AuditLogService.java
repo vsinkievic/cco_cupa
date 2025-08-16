@@ -3,7 +3,9 @@ package lt.creditco.cupa.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Set;
 import lt.creditco.cupa.domain.AuditLog;
+import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.repository.AuditLogRepository;
 import lt.creditco.cupa.service.dto.AuditLogDTO;
 import lt.creditco.cupa.service.mapper.AuditLogMapper;
@@ -159,5 +161,88 @@ public class AuditLogService {
             }
         }
         return content;
+    }
+
+    /**
+     * Get all the auditLogs with access control based on user's merchant access.
+     *
+     * @param pageable the pagination information.
+     * @param user the authenticated user.
+     * @return the list of entities filtered by user's merchant access.
+     */
+    @Transactional(readOnly = true)
+    public Page<AuditLogDTO> findAllWithAccessControl(Pageable pageable, User user) {
+        if (user == null) {
+            LOG.warn("Anonymous user access attempt - returning empty results");
+            return Page.empty(pageable);
+        }
+
+        LOG.debug("Request to get all AuditLogs with access control for user: {}", user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findAll(pageable);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return auditLogRepository.findAllByMerchantIds(merchantIds, pageable).map(auditLogMapper::toDto);
+    }
+
+    /**
+     * Get all the auditLogs with eager load of many-to-many relationships and access control.
+     *
+     * @param pageable the pagination information.
+     * @param user the authenticated user.
+     * @return the list of entities filtered by user's merchant access.
+     */
+    public Page<AuditLogDTO> findAllWithEagerRelationshipsWithAccessControl(Pageable pageable, User user) {
+        if (user == null) {
+            LOG.warn("Anonymous user access attempt - returning empty results");
+            return Page.empty(pageable);
+        }
+
+        LOG.debug("Request to get all AuditLogs with eager relationships and access control for user: {}", user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findAllWithEagerRelationships(pageable);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return auditLogRepository.findAllByMerchantIds(merchantIds, pageable).map(auditLogMapper::toDto);
+    }
+
+    /**
+     * Get the "id" auditLog with access control.
+     *
+     * @param id the id of the entity.
+     * @param user the authenticated user.
+     * @return the entity if accessible.
+     */
+    @Transactional(readOnly = true)
+    public Optional<AuditLogDTO> findOneWithAccessControl(Long id, User user) {
+        if (user == null) {
+            LOG.warn("Anonymous user access attempt for AuditLog ID: {} - returning empty result", id);
+            return Optional.empty();
+        }
+
+        LOG.debug("Request to get AuditLog : {} with access control for user: {}", id, user.getLogin());
+
+        if (user.hasAuthority("ROLE_ADMIN")) {
+            return findOne(id);
+        }
+
+        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return auditLogRepository.findByIdAndMerchantIds(id, merchantIds).map(auditLogMapper::toDto);
     }
 }

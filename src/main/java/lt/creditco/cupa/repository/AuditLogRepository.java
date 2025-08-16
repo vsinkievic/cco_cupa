@@ -2,6 +2,7 @@ package lt.creditco.cupa.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lt.creditco.cupa.domain.AuditLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,4 +35,13 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
     @Query("select auditLog from AuditLog auditLog where auditLog.id =:id")
     Optional<AuditLog> findOneWithToOneRelationships(@Param("id") Long id);
+
+    @Query("select auditLog from AuditLog auditLog where auditLog.merchantId in :merchantIds")
+    Page<AuditLog> findAllByMerchantIds(@Param("merchantIds") Set<String> merchantIds, Pageable pageable);
+
+    @Query("select auditLog from AuditLog auditLog where auditLog.merchantId in :merchantIds")
+    List<AuditLog> findAllByMerchantIds(@Param("merchantIds") Set<String> merchantIds);
+
+    @Query("select auditLog from AuditLog auditLog where auditLog.id = :id and auditLog.merchantId in :merchantIds")
+    Optional<AuditLog> findByIdAndMerchantIds(@Param("id") Long id, @Param("merchantIds") Set<String> merchantIds);
 }
