@@ -56,6 +56,7 @@ export class PaymentTransactionFormService {
   private originalPaymentTransaction: IPaymentTransaction | null = null;
   private clientsSharedCollection: IClient[] = [];
   private merchantsSharedCollection: IMerchant[] = [];
+  private pendingAutoAssignment: { merchantId: string; currency: string | null | undefined } | null = null;
 
   createPaymentTransactionFormGroup(paymentTransaction: PaymentTransactionFormGroupInput = { id: null }): PaymentTransactionFormGroup {
     // Store the original payment transaction for later use when preserving fields
@@ -69,7 +70,8 @@ export class PaymentTransactionFormService {
       ...this.getFormDefaults(),
       ...paymentTransaction,
     });
-    return new FormGroup<PaymentTransactionFormGroupContent>({
+
+    const form = new FormGroup<PaymentTransactionFormGroupContent>({
       id: new FormControl(
         { value: paymentTransactionRawValue.id, disabled: true },
         {
@@ -104,11 +106,107 @@ export class PaymentTransactionFormService {
         validators: [Validators.required],
       }),
     });
+
+    // Apply pending auto-assignment if available
+    this.applyPendingAutoAssignment(form);
+
+    return form;
   }
 
   setSharedCollections(clients: IClient[], merchants: IMerchant[]): void {
     this.clientsSharedCollection = clients;
     this.merchantsSharedCollection = merchants;
+
+    // Auto-assign merchant and currency whenever collections are updated
+    // This handles cases where collections are loaded after form creation
+    this.triggerAutoAssignment();
+  }
+
+  /**
+   * Auto-assigns merchantId and currency for new payment transactions when there's only one merchant available.
+   * This method should be called after setSharedCollections to ensure the collections are populated.
+   *
+   * Usage example:
+   * 1. Call setSharedCollections(clients, merchants) first
+   * 2. Create or reset the form
+   * 3. Call autoAssignMerchantAndCurrency(form) to auto-populate fields
+   *
+   * @param form The payment transaction form to update
+   */
+  autoAssignMerchantAndCurrency(form: PaymentTransactionFormGroup): void {
+    // Only auto-assign for new transactions (when id is null or empty)
+    const currentId = form.get('id')?.value;
+    if (currentId === null || currentId === '') {
+      // Check if there's only one merchant available
+      if (this.merchantsSharedCollection.length === 1) {
+        const singleMerchant = this.merchantsSharedCollection[0];
+
+        // Auto-assign merchantId
+        form.patchValue({
+          merchantId: singleMerchant.id,
+        });
+
+        // Auto-assign currency if merchant has a valid currency
+        if (singleMerchant.currency && this.isValidCurrency(singleMerchant.currency)) {
+          form.patchValue({
+            currency: singleMerchant.currency as keyof typeof import('app/entities/enumerations/currency.model').Currency,
+          });
+        }
+      }
+    }
+  }
+
+  /**
+   * Triggers auto-assignment for all active forms when collections are updated.
+   * This handles timing issues where collections are loaded after form creation.
+   */
+  private triggerAutoAssignment(): void {
+    // If we have exactly one merchant and no active form is set,
+    // we'll store this information for when a form is created
+    if (this.merchantsSharedCollection.length === 1) {
+      this.pendingAutoAssignment = {
+        merchantId: this.merchantsSharedCollection[0].id,
+        currency: this.merchantsSharedCollection[0].currency,
+      };
+    } else {
+      this.pendingAutoAssignment = null;
+    }
+  }
+
+  /**
+   * Applies pending auto-assignment when a form is created.
+   * This ensures auto-assignment works even when form is created before collections.
+   */
+  private applyPendingAutoAssignment(form: PaymentTransactionFormGroup): void {
+    if (this.pendingAutoAssignment && this.originalPaymentTransaction === null) {
+      const currentId = form.get('id')?.value;
+      if (currentId === null || currentId === '') {
+        // Auto-assign merchantId
+        form.patchValue({
+          merchantId: this.pendingAutoAssignment.merchantId,
+        });
+
+        // Auto-assign currency if merchant has a valid currency
+        if (this.pendingAutoAssignment.currency && this.isValidCurrency(this.pendingAutoAssignment.currency)) {
+          form.patchValue({
+            currency: this.pendingAutoAssignment.currency as keyof typeof import('app/entities/enumerations/currency.model').Currency,
+          });
+        }
+      }
+    }
+  }
+
+  /**
+   * Public method to manually trigger auto-assignment for a form.
+   * Useful when components want to ensure auto-assignment happens after collections are loaded.
+   * @param form The payment transaction form to update
+   */
+  public triggerAutoAssignmentForForm(form: PaymentTransactionFormGroup): void {
+    // First try to apply pending auto-assignment
+    this.applyPendingAutoAssignment(form);
+
+    // Then try direct auto-assignment with current collections
+    this.autoAssignMerchantAndCurrency(form);
   }
 
   onClientChange(form: PaymentTransactionFormGroup): void {
@@ -205,8 +303,13 @@ export class PaymentTransactionFormService {
       {
         ...paymentTransactionRawValue,
         id: { value: paymentTransactionRawValue.id, disabled: true },
-      } as any /* cast to workaround https://github.com/angular/angular/issues/46458 */,
+      } as any /* cast to workaround https://github.com/angular/angular/issues/currency */,
     );
+
+    // Auto-assign merchant and currency for new transactions after form reset
+    if (this.originalPaymentTransaction === null) {
+      this.autoAssignMerchantAndCurrency(form);
+    }
   }
 
   private getFormDefaults(): PaymentTransactionFormDefaults {
@@ -233,5 +336,15 @@ export class PaymentTransactionFormService {
       ...paymentTransaction,
       requestTimestamp: paymentTransaction.requestTimestamp ? paymentTransaction.requestTimestamp.format(DATE_TIME_FORMAT) : undefined,
     };
+  }
+
+  /**
+   * Checks if the given currency string is a valid currency enum value.
+   * @param currency The currency string to validate
+   * @returns true if the currency is valid, false otherwise
+   */
+  private isValidCurrency(currency: string): boolean {
+    const validCurrencies = ['AUD', 'USD', 'HKD', 'CAD', 'CHF', 'CNY', 'EUR', 'GBP', 'JPY', 'KRW', 'MOP', 'RUB', 'SGD', 'TWD'];
+    return validCurrencies.includes(currency);
   }
 }
