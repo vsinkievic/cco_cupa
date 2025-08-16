@@ -134,11 +134,13 @@ public class MerchantService {
     }
 
     /**
-     * Get all the merchants with access control based on user's merchant access.
+     * Get all the merchants with role-based access control.
+     * Admin users get all fields, other users get limited fields (id, name, mode, currency).
+     * Non-admin users can only access merchants in their merchant_ids list.
      *
      * @param pageable the pagination information.
      * @param user the authenticated user.
-     * @return the list of entities filtered by user's merchant access.
+     * @return the list of entities with role-based field visibility and merchant filtering.
      */
     @Transactional(readOnly = true)
     public Page<MerchantDTO> findAllWithAccessControl(Pageable pageable, User user) {
@@ -150,23 +152,29 @@ public class MerchantService {
         log.debug("Request to get all Merchants with access control for user: {}", user.getLogin());
 
         if (user.hasAuthority("ROLE_ADMIN")) {
+            // Admin gets full data
             return findAll(pageable);
         }
 
+        // Non-admin users get limited data for comboboxes and forms, but only for their merchants
         Set<String> merchantIds = user.getMerchantIdsSet();
         if (merchantIds.isEmpty()) {
+            log.warn("User {} has no merchant access - returning empty results", user.getLogin());
             return Page.empty(pageable);
         }
 
-        return merchantRepository.findAllByMerchantIds(merchantIds, pageable).map(merchantMapper::toDto);
+        Page<Merchant> merchants = merchantRepository.findAllByMerchantIds(merchantIds, pageable);
+        return merchants.map(merchant -> mapToLimitedDto(merchant));
     }
 
     /**
-     * Get the "id" merchant with access control.
+     * Get the "id" merchant with role-based access control.
+     * Admin users get all fields, other users get limited fields (id, name, mode, currency).
+     * Non-admin users can only access merchants in their merchant_ids list.
      *
      * @param id the id of the entity.
      * @param user the authenticated user.
-     * @return the entity if accessible.
+     * @return the entity with role-based field visibility and merchant filtering.
      */
     @Transactional(readOnly = true)
     public Optional<MerchantDTO> findOneWithAccessControl(String id, User user) {
@@ -178,14 +186,35 @@ public class MerchantService {
         log.debug("Request to get Merchant : {} with access control for user: {}", id, user.getLogin());
 
         if (user.hasAuthority("ROLE_ADMIN")) {
+            // Admin gets full data
             return findOne(id);
         }
 
+        // Non-admin users get limited data for comboboxes and forms, but only for their merchants
         Set<String> merchantIds = user.getMerchantIdsSet();
         if (merchantIds.isEmpty()) {
+            log.warn("User {} has no merchant access - returning empty result", user.getLogin());
             return Optional.empty();
         }
 
-        return merchantRepository.findByIdAndMerchantIds(id, merchantIds).map(merchantMapper::toDto);
+        return merchantRepository.findByIdAndMerchantIds(id, merchantIds).map(merchant -> mapToLimitedDto(merchant));
+    }
+
+    /**
+     * Maps a Merchant entity to a limited DTO with only essential fields for non-admin users.
+     * This allows non-admin users to see merchant data in comboboxes and forms
+     * while restricting access to sensitive information.
+     *
+     * @param merchant the merchant entity
+     * @return a limited DTO with only id, name, mode, and currency fields
+     */
+    private MerchantDTO mapToLimitedDto(Merchant merchant) {
+        MerchantDTO dto = new MerchantDTO();
+        dto.setId(merchant.getId());
+        dto.setName(merchant.getName());
+        dto.setMode(merchant.getMode());
+        dto.setCurrency(merchant.getCurrency());
+        // All other fields remain null/default values
+        return dto;
     }
 }

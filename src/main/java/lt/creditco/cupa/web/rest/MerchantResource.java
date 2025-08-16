@@ -32,11 +32,10 @@ import tech.jhipster.web.util.ResponseUtil;
 
 /**
  * REST controller for managing {@link lt.creditco.cupa.domain.Merchant}.
- * Only ADMIN users can access merchant data.
+ * All authenticated users can access merchant data with role-based field visibility.
  */
 @RestController
 @RequestMapping("/api/merchants")
-@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class MerchantResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(MerchantResource.class);
@@ -176,13 +175,13 @@ public class MerchantResource {
 
     /**
      * {@code GET  /merchants} : get all the merchants.
+     * Accessible to all authenticated users with role-based field visibility.
      *
      * @param pageable the pagination information.
      * @param principal the authenticated principal
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of merchants in body.
      */
     @GetMapping("")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<List<MerchantDTO>> getAllMerchants(
         @org.springdoc.core.annotations.ParameterObject Pageable pageable,
         Principal principal
@@ -204,13 +203,13 @@ public class MerchantResource {
 
     /**
      * {@code GET  /merchants/:id} : get the "id" merchant.
+     * Accessible to all authenticated users with role-based field visibility.
      *
      * @param id the id of the merchantDTO to retrieve.
      * @param principal the authenticated principal
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the merchantDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<MerchantDTO> getMerchant(@PathVariable("id") String id, Principal principal) {
         //        LOG.debug("REST request to get Merchant : {}", id);
         User currentUser = getCurrentUser(principal);
