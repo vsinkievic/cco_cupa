@@ -123,6 +123,32 @@ export class PaymentTransactionFormService {
   }
 
   /**
+   * Public method to manually trigger auto-assignment for a form.
+   * Useful when components want to ensure auto-assignment happens after collections are loaded.
+   * @param form The payment transaction form to update
+   */
+  public triggerAutoAssignmentForForm(form: PaymentTransactionFormGroup): void {
+    // First try to apply pending auto-assignment
+    this.applyPendingAutoAssignment(form);
+
+    // Then try direct auto-assignment with current collections
+    this.autoAssignMerchantAndCurrency(form);
+  }
+
+  onClientChange(form: PaymentTransactionFormGroup): void {
+    const selectedClientId = form.get('clientId')?.value;
+    const selectedClient = this.clientsSharedCollection.find(client => client.id === selectedClientId);
+
+    if (selectedClient) {
+      // Update the form with client-related fields
+      form.patchValue({
+        // Note: We don't set merchantClientId here as it's not in the form
+        // The backend service will handle this during save
+      });
+    }
+  }
+
+  /**
    * Auto-assigns merchantId and currency for new payment transactions when there's only one merchant available.
    * This method should be called after setSharedCollections to ensure the collections are populated.
    *
@@ -153,72 +179,6 @@ export class PaymentTransactionFormService {
           });
         }
       }
-    }
-  }
-
-  /**
-   * Triggers auto-assignment for all active forms when collections are updated.
-   * This handles timing issues where collections are loaded after form creation.
-   */
-  private triggerAutoAssignment(): void {
-    // If we have exactly one merchant and no active form is set,
-    // we'll store this information for when a form is created
-    if (this.merchantsSharedCollection.length === 1) {
-      this.pendingAutoAssignment = {
-        merchantId: this.merchantsSharedCollection[0].id,
-        currency: this.merchantsSharedCollection[0].currency,
-      };
-    } else {
-      this.pendingAutoAssignment = null;
-    }
-  }
-
-  /**
-   * Applies pending auto-assignment when a form is created.
-   * This ensures auto-assignment works even when form is created before collections.
-   */
-  private applyPendingAutoAssignment(form: PaymentTransactionFormGroup): void {
-    if (this.pendingAutoAssignment && this.originalPaymentTransaction === null) {
-      const currentId = form.get('id')?.value;
-      if (currentId === null || currentId === '') {
-        // Auto-assign merchantId
-        form.patchValue({
-          merchantId: this.pendingAutoAssignment.merchantId,
-        });
-
-        // Auto-assign currency if merchant has a valid currency
-        if (this.pendingAutoAssignment.currency && this.isValidCurrency(this.pendingAutoAssignment.currency)) {
-          form.patchValue({
-            currency: this.pendingAutoAssignment.currency as keyof typeof import('app/entities/enumerations/currency.model').Currency,
-          });
-        }
-      }
-    }
-  }
-
-  /**
-   * Public method to manually trigger auto-assignment for a form.
-   * Useful when components want to ensure auto-assignment happens after collections are loaded.
-   * @param form The payment transaction form to update
-   */
-  public triggerAutoAssignmentForForm(form: PaymentTransactionFormGroup): void {
-    // First try to apply pending auto-assignment
-    this.applyPendingAutoAssignment(form);
-
-    // Then try direct auto-assignment with current collections
-    this.autoAssignMerchantAndCurrency(form);
-  }
-
-  onClientChange(form: PaymentTransactionFormGroup): void {
-    const selectedClientId = form.get('clientId')?.value;
-    const selectedClient = this.clientsSharedCollection.find(client => client.id === selectedClientId);
-
-    if (selectedClient) {
-      // Update the form with client-related fields
-      form.patchValue({
-        // Note: We don't set merchantClientId here as it's not in the form
-        // The backend service will handle this during save
-      });
     }
   }
 
@@ -336,6 +296,46 @@ export class PaymentTransactionFormService {
       ...paymentTransaction,
       requestTimestamp: paymentTransaction.requestTimestamp ? paymentTransaction.requestTimestamp.format(DATE_TIME_FORMAT) : undefined,
     };
+  }
+
+  /**
+   * Triggers auto-assignment for all active forms when collections are updated.
+   * This handles timing issues where collections are loaded after form creation.
+   */
+  private triggerAutoAssignment(): void {
+    // If we have exactly one merchant and no active form is set,
+    // we'll store this information for when a form is created
+    if (this.merchantsSharedCollection.length === 1) {
+      this.pendingAutoAssignment = {
+        merchantId: this.merchantsSharedCollection[0].id,
+        currency: this.merchantsSharedCollection[0].currency,
+      };
+    } else {
+      this.pendingAutoAssignment = null;
+    }
+  }
+
+  /**
+   * Applies pending auto-assignment when a form is created.
+   * This ensures auto-assignment works even when form is created before collections.
+   */
+  private applyPendingAutoAssignment(form: PaymentTransactionFormGroup): void {
+    if (this.pendingAutoAssignment && this.originalPaymentTransaction === null) {
+      const currentId = form.get('id')?.value;
+      if (currentId === null || currentId === '') {
+        // Auto-assign merchantId
+        form.patchValue({
+          merchantId: this.pendingAutoAssignment.merchantId,
+        });
+
+        // Auto-assign currency if merchant has a valid currency
+        if (this.pendingAutoAssignment.currency && this.isValidCurrency(this.pendingAutoAssignment.currency)) {
+          form.patchValue({
+            currency: this.pendingAutoAssignment.currency as keyof typeof import('app/entities/enumerations/currency.model').Currency,
+          });
+        }
+      }
+    }
   }
 
   /**
