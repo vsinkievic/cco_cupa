@@ -10,6 +10,7 @@ const merchantRoute: Routes = [
     loadComponent: () => import('./list/merchant.component').then(m => m.MerchantComponent),
     data: {
       defaultSort: `id,${ASC}`,
+      authorities: ['ROLE_ADMIN'],
     },
     canActivate: [UserRouteAccessService],
   },
@@ -19,6 +20,9 @@ const merchantRoute: Routes = [
     resolve: {
       merchant: MerchantResolve,
     },
+    data: {
+      authorities: ['ROLE_ADMIN'],
+    },
     canActivate: [UserRouteAccessService],
   },
   {
@@ -27,6 +31,9 @@ const merchantRoute: Routes = [
     resolve: {
       merchant: MerchantResolve,
     },
+    data: {
+      authorities: ['ROLE_ADMIN'],
+    },
     canActivate: [UserRouteAccessService],
   },
   {
@@ -34,6 +41,9 @@ const merchantRoute: Routes = [
     loadComponent: () => import('./update/merchant-update.component').then(m => m.MerchantUpdateComponent),
     resolve: {
       merchant: MerchantResolve,
+    },
+    data: {
+      authorities: ['ROLE_ADMIN'],
     },
     canActivate: [UserRouteAccessService],
   },

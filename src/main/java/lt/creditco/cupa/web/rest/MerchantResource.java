@@ -11,6 +11,7 @@ import java.util.Optional;
 import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.repository.UserRepository;
+import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.MerchantDTO;
 import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
@@ -30,9 +32,11 @@ import tech.jhipster.web.util.ResponseUtil;
 
 /**
  * REST controller for managing {@link lt.creditco.cupa.domain.Merchant}.
+ * Only ADMIN users can access merchant data.
  */
 @RestController
 @RequestMapping("/api/merchants")
+@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class MerchantResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(MerchantResource.class);
@@ -84,6 +88,7 @@ public class MerchantResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<MerchantDTO> createMerchant(@Valid @RequestBody MerchantDTO merchantDTO) throws URISyntaxException {
         LOG.debug("REST request to save Merchant : {}", merchantDTO);
         if (StringUtils.isBlank(merchantDTO.getId())) {
@@ -109,6 +114,7 @@ public class MerchantResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<MerchantDTO> updateMerchant(
         @PathVariable(value = "id", required = false) final String id,
         @Valid @RequestBody MerchantDTO merchantDTO
@@ -143,6 +149,7 @@ public class MerchantResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<MerchantDTO> partialUpdateMerchant(
         @PathVariable(value = "id", required = false) final String id,
         @NotNull @RequestBody MerchantDTO merchantDTO
@@ -175,6 +182,7 @@ public class MerchantResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of merchants in body.
      */
     @GetMapping("")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<List<MerchantDTO>> getAllMerchants(
         @org.springdoc.core.annotations.ParameterObject Pageable pageable,
         Principal principal
@@ -202,6 +210,7 @@ public class MerchantResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the merchantDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<MerchantDTO> getMerchant(@PathVariable("id") String id, Principal principal) {
         //        LOG.debug("REST request to get Merchant : {}", id);
         User currentUser = getCurrentUser(principal);
@@ -222,6 +231,7 @@ public class MerchantResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Void> deleteMerchant(@PathVariable("id") String id) {
         LOG.debug("REST request to delete Merchant : {}", id);
         merchantService.delete(id);
