@@ -25,11 +25,11 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
 
     private String id;
 
+    @NotNull
     private String orderId;
 
     private String gatewayTransactionId;
 
-    @NotNull
     private TransactionStatus status;
 
     private String statusDescription;
@@ -57,7 +57,6 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
 
     private String signatureVersion;
 
-    @NotNull
     private Instant requestTimestamp;
 
     @Lob
@@ -78,7 +77,6 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
 
     private String merchantClientId;
 
-    @NotNull
     private String merchantId;
 
     private String clientName;
