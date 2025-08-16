@@ -101,27 +101,7 @@
               <td>{{ paymentTransaction.orderId }}</td>
               <td>{{ paymentTransaction.paymentBrand }}</td>
               <td>{{ paymentTransaction.amount }}</td>
-              <td>
-                {{
-                  {
-                    null: '',
-                    AUD: 'AUD',
-                    USD: 'USD',
-                    HKD: 'HKD',
-                    CAD: 'CAD',
-                    CHF: 'CHF',
-                    CNY: 'CNY',
-                    EUR: 'EUR',
-                    GBP: 'GBP',
-                    JPY: 'JPY',
-                    KRW: 'KRW',
-                    MOP: 'MOP',
-                    RUB: 'RUB',
-                    SGD: 'SGD',
-                    TWD: 'TWD',
-                  }[paymentTransaction.currency ?? 'null']
-                }}
-              </td>
+              <td>{{ paymentTransaction.currency }}</td>
               <td>{{ paymentTransaction.requestTimestamp | formatMediumDatetime }}</td>
               <td>{{ paymentTransaction.status }}</td>
               <td>{{ paymentTransaction.statusDescription }}</td>

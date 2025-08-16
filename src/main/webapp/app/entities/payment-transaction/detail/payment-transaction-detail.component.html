@@ -103,23 +103,25 @@
               <pre class="wrapped-pre" jhiJsonHighlight>{{ paymentTransactionRef.lastQueryData }}</pre>
             </span>
           </dd>
-          <dt><span>Client</span></dt>
+          <dt><span>Client Id</span></dt>
           <dd>
-            @if (paymentTransaction()!.client) {
-              <div>
-                <a [routerLink]="['/client', paymentTransaction()!.client?.id, 'view']">{{
-                  paymentTransactionRef.client?.merchantClientId
-                }}</a>
-              </div>
-            }
+            <span>{{ paymentTransactionRef.clientId }}</span>
           </dd>
-          <dt><span>Merchant</span></dt>
+          <dt><span>Merchant Client Id</span></dt>
           <dd>
-            @if (paymentTransaction()!.merchant) {
-              <div>
-                <a [routerLink]="['/merchant', paymentTransaction()!.merchant?.id, 'view']">{{ paymentTransactionRef.merchant?.name }}</a>
-              </div>
-            }
+            <span>{{ paymentTransactionRef.merchantClientId }}</span>
+          </dd>
+          <dt><span>Merchant Id</span></dt>
+          <dd>
+            <span>{{ paymentTransactionRef.merchantId }}</span>
+          </dd>
+          <dt><span>Client Name</span></dt>
+          <dd>
+            <span>{{ paymentTransactionRef.clientName }}</span>
+          </dd>
+          <dt><span>Merchant Name</span></dt>
+          <dd>
+            <span>{{ paymentTransactionRef.merchantName }}</span>
           </dd>
         </dl>
 

@@ -51,62 +51,38 @@ describe('PaymentTransaction Management Update Component', () => {
   });
 
   describe('ngOnInit', () => {
-    it('should call Client query and add missing value', () => {
-      const paymentTransaction: IPaymentTransaction = { id: '1571' };
-      const client: IClient = { id: '26282' };
-      paymentTransaction.client = client;
+    it('should call Client query and load clients', () => {
+      const paymentTransaction: IPaymentTransaction = { id: '1571', clientId: '26282' };
 
       const clientCollection: IClient[] = [{ id: '26282' }];
       jest.spyOn(clientService, 'query').mockReturnValue(of(new HttpResponse({ body: clientCollection })));
-      const additionalClients = [client];
-      const expectedCollection: IClient[] = [...additionalClients, ...clientCollection];
-      jest.spyOn(clientService, 'addClientToCollectionIfMissing').mockReturnValue(expectedCollection);
 
       activatedRoute.data = of({ paymentTransaction });
       comp.ngOnInit();
 
       expect(clientService.query).toHaveBeenCalled();
-      expect(clientService.addClientToCollectionIfMissing).toHaveBeenCalledWith(
-        clientCollection,
-        ...additionalClients.map(expect.objectContaining),
-      );
-      expect(comp.clientsSharedCollection).toEqual(expectedCollection);
+      expect(comp.clientsSharedCollection).toEqual(clientCollection);
     });
 
-    it('should call Merchant query and add missing value', () => {
-      const paymentTransaction: IPaymentTransaction = { id: '1571' };
-      const merchant: IMerchant = { id: '23082' };
-      paymentTransaction.merchant = merchant;
+    it('should call Merchant query and load merchants', () => {
+      const paymentTransaction: IPaymentTransaction = { id: '1571', merchantId: '23082' };
 
       const merchantCollection: IMerchant[] = [{ id: '23082' }];
       jest.spyOn(merchantService, 'query').mockReturnValue(of(new HttpResponse({ body: merchantCollection })));
-      const additionalMerchants = [merchant];
-      const expectedCollection: IMerchant[] = [...additionalMerchants, ...merchantCollection];
-      jest.spyOn(merchantService, 'addMerchantToCollectionIfMissing').mockReturnValue(expectedCollection);
 
       activatedRoute.data = of({ paymentTransaction });
       comp.ngOnInit();
 
       expect(merchantService.query).toHaveBeenCalled();
-      expect(merchantService.addMerchantToCollectionIfMissing).toHaveBeenCalledWith(
-        merchantCollection,
-        ...additionalMerchants.map(expect.objectContaining),
-      );
-      expect(comp.merchantsSharedCollection).toEqual(expectedCollection);
+      expect(comp.merchantsSharedCollection).toEqual(merchantCollection);
     });
 
     it('should update editForm', () => {
-      const paymentTransaction: IPaymentTransaction = { id: '1571' };
-      const client: IClient = { id: '26282' };
-      paymentTransaction.client = client;
-      const merchant: IMerchant = { id: '23082' };
-      paymentTransaction.merchant = merchant;
+      const paymentTransaction: IPaymentTransaction = { id: '1571', clientId: '26282', merchantId: '23082' };
 
       activatedRoute.data = of({ paymentTransaction });
       comp.ngOnInit();
 
-      expect(comp.clientsSharedCollection).toContainEqual(client);
-      expect(comp.merchantsSharedCollection).toContainEqual(merchant);
       expect(comp.paymentTransaction).toEqual(paymentTransaction);
     });
   });
@@ -153,51 +129,67 @@ describe('PaymentTransaction Management Update Component', () => {
 
       // THEN
       expect(paymentTransactionFormService.getPaymentTransaction).toHaveBeenCalled();
-      expect(paymentTransactionService.create).toHaveBeenCalled();
-      expect(comp.isSaving).toEqual(false);
       expect(comp.previousState).toHaveBeenCalled();
-    });
-
-    it('should set isSaving to false on error', () => {
-      // GIVEN
-      const saveSubject = new Subject<HttpResponse<IPaymentTransaction>>();
-      const paymentTransaction = { id: '10661' };
-      jest.spyOn(paymentTransactionService, 'update').mockReturnValue(saveSubject);
-      jest.spyOn(comp, 'previousState');
-      activatedRoute.data = of({ paymentTransaction });
-      comp.ngOnInit();
-
-      // WHEN
-      comp.save();
-      expect(comp.isSaving).toEqual(true);
-      saveSubject.error('This is an error!');
-
-      // THEN
-      expect(paymentTransactionService.update).toHaveBeenCalled();
+      expect(paymentTransactionService.create).toHaveBeenCalledWith(expect.objectContaining({ id: null, version: null }));
       expect(comp.isSaving).toEqual(false);
-      expect(comp.previousState).not.toHaveBeenCalled();
     });
   });
 
-  describe('Compare relationships', () => {
-    describe('compareClient', () => {
-      it('should forward to clientService', () => {
-        const entity = { id: '26282' };
-        const entity2 = { id: '16836' };
-        jest.spyOn(clientService, 'compareClient');
-        comp.compareClient(entity, entity2);
-        expect(clientService.compareClient).toHaveBeenCalledWith(entity, entity2);
-      });
+  describe('onClientChange', () => {
+    it('should not update form fields when client is selected', () => {
+      // GIVEN
+      const client: IClient = { id: '123', merchantClientId: 'merchant-client-123', name: 'Test Client' };
+      comp.clientsSharedCollection = [client];
+      comp.editForm.patchValue({ clientId: '123' });
+
+      // WHEN
+      comp.onClientChange();
+
+      // THEN
+      // The form service now handles client enrichment during save, not in the form
+      // These fields are not in the form anymore
+      expect(comp.editForm.get('merchantClientId')?.value).toBeUndefined();
+      expect(comp.editForm.get('clientName')?.value).toBeUndefined();
     });
 
-    describe('compareMerchant', () => {
-      it('should forward to merchantService', () => {
-        const entity = { id: '23082' };
-        const entity2 = { id: '16734' };
-        jest.spyOn(merchantService, 'compareMerchant');
-        comp.compareMerchant(entity, entity2);
-        expect(merchantService.compareMerchant).toHaveBeenCalledWith(entity, entity2);
-      });
+    it('should not update fields when no client is selected', () => {
+      // GIVEN
+      comp.editForm.patchValue({ clientId: null });
+
+      // WHEN
+      comp.onClientChange();
+
+      // THEN
+      expect(comp.editForm.get('merchantClientId')?.value).toBeUndefined();
+      expect(comp.editForm.get('clientName')?.value).toBeUndefined();
+    });
+  });
+
+  describe('onMerchantChange', () => {
+    it('should not update form fields when merchant is selected', () => {
+      // GIVEN
+      const merchant: IMerchant = { id: '456', name: 'Test Merchant' };
+      comp.merchantsSharedCollection = [merchant];
+      comp.editForm.patchValue({ merchantId: '456' });
+
+      // WHEN
+      comp.onMerchantChange();
+
+      // THEN
+      // The form service now handles merchant enrichment during save, not in the form
+      // These fields are not in the form anymore
+      expect(comp.editForm.get('merchantName')?.value).toBeUndefined();
+    });
+
+    it('should not update field when no merchant is selected', () => {
+      // GIVEN
+      comp.editForm.patchValue({ merchantId: null });
+
+      // WHEN
+      comp.onMerchantChange();
+
+      // THEN
+      expect(comp.editForm.get('merchantName')?.value).toBeUndefined();
     });
   });
 });

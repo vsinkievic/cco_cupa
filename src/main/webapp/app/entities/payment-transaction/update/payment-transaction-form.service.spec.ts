@@ -26,22 +26,14 @@ describe('PaymentTransaction Form Service', () => {
             statusDescription: expect.any(Object),
             paymentBrand: expect.any(Object),
             amount: expect.any(Object),
-            balance: expect.any(Object),
             currency: expect.any(Object),
             replyUrl: expect.any(Object),
             backofficeUrl: expect.any(Object),
             echo: expect.any(Object),
             paymentFlow: expect.any(Object),
-            signature: expect.any(Object),
-            signatureVersion: expect.any(Object),
             requestTimestamp: expect.any(Object),
-            requestData: expect.any(Object),
-            initialResponseData: expect.any(Object),
-            callbackTimestamp: expect.any(Object),
-            callbackData: expect.any(Object),
-            lastQueryData: expect.any(Object),
-            client: expect.any(Object),
-            merchant: expect.any(Object),
+            clientId: expect.any(Object),
+            merchantId: expect.any(Object),
           }),
         );
       });
@@ -58,22 +50,14 @@ describe('PaymentTransaction Form Service', () => {
             statusDescription: expect.any(Object),
             paymentBrand: expect.any(Object),
             amount: expect.any(Object),
-            balance: expect.any(Object),
             currency: expect.any(Object),
             replyUrl: expect.any(Object),
             backofficeUrl: expect.any(Object),
             echo: expect.any(Object),
             paymentFlow: expect.any(Object),
-            signature: expect.any(Object),
-            signatureVersion: expect.any(Object),
             requestTimestamp: expect.any(Object),
-            requestData: expect.any(Object),
-            initialResponseData: expect.any(Object),
-            callbackTimestamp: expect.any(Object),
-            callbackData: expect.any(Object),
-            lastQueryData: expect.any(Object),
-            client: expect.any(Object),
-            merchant: expect.any(Object),
+            clientId: expect.any(Object),
+            merchantId: expect.any(Object),
           }),
         );
       });
@@ -85,7 +69,11 @@ describe('PaymentTransaction Form Service', () => {
 
         const paymentTransaction = service.getPaymentTransaction(formGroup) as any;
 
-        expect(paymentTransaction).toMatchObject(sampleWithNewData);
+        // The form service should return the version field even though it's not in the form
+        expect(paymentTransaction).toMatchObject({
+          ...sampleWithNewData,
+          version: null,
+        });
       });
 
       it('should return NewPaymentTransaction for empty PaymentTransaction initial value', () => {
@@ -119,7 +107,7 @@ describe('PaymentTransaction Form Service', () => {
         const formGroup = service.createPaymentTransactionFormGroup(sampleWithRequiredData);
         expect(formGroup.controls.id.disabled).toBe(true);
 
-        service.resetForm(formGroup, { id: '' });
+        service.resetForm(formGroup, { id: null });
 
         expect(formGroup.controls.id.disabled).toBe(true);
       });

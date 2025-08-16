@@ -18,7 +18,7 @@ import { TransactionStatus } from 'app/entities/enumerations/transaction-status.
 import { PaymentBrand } from 'app/entities/enumerations/payment-brand.model';
 import { Currency } from 'app/entities/enumerations/currency.model';
 import { PaymentTransactionService } from '../service/payment-transaction.service';
-import { IPaymentTransaction } from '../payment-transaction.model';
+import { IPaymentTransaction, NewPaymentTransaction } from '../payment-transaction.model';
 import { PaymentTransactionFormGroup, PaymentTransactionFormService } from './payment-transaction-form.service';
 
 @Component({
@@ -86,12 +86,20 @@ export class PaymentTransactionUpdateComponent implements OnInit {
   save(): void {
     this.isSaving = true;
     const paymentTransaction = this.paymentTransactionFormService.getPaymentTransaction(this.editForm);
-    console.warn('paymentTransaction before save:', paymentTransaction);
+
     if (paymentTransaction.id !== null) {
       this.subscribeToSaveResponse(this.paymentTransactionService.update(paymentTransaction));
     } else {
       this.subscribeToSaveResponse(this.paymentTransactionService.create(paymentTransaction));
     }
+  }
+
+  onClientChange(): void {
+    this.paymentTransactionFormService.onClientChange(this.editForm);
+  }
+
+  onMerchantChange(): void {
+    this.paymentTransactionFormService.onMerchantChange(this.editForm);
   }
 
   protected subscribeToSaveResponse(result: Observable<HttpResponse<IPaymentTransaction>>): void {
@@ -116,34 +124,25 @@ export class PaymentTransactionUpdateComponent implements OnInit {
   protected updateForm(paymentTransaction: IPaymentTransaction): void {
     this.paymentTransaction = paymentTransaction;
     this.paymentTransactionFormService.resetForm(this.editForm, paymentTransaction);
-
-    this.clientsSharedCollection = this.clientService.addClientToCollectionIfMissing<IClient>(
-      this.clientsSharedCollection,
-      paymentTransaction.client,
-    );
-    this.merchantsSharedCollection = this.merchantService.addMerchantToCollectionIfMissing<IMerchant>(
-      this.merchantsSharedCollection,
-      paymentTransaction.merchant,
-    );
   }
 
   protected loadRelationshipsOptions(): void {
     this.clientService
       .query()
       .pipe(map((res: HttpResponse<IClient[]>) => res.body ?? []))
-      .pipe(
-        map((clients: IClient[]) => this.clientService.addClientToCollectionIfMissing<IClient>(clients, this.paymentTransaction?.client)),
-      )
-      .subscribe((clients: IClient[]) => (this.clientsSharedCollection = clients));
+      .subscribe((clients: IClient[]) => {
+        this.clientsSharedCollection = clients;
+        // Update the form service with the loaded collections
+        this.paymentTransactionFormService.setSharedCollections(clients, this.merchantsSharedCollection);
+      });
 
     this.merchantService
       .query()
       .pipe(map((res: HttpResponse<IMerchant[]>) => res.body ?? []))
-      .pipe(
-        map((merchants: IMerchant[]) =>
-          this.merchantService.addMerchantToCollectionIfMissing<IMerchant>(merchants, this.paymentTransaction?.merchant),
-        ),
-      )
-      .subscribe((merchants: IMerchant[]) => (this.merchantsSharedCollection = merchants));
+      .subscribe((merchants: IMerchant[]) => {
+        this.merchantsSharedCollection = merchants;
+        // Update the form service with the loaded collections
+        this.paymentTransactionFormService.setSharedCollections(this.clientsSharedCollection, merchants);
+      });
   }
 }

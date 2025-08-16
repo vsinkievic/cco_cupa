@@ -11,9 +11,14 @@ import { IPaymentTransaction, NewPaymentTransaction } from '../payment-transacti
 
 export type PartialUpdatePaymentTransaction = Partial<IPaymentTransaction> & Pick<IPaymentTransaction, 'id'>;
 
-type RestOf<T extends IPaymentTransaction | NewPaymentTransaction> = Omit<T, 'requestTimestamp' | 'callbackTimestamp'> & {
+type RestOf<T extends IPaymentTransaction | NewPaymentTransaction> = Omit<
+  T,
+  'requestTimestamp' | 'callbackTimestamp' | 'createdDate' | 'lastModifiedDate'
+> & {
   requestTimestamp?: string | null;
   callbackTimestamp?: string | null;
+  createdDate?: string | null;
+  lastModifiedDate?: string | null;
 };
 
 export type RestPaymentTransaction = RestOf<IPaymentTransaction>;
@@ -107,6 +112,8 @@ export class PaymentTransactionService {
       ...paymentTransaction,
       requestTimestamp: paymentTransaction.requestTimestamp?.toJSON() ?? null,
       callbackTimestamp: paymentTransaction.callbackTimestamp?.toJSON() ?? null,
+      createdDate: paymentTransaction.createdDate?.toJSON() ?? null,
+      lastModifiedDate: paymentTransaction.lastModifiedDate?.toJSON() ?? null,
     };
   }
 
@@ -115,6 +122,8 @@ export class PaymentTransactionService {
       ...restPaymentTransaction,
       requestTimestamp: restPaymentTransaction.requestTimestamp ? dayjs(restPaymentTransaction.requestTimestamp) : undefined,
       callbackTimestamp: restPaymentTransaction.callbackTimestamp ? dayjs(restPaymentTransaction.callbackTimestamp) : undefined,
+      createdDate: restPaymentTransaction.createdDate ? dayjs(restPaymentTransaction.createdDate) : undefined,
+      lastModifiedDate: restPaymentTransaction.lastModifiedDate ? dayjs(restPaymentTransaction.lastModifiedDate) : undefined,
     };
   }
 

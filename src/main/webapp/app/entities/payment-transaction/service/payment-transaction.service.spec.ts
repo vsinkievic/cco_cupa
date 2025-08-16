@@ -11,6 +11,8 @@ const requireRestSample: RestPaymentTransaction = {
   ...sampleWithRequiredData,
   requestTimestamp: sampleWithRequiredData.requestTimestamp?.toJSON(),
   callbackTimestamp: sampleWithRequiredData.callbackTimestamp?.toJSON(),
+  createdDate: sampleWithRequiredData.createdDate?.toJSON() ?? null,
+  lastModifiedDate: sampleWithRequiredData.lastModifiedDate?.toJSON() ?? null,
 };
 
 describe('PaymentTransaction Service', () => {

@@ -1,6 +1,4 @@
 import dayjs from 'dayjs/esm';
-import { IClient } from 'app/entities/client/client.model';
-import { IMerchant } from 'app/entities/merchant/merchant.model';
 import { TransactionStatus } from 'app/entities/enumerations/transaction-status.model';
 import { PaymentBrand } from 'app/entities/enumerations/payment-brand.model';
 import { Currency } from 'app/entities/enumerations/currency.model';
@@ -27,9 +25,16 @@ export interface IPaymentTransaction {
   callbackTimestamp?: dayjs.Dayjs | null;
   callbackData?: string | null;
   lastQueryData?: string | null;
-  client?: Pick<IClient, 'id' | 'merchantClientId'> | null;
-  merchant?: Pick<IMerchant, 'id' | 'name'> | null;
+  clientId?: string | null;
+  merchantClientId?: string | null;
+  merchantId?: string | null;
+  clientName?: string | null;
+  merchantName?: string | null;
   version?: number | null;
+  createdBy?: string | null;
+  createdDate?: dayjs.Dayjs | null;
+  lastModifiedBy?: string | null;
+  lastModifiedDate?: dayjs.Dayjs | null;
 }
 
 export type NewPaymentTransaction = Omit<IPaymentTransaction, 'id' | 'version'> & { id: null; version: null };

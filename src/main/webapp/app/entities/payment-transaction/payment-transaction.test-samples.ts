@@ -28,6 +28,8 @@ export const sampleWithPartialData: IPaymentTransaction = {
   requestTimestamp: dayjs('2025-08-04T08:13'),
   requestData: '../fake-data/blob/hipster.txt',
   callbackData: '../fake-data/blob/hipster.txt',
+  clientId: 'client-123',
+  merchantId: 'merchant-456',
   version: 1,
 };
 
@@ -47,12 +49,21 @@ export const sampleWithFullData: IPaymentTransaction = {
   paymentFlow: 'FLOW_B',
   signature: 'drab',
   signatureVersion: 'nervously impractical',
-  requestTimestamp: dayjs('2025-08-04T11:25'),
+  requestTimestamp: dayjs('2025-08-04T08:13'),
   requestData: '../fake-data/blob/hipster.txt',
   initialResponseData: '../fake-data/blob/hipster.txt',
   callbackTimestamp: dayjs('2025-08-04T09:00'),
   callbackData: '../fake-data/blob/hipster.txt',
   lastQueryData: '../fake-data/blob/hipster.txt',
+  clientId: 'client-789',
+  merchantClientId: 'merchant-client-abc',
+  merchantId: 'merchant-def',
+  clientName: 'John Doe',
+  merchantName: 'Test Merchant',
+  createdBy: 'admin',
+  createdDate: dayjs('2025-08-04T10:00'),
+  lastModifiedBy: 'admin',
+  lastModifiedDate: dayjs('2025-08-04T11:00'),
   version: 0,
 };
 
@@ -64,6 +75,8 @@ export const sampleWithNewData: NewPaymentTransaction = {
   currency: 'CAD',
   paymentFlow: 'FLOW_C',
   requestTimestamp: dayjs('2025-08-03T16:09'),
+  clientId: 'new-client-123',
+  merchantId: 'new-merchant-456',
   id: null,
   version: null,
 };
