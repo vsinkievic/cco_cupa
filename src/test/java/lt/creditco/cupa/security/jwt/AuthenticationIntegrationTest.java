@@ -10,6 +10,9 @@ import lt.creditco.cupa.config.WebConfigurer;
 import lt.creditco.cupa.management.SecurityMetersService;
 import lt.creditco.cupa.web.rest.AuthenticateController;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import tech.jhipster.config.JHipsterProperties;
 
 @Target(ElementType.TYPE)
@@ -29,5 +32,14 @@ import tech.jhipster.config.JHipsterProperties;
         JwtAuthenticationTestUtils.class,
     }
 )
+@Import(AuthenticationIntegrationTest.TestConfig.class)
 public @interface AuthenticationIntegrationTest {
+    @TestConfiguration
+    static class TestConfig {
+
+        @Bean
+        public lt.creditco.cupa.repository.MerchantRepository merchantRepository() {
+            return org.mockito.Mockito.mock(lt.creditco.cupa.repository.MerchantRepository.class);
+        }
+    }
 }

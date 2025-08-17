@@ -3,7 +3,9 @@ package lt.creditco.cupa.config;
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
+import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.security.*;
+import lt.creditco.cupa.web.filter.ApiKeyAuthenticationFilter;
 import lt.creditco.cupa.web.filter.SpaWebFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,9 +36,12 @@ public class SecurityConfiguration {
 
     private final JHipsterProperties jHipsterProperties;
 
-    public SecurityConfiguration(Environment env, JHipsterProperties jHipsterProperties) {
+    private final MerchantRepository merchantRepository;
+
+    public SecurityConfiguration(Environment env, JHipsterProperties jHipsterProperties, MerchantRepository merchantRepository) {
         this.env = env;
         this.jHipsterProperties = jHipsterProperties;
+        this.merchantRepository = merchantRepository;
     }
 
     @Bean
@@ -50,6 +55,7 @@ public class SecurityConfiguration {
             .cors(withDefaults())
             .csrf(csrf -> csrf.disable())
             .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class)
+            .addFilterAfter(new ApiKeyAuthenticationFilter(merchantRepository), BasicAuthenticationFilter.class)
             .headers(headers ->
                 headers
                     .contentSecurityPolicy(csp -> csp.policyDirectives(jHipsterProperties.getSecurity().getContentSecurityPolicy()))
