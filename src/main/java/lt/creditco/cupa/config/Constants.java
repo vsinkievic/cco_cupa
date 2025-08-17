@@ -11,5 +11,8 @@ public final class Constants {
     public static final String SYSTEM = "system";
     public static final String DEFAULT_LANGUAGE = "en";
 
+    // API Key header name
+    public static final String API_KEY_HEADER = "X-API-Key";
+
     private Constants() {}
 }
