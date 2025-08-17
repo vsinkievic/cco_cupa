@@ -157,6 +157,13 @@ public class PaymentTransactionService {
             paymentTransaction.setId(UUID.randomUUID().toString());
         }
 
+        // Check for duplicate orderId for the merchant
+        if (
+            paymentTransactionRepository.existsByMerchantIdAndOrderId(paymentTransaction.getMerchantId(), paymentTransaction.getOrderId())
+        ) {
+            throw new BadRequestAlertException("Duplicate OrderId", "PaymentTransaction", "duplicateOrderId");
+        }
+
         paymentTransaction.setStatus(TransactionStatus.RECEIVED);
         paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
 
@@ -321,6 +328,22 @@ public class PaymentTransactionService {
         LOG.debug("Request to get PaymentTransaction : {}", id);
         return paymentTransactionRepository
             .findOneWithEagerRelationships(id)
+            .map(paymentTransactionMapper::toDto)
+            .map(this::enrichWithRelatedData);
+    }
+
+    /**
+     * Get one paymentTransaction by merchantId and orderId.
+     *
+     * @param merchantId the merchant ID.
+     * @param orderId the order ID.
+     * @return the entity.
+     */
+    @Transactional(readOnly = true)
+    public Optional<PaymentTransactionDTO> findByMerchantIdAndOrderId(String merchantId, String orderId) {
+        LOG.debug("Request to get PaymentTransaction by merchantId: {} and orderId: {}", merchantId, orderId);
+        return paymentTransactionRepository
+            .findByMerchantIdAndOrderId(merchantId, orderId)
             .map(paymentTransactionMapper::toDto)
             .map(this::enrichWithRelatedData);
     }

@@ -5,6 +5,7 @@ import java.time.Instant;
 
 public class Payment {
 
+    private String id;
     private String orderId;
     private String clientId;
     private BigDecimal amount;
@@ -14,6 +15,10 @@ public class Payment {
     private Instant createdAt = Instant.now();
 
     // Getters
+    public String getId() {
+        return id;
+    }
+
     public String getOrderId() {
         return orderId;
     }
@@ -39,6 +44,10 @@ public class Payment {
     }
 
     // Setters
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }

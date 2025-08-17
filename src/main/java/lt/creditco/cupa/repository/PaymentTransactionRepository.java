@@ -49,4 +49,14 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
         "select paymentTransaction from PaymentTransaction paymentTransaction where paymentTransaction.id = :id and paymentTransaction.merchantId in :merchantIds"
     )
     Optional<PaymentTransaction> findByIdAndMerchantIds(@Param("id") String id, @Param("merchantIds") Set<String> merchantIds);
+
+    @Query(
+        "select paymentTransaction from PaymentTransaction paymentTransaction where paymentTransaction.merchantId = :merchantId and paymentTransaction.orderId = :orderId"
+    )
+    Optional<PaymentTransaction> findByMerchantIdAndOrderId(@Param("merchantId") String merchantId, @Param("orderId") String orderId);
+
+    @Query(
+        "select count(paymentTransaction) > 0 from PaymentTransaction paymentTransaction where paymentTransaction.merchantId = :merchantId and paymentTransaction.orderId = :orderId"
+    )
+    boolean existsByMerchantIdAndOrderId(@Param("merchantId") String merchantId, @Param("orderId") String orderId);
 }

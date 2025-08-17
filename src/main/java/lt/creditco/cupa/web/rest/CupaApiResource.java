@@ -43,24 +43,60 @@ public class CupaApiResource {
 
     @Tag(name = "Payments")
     @Operation(
-        summary = "Get a payment by order ID",
-        description = "Get a payment by order ID",
-        parameters = @Parameter(name = "orderId", description = "Order ID", example = "9ed5abf8-f37c-495d-a9cd-527f871125c1")
+        summary = "Get a payment by order ID for a specific merchant",
+        description = "Get a payment by order ID for a specific merchant. User must have access to the specified merchant.",
+        parameters = {
+            @Parameter(name = "merchantId", description = "Merchant ID", example = "MER-00001"),
+            @Parameter(name = "orderId", description = "Order ID", example = "9ed5abf8-f37c-495d-a9cd-527f871125c1"),
+        }
     )
-    @GetMapping("/payments/{orderId}")
-    public ResponseEntity<Payment> getPayment(@PathVariable String orderId, Principal principal) {
+    @GetMapping("/merchants/{merchantId}/payments/{orderId}")
+    public ResponseEntity<Payment> getPaymentByOrderIdForMerchant(
+        @PathVariable String merchantId,
+        @PathVariable String orderId,
+        Principal principal
+    ) {
         // Business context is already available from interceptor
         CupaApiContext.CupaApiContextData context = CupaApiContext.getContext();
 
         log.info(
-            "getPayment({}), executed by {}, merchant: {}, environment: {}",
+            "getPaymentByOrderIdForMerchant({}, {}), executed by {}, merchant: {}, environment: {}",
+            merchantId,
             orderId,
             principal.getName(),
             context.getMerchantId(),
             context.getEnvironment()
         );
 
-        Optional<PaymentTransactionDTO> paymentTransaction = paymentTransactionService.findOne(orderId);
+        // Check if user can access the specified merchant
+        if (context.getUser() != null && !context.getUser().getMerchantIdsSet().contains(merchantId)) {
+            throw new AccessDeniedException(String.format("Access denied for merchant: %s", merchantId));
+        }
+
+        Optional<PaymentTransactionDTO> paymentTransaction = paymentTransactionService.findByMerchantIdAndOrderId(merchantId, orderId);
+        return AccessControlHelper.checkAccessAndReturn(paymentTransaction, context, paymentMapper::toPayment);
+    }
+
+    @Tag(name = "Payments")
+    @Operation(
+        summary = "Get a payment by ID",
+        description = "Get a payment by its internal ID. User must have access to the payment's merchant.",
+        parameters = @Parameter(name = "id", description = "Payment ID", example = "9ed5abf8-f37c-495d-a9cd-527f871125c1")
+    )
+    @GetMapping("/payments/{id}")
+    public ResponseEntity<Payment> getPaymentById(@PathVariable String id, Principal principal) {
+        // Business context is already available from interceptor
+        CupaApiContext.CupaApiContextData context = CupaApiContext.getContext();
+
+        log.info(
+            "getPaymentById({}), executed by {}, merchant: {}, environment: {}",
+            id,
+            principal.getName(),
+            context.getMerchantId(),
+            context.getEnvironment()
+        );
+
+        Optional<PaymentTransactionDTO> paymentTransaction = paymentTransactionService.findOne(id);
         return AccessControlHelper.checkAccessAndReturn(paymentTransaction, context, paymentMapper::toPayment);
     }
 
@@ -92,6 +128,6 @@ public class CupaApiResource {
 
         Payment payment = paymentTransactionService.createPayment(request, context);
 
-        return ResponseEntity.created(new URI("/api/v1/payments/" + payment.getOrderId())).body(payment);
+        return ResponseEntity.created(new URI("/api/v1/payments/" + payment.getId())).body(payment);
     }
 }
