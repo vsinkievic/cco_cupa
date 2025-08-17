@@ -27,6 +27,14 @@ public class PaymentRequest implements MerchantOwnedEntity {
     )
     private String clientId;
 
+    @Schema(
+        required = false,
+        title = "Client",
+        description = "Client details. Required if client is new (was not previously created).",
+        example = "{\"name\": \"John Doe\", \"emailAddress\": \"john.doe@example.com\", \"mobileNumber\": \"+37061234567\"}"
+    )
+    private PaymentClient client;
+
     @Schema(required = true, title = "Amount", description = "Amount of the payment. Example: 100.00", example = "100.00")
     private BigDecimal amount;
 

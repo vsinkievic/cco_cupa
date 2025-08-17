@@ -429,6 +429,20 @@ public class PaymentTransactionService {
 
         paymentTransactionDTO.setStatus(TransactionStatus.RECEIVED);
 
+        if (paymentTransactionDTO.getMerchantId() == null) {
+            throw new BadRequestAlertException("Merchant ID is required", "PaymentTransaction", "merchantIdRequired");
+        }
+        if (!context.canAccessEntity(paymentTransactionDTO)) {
+            throw new BadRequestAlertException(
+                String.format("You cannot post transactions for merchant: %s", request.getMerchantId()),
+                "PaymentTransaction",
+                "accessDenied"
+            );
+        }
+        if (request.getClient() != null) {
+            createOrUpdateClient(paymentTransactionDTO.getMerchantId(), paymentTransactionDTO.getClientId(), request.getClient());
+        }
+
         paymentTransactionDTO = save(paymentTransactionDTO, context);
 
         Payment payment = paymentMapper.toPayment(paymentTransactionDTO);
@@ -573,5 +587,64 @@ public class PaymentTransactionService {
             .findByIdAndMerchantIds(id, merchantIds)
             .map(paymentTransactionMapper::toDto)
             .map(this::enrichWithRelatedData);
+    }
+
+    /**
+     * Create or update a client. Only updates the database if at least one value differs.
+     *
+     * @param merchantId the merchant ID
+     * @param clientId the client ID
+     * @param paymentClient the client data from payment request
+     */
+    private void createOrUpdateClient(String merchantId, String clientId, lt.creditco.cupa.api.PaymentClient paymentClient) {
+        if (paymentClient == null) {
+            return;
+        }
+
+        // Try to find existing client by merchantClientId
+        Optional<Client> existingClientOpt = clientRepository.findByMerchantClientId(clientId);
+
+        if (existingClientOpt.isPresent()) {
+            // Update existing client only if values differ
+            Client existingClient = existingClientOpt.get();
+            boolean needsUpdate = false;
+
+            if (paymentClient.getName() != null && !paymentClient.getName().equals(existingClient.getName())) {
+                existingClient.setName(paymentClient.getName());
+                needsUpdate = true;
+            }
+
+            if (paymentClient.getEmailAddress() != null && !paymentClient.getEmailAddress().equals(existingClient.getEmailAddress())) {
+                existingClient.setEmailAddress(paymentClient.getEmailAddress());
+                needsUpdate = true;
+            }
+
+            if (paymentClient.getMobileNumber() != null && !paymentClient.getMobileNumber().equals(existingClient.getMobileNumber())) {
+                existingClient.setMobileNumber(paymentClient.getMobileNumber());
+                needsUpdate = true;
+            }
+
+            // Only save if something changed
+            if (needsUpdate) {
+                existingClient.setUpdatedInGateway(Instant.now());
+                clientRepository.save(existingClient);
+                LOG.debug("Updated existing client: {}", clientId);
+            }
+        } else {
+            // Create new client
+            Client newClient = new Client();
+            newClient.setId(UUID.randomUUID().toString());
+            newClient.setMerchantClientId(clientId);
+            newClient.setMerchantId(merchantId);
+            newClient.setName(paymentClient.getName());
+            newClient.setEmailAddress(paymentClient.getEmailAddress());
+            newClient.setMobileNumber(paymentClient.getMobileNumber());
+            newClient.setValid(true);
+            newClient.setCreatedInGateway(Instant.now());
+            newClient.setUpdatedInGateway(Instant.now());
+
+            clientRepository.save(newClient);
+            LOG.debug("Created new client: {}", clientId);
+        }
     }
 }
