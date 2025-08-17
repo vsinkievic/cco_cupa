@@ -1,16 +1,19 @@
 package lt.creditco.cupa.web.rest;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.repository.PaymentTransactionRepository;
 import lt.creditco.cupa.repository.UserRepository;
+import lt.creditco.cupa.service.CupaApiBusinessLogicService;
 import lt.creditco.cupa.service.PaymentTransactionService;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
 import lt.creditco.cupa.web.context.CupaApiContext;
@@ -48,14 +51,18 @@ public class PaymentTransactionResource {
 
     private final UserRepository userRepository;
 
+    private final CupaApiBusinessLogicService businessLogicService;
+
     public PaymentTransactionResource(
         PaymentTransactionService paymentTransactionService,
         PaymentTransactionRepository paymentTransactionRepository,
-        UserRepository userRepository
+        UserRepository userRepository,
+        CupaApiBusinessLogicService businessLogicService
     ) {
         this.paymentTransactionService = paymentTransactionService;
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.userRepository = userRepository;
+        this.businessLogicService = businessLogicService;
     }
 
     /**
@@ -88,13 +95,19 @@ public class PaymentTransactionResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
-    public ResponseEntity<PaymentTransactionDTO> createPaymentTransaction(@Valid @RequestBody PaymentTransactionDTO paymentTransactionDTO)
-        throws URISyntaxException {
+    public ResponseEntity<PaymentTransactionDTO> createPaymentTransaction(
+        @Valid @RequestBody PaymentTransactionDTO paymentTransactionDTO,
+        HttpServletRequest request,
+        Principal principal
+    ) throws URISyntaxException {
         LOG.debug("REST request to save PaymentTransaction : {}", paymentTransactionDTO);
         if (paymentTransactionDTO.getId() != null) {
             throw new BadRequestAlertException("A new paymentTransaction cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        CupaApiContext.CupaApiContextData context = CupaApiContext.getContext();
+        if (paymentTransactionDTO.getRequestTimestamp() == null) {
+            paymentTransactionDTO.setRequestTimestamp(Instant.now());
+        }
+        CupaApiContext.CupaApiContextData context = businessLogicService.extractBusinessContext(request, paymentTransactionDTO, principal);
         paymentTransactionDTO = paymentTransactionService.save(paymentTransactionDTO, context);
         return ResponseEntity.created(new URI("/api/payment-transactions/" + paymentTransactionDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, paymentTransactionDTO.getId().toString()))
