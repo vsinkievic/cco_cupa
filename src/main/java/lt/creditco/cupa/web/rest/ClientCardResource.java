@@ -70,9 +70,9 @@ public class ClientCardResource {
         }
 
         // Try to find user by login (principal.getName()) with authorities eagerly loaded
-        Optional<User> userOpt = userRepository.findOneWithAuthoritiesByLogin(principal.getName());
-        if (userOpt.isPresent()) {
-            return userOpt.get();
+        User user = userRepository.findOneWithAuthoritiesByLogin(principal.getName()).orElse(null);
+        if (user != null) {
+            return user;
         }
 
         LOG.warn("User not found for principal: {} - returning empty results", principal.getName());

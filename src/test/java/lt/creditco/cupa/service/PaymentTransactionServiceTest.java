@@ -243,7 +243,7 @@ class PaymentTransactionServiceTest {
 
         // Then
         assertThat(result).isPresent();
-        PaymentTransactionDTO enrichedDTO = result.get();
+        PaymentTransactionDTO enrichedDTO = result.orElse(null);
         assertThat(enrichedDTO.getMerchantClientId()).isEqualTo("merchant-client-id");
         assertThat(enrichedDTO.getClientName()).isEqualTo("Test Client Name");
         assertThat(enrichedDTO.getMerchantName()).isEqualTo("Test Merchant Name");

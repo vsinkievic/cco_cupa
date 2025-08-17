@@ -12,7 +12,7 @@ public class Payment {
     private String currency;
     private String status;
     private String statusDescription;
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
 
     // Getters
     public String getId() {

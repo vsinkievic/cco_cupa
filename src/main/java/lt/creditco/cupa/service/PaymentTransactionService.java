@@ -625,11 +625,10 @@ public class PaymentTransactionService {
         }
 
         // Try to find existing client by merchantClientId
-        Optional<Client> existingClientOpt = clientRepository.findByMerchantClientId(clientId);
+        Client existingClient = clientRepository.findByMerchantClientId(clientId).orElse(null);
 
-        if (existingClientOpt.isPresent()) {
+        if (existingClient != null) {
             // Update existing client only if values differ
-            Client existingClient = existingClientOpt.get();
             boolean needsUpdate = false;
 
             if (paymentClient.getName() != null && !paymentClient.getName().equals(existingClient.getName())) {
