@@ -6,6 +6,7 @@ import { takeUntil } from 'rxjs/operators';
 import SharedModule from 'app/shared/shared.module';
 import { AccountService } from 'app/core/auth/account.service';
 import { Account } from 'app/core/auth/account.model';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'jhi-home',
@@ -15,6 +16,7 @@ import { Account } from 'app/core/auth/account.model';
 })
 export default class HomeComponent implements OnInit, OnDestroy {
   account = signal<Account | null>(null);
+  isDevelopment = environment.DEBUG_INFO_ENABLED;
 
   private readonly destroy$ = new Subject<void>();
 
