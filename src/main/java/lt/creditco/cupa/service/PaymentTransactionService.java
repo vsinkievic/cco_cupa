@@ -518,7 +518,10 @@ public class PaymentTransactionService {
             return Page.empty(pageable);
         }
 
-        return paymentTransactionRepository.findAllByMerchantIds(merchantIds, pageable).map(paymentTransactionMapper::toDto);
+        return paymentTransactionRepository
+            .findAllByMerchantIds(merchantIds, pageable)
+            .map(paymentTransactionMapper::toDto)
+            .map(this::enrichWithRelatedData);
     }
 
     /**
@@ -540,7 +543,10 @@ public class PaymentTransactionService {
             return Page.empty(pageable);
         }
 
-        return paymentTransactionRepository.findAllByMerchantIds(merchantIds, pageable).map(paymentTransactionMapper::toDto);
+        return paymentTransactionRepository
+            .findAllByMerchantIds(merchantIds, pageable)
+            .map(paymentTransactionMapper::toDto)
+            .map(this::enrichWithRelatedData);
     }
 
     /**
@@ -563,6 +569,9 @@ public class PaymentTransactionService {
             return Optional.empty();
         }
 
-        return paymentTransactionRepository.findByIdAndMerchantIds(id, merchantIds).map(paymentTransactionMapper::toDto);
+        return paymentTransactionRepository
+            .findByIdAndMerchantIds(id, merchantIds)
+            .map(paymentTransactionMapper::toDto)
+            .map(this::enrichWithRelatedData);
     }
 }
