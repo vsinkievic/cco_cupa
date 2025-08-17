@@ -177,7 +177,7 @@ public class CupaApiBusinessLogicService {
     }
 
     private String getApiKeyFromHeaders(HttpServletRequest request) {
-        return request.getHeader("X-API-Key");
+        return request.getHeader(lt.creditco.cupa.config.Constants.API_KEY_HEADER);
     }
 
     private CupaApiContext.MerchantContext findMerchantByApiKey(String apiKey) {

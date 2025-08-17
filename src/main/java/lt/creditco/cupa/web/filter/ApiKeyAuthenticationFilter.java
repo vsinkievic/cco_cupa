@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
+import lt.creditco.cupa.config.Constants;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
@@ -27,7 +28,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApiKeyAuthenticationFilter.class);
-    private static final String API_KEY_HEADER = "X-API-KEY";
     private static final String API_V1_PATH = "/api/v1";
 
     private final MerchantRepository merchantRepository;
@@ -45,7 +45,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String apiKey = request.getHeader(API_KEY_HEADER);
+        String apiKey = request.getHeader(Constants.API_KEY_HEADER);
         if (apiKey == null || apiKey.trim().isEmpty()) {
             // No API key provided, continue with normal authentication
             filterChain.doFilter(request, response);
