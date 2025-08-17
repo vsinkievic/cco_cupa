@@ -298,6 +298,7 @@
             <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- jhipster-needle-maven-add-dependency -->
     </dependencies>
     <build>
         <defaultGoal>spring-boot:run</defaultGoal>
@@ -372,6 +373,94 @@
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
+            </plugin>
+            <!-- RPM Build Plugin -->
+            <plugin>
+                <groupId>de.dentrassi.maven</groupId>
+                <artifactId>rpm</artifactId>
+                <version>0.10.2</version>
+                <executions>
+                    <execution>
+                        <id>build-rpm</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>rpm</goal>
+                        </goals>
+                        <inherited>false</inherited>
+                        <configuration>
+                            <attach>true</attach>
+                            <group>Application/Misc</group>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <packageName>cupa</packageName>
+                    <skipSigning>true</skipSigning>
+                    <beforeInstallation>
+                        <script>groupadd -g 792 -r -f cupa
+							if [ ! `id -u cupa 2&gt;/dev/null || echo -1` -ge 0 ]; then
+							useradd -g cupa -u 792 -r cupa
+							fi</script>
+                    </beforeInstallation>
+                    <afterInstallation>systemctl daemon-reload</afterInstallation>
+                    <afterRemoval>systemctl daemon-reload</afterRemoval>
+                    <entries>
+                        <entry>
+                            <name>/opt/cupa</name>
+                            <directory>true</directory>
+                            <user>root</user>
+                            <group>cupa</group>
+                            <mode>0775</mode>
+                        </entry>
+                        <entry>
+                            <name>/opt/cupa/${project.build.finalName}.jar</name>
+                            <collect>
+                                <from>target/${project.build.finalName}.jar</from>
+                            </collect>
+                            <user>root</user>
+                            <group>cupa</group>
+                            <mode>0644</mode>
+                        </entry>
+                        <entry>
+                            <name>/opt/cupa/application-prod.yml.default</name>
+                            <collect>
+                                <from>src/main/resources/config/application-prod.yml</from>
+                            </collect>
+                            <user>root</user>
+                            <group>cupa</group>
+                            <mode>0644</mode>
+                        </entry>
+                        <entry>
+                            <name>/opt/cupa/readme.txt</name>
+                            <collect>
+                                <from>src/main/resources/readme.txt</from>
+                            </collect>
+                            <user>root</user>
+                            <group>cupa</group>
+                            <mode>0644</mode>
+                        </entry>
+                        <entry>
+                            <name>/opt/cupa/cupa.jar</name>
+                            <linkTo>/opt/cupa/${project.build.finalName}.jar</linkTo>
+                        </entry>
+                        <entry>
+                            <name>/etc/systemd/system/cupa.service</name>
+                            <collect>
+                                <from>src/main/resources/cupa.service</from>
+                            </collect>
+                            <user>root</user>
+                            <group>root</group>
+                            <mode>0644</mode>
+                        </entry>
+                        <entry>
+                            <name>/var/log/cupa</name>
+                            <directory>true</directory>
+                            <user>root</user>
+                            <group>cupa</group>
+                            <mode>0775</mode>
+                        </entry>
+                    </entries>
+                </configuration>
             </plugin>
         </plugins>
         <pluginManagement>
@@ -835,6 +924,12 @@
                     <groupId>org.sonarsource.scanner.maven</groupId>
                     <artifactId>sonar-maven-plugin</artifactId>
                     <version>${sonar-maven-plugin.version}</version>
+                </plugin>
+                <!-- RPM Plugin Management -->
+                <plugin>
+                    <groupId>de.dentrassi.maven</groupId>
+                    <artifactId>rpm</artifactId>
+                    <version>0.10.2</version>
                 </plugin>
             </plugins>
         </pluginManagement>

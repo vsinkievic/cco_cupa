@@ -17,7 +17,9 @@ logging:
   level:
     ROOT: INFO
     tech.jhipster: INFO
-    lt.creditco.cupa: INFO
+    lt.creditco.cupa: DEBUG
+  file:
+    name: /var/log/cupa/cupa.log
 
 management:
   prometheus:
@@ -76,6 +78,44 @@ server:
     enabled: true
     mime-types: text/html,text/xml,text/plain,text/css,application/javascript,application/json,image/svg+xml
     min-response-size: 1024
+
+# ===================================================================
+# Proxy Configuration (uncomment and configure as needed)
+# ===================================================================
+#spring:
+#  cloud:
+#    gateway:
+#      routes:
+#        - id: proxy_route
+#          uri: http://proxy-server:8080
+#          predicates:
+#            - Path=/api/**
+#          filters:
+#            - name: RequestRateLimiter
+#              args:
+#                redis-rate-limiter.replenishRate: 10
+#                redis-rate-limiter.burstCapacity: 20
+#            - name: Retry
+#              args:
+#                retries: 3
+#                statuses: BAD_GATEWAY
+#                methods: GET,POST
+#
+#  # HTTP client proxy configuration
+#  http:
+#    client:
+#      proxy:
+#        host: proxy-server
+#        port: 8080
+#        username: ${PROXY_USERNAME:}
+#        password: ${PROXY_PASSWORD:}
+#
+#  # JVM proxy settings (uncomment if needed)
+#  # -Dhttp.proxyHost=proxy-server
+#  # -Dhttp.proxyPort=8080
+#  # -Dhttps.proxyHost=proxy-server
+#  # -Dhttps.proxyPort=8080
+#  # -Dhttp.nonProxyHosts=localhost|127.0.0.1|*.internal
 
 # ===================================================================
 # JHipster specific properties

@@ -1,0 +1,23 @@
+[Unit]
+Description=Cupa service
+After=syslog.target
+
+[Service]
+User=cupa
+Group=cupa
+ExecStart=/usr/bin/java -Xmx2560m -jar cupa.jar --spring.profiles.active=prod,api-docs -Djava.net.preferIPv4Stack=true
+WorkingDirectory=/opt/cupa
+SuccessExitStatus=143
+StandardOutput=journal
+StandardError=journal
+
+# Log directory configuration
+LogDirectoryMode=0755
+LogDirectory=/var/log/cupa
+
+# Restart configuration
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
