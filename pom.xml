@@ -41,6 +41,25 @@
         </repository>
     </repositories>
     
+        <!-- Allow suppression with comments
+       // CHECKSTYLE:OFF
+       -->
+    <distributionManagement>
+        <repository>
+            <id>mbuilder.sinkievic.lt</id>
+            <name>mbuilder.sinkievic.lt-releases</name>
+            <url>http://192.168.11.5:8081/artifactory/BPMID-releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>mbuilder.sinkievic.lt</id>
+            <name>mbuilder.sinkievic.lt-snapshots</name>
+            <url>http://192.168.11.5:8081/artifactory/BPMID-dev</url>
+        </snapshotRepository>
+    </distributionManagement>
+        <!-- Allow suppression with comments
+       // CHECKSTYLE:ON
+       -->
+
     <properties>
         <!--
             Build properties
