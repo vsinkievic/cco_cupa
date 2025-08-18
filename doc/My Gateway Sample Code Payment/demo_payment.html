@@ -1,0 +1,901 @@
+<html>
+  <head>
+    <!-- ******************************************************* -->
+    <!-- Test App for the Gateway Payment API                    -->
+    <!-- Documentation for this API  is in :                     -->
+    <!-- Gateway Product Guide                                   -->
+    <!--                                                         -->
+    <!-- Copyright (c) SS.net 2020-2024 v5.x                     -->
+    <!-- dev@ss.net                                              -->
+    <!--                                                         -->
+    <!-- ******************************************************* -->
+
+    <meta name="description" content="Gateway API Demo" />
+
+    <!--  Style for <Submit> button -->
+
+    <style>
+      .buttonL {
+        background-color: #149dcc;
+        border: none;
+        color: white;
+        padding: 0.4rem 1.5rem;
+        text-align: center;
+        vertical-align: middle;
+        display: block;
+        letter-spacing: 1px;
+        cursor: pointer;
+        border-radius: 100px;
+        outline: none;
+      }
+    </style>
+
+    <!--  Generic layout and font styles for input form  -->
+    <!--  Copied from Bootstrap CSS                      -->
+
+    <style>
+      *,
+      ::after,
+      ::before {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+          'Noto Color Emoji';
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        text-align: left;
+        background-color: #fff;
+      }
+
+      label {
+        display: inline-block;
+        margin-bottom: 0.5rem;
+      }
+
+      button,
+      input,
+      optgroup,
+      select,
+      textarea {
+        margin: 0;
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
+      }
+
+      fieldset {
+        min-width: 0;
+        padding: 0;
+        margin: 0;
+        border: 0;
+      }
+    </style>
+
+    <!--  Style for 2 columns side by side in a form  -->
+
+    <style>
+      .two-colAddr {
+        overflow: hidden;
+      }
+
+      .two-colAddr .col1Addr,
+      .two-colAddr .col2Addr {
+        width: 50%;
+      }
+
+      .two-colAddr .col1Addr {
+        float: left;
+        width: 50%;
+      }
+
+      .two-colAddr .col2Addr {
+        float: right;
+        width: 50%;
+      }
+
+      .two-colAddr label {
+        display: block;
+      }
+    </style>
+
+    <!-- The Close Button (x) -->
+
+    <style>
+      .close {
+        position: absolute;
+        right: 25px;
+        top: 0px;
+        color: white;
+        font-size: 25px;
+        font-weight: bold;
+      }
+
+      .close:hover,
+      .close:focus {
+        color: red;
+        cursor: pointer;
+      }
+    </style>
+
+    <title>Gateway API Demo</title>
+
+    <!-- Crypto files for encryption used for payment signature -->
+
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@3.1.9-1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@3.1.9-1/sha256.js"></script>
+
+    <!-- Config file -->
+
+    <script src="demo_payment_config.js"></script>
+  </head>
+  <body>
+    <!-- ******************************************** -->
+    <!-- The 'Test API' form - input from user        -->
+    <!-- gets the user data, which is used to create  -->
+    <!-- the parameters for a test payment            -->
+    <!-- ******************************************** -->
+
+    <section>
+      <div class="row">
+        <!-- The input form Styles, ID etc -->
+
+        <form style="top: 10%; left: 25%; width: 50%; background: rgb(240, 240, 240); border: 2px solid #ccc; position: absolute">
+          <fieldset>
+            <!--The form header -->
+
+            <div
+              style="
+                position: absolute;
+                width: 100%;
+                padding: 5px;
+                text-align: center;
+                background: rgb(211, 239, 245);
+                color: rgb(127, 127, 127);
+                font-size: 20px;
+              "
+              id="FormHeader"
+            >
+              Gateway Payment API Demo
+            </div>
+            <br />
+
+            <!-- Merchant ID field -->
+
+            <label style="padding-top: 40px; padding-left: 40px" class="control-label" title="Enter your Merchant Mid">Merchant MID</label>
+            <span style="padding-left: 20px"
+              ><input style="width: 60%" type="text" placeholder="The Merchant ID provided you at set up" id="MerchantID" /></span
+            ><br />
+
+            <!-- Merchant Hash Key field -->
+
+            <label style="padding-left: 40px" class="control-label" title="Enter your Merchant Key">Merchant Key</label>
+            <span style="padding-left: 25px"
+              ><input style="width: 60%" type="text" placeholder="The Merchant Key provided to you at set up" id="MerchantKey" /></span
+            ><br />
+
+            <!-- API Key field -->
+
+            <label style="padding-left: 40px" class="control-label" title="Enter your API Key">API Key</label>
+            <span style="padding-left: 68px"
+              ><input style="width: 60%" type="text" placeholder="The API Key provided to you at set up" id="APIKey" /></span
+            ><br />
+
+            <!-- Client ID field -->
+
+            <label style="padding-left: 40px" title="Enter a Client ID">Client ID</label>
+            <span style="padding-left: 60px"
+              ><input style="width: 60%" type="text" placeholder="An existing Client ID for your merchant" id="ClientID" /></span
+            ><br />
+
+            <!-- Client Information field -->
+
+            <label
+              style="padding-left: 40px; color: blue; cursor: pointer"
+              title="Use the entered Client information &#xA;or click here to enter the client contact details."
+              onclick="show_client_address_form( 'inline' );"
+              ><u>Client Details</u></label
+            >
+            <span style="padding-left: 28px"
+              ><input
+                style="width: 60%"
+                type="text"
+                placeholder="Click <Client Details> to enter a new client's information"
+                readonly
+                id="ClientContact" /></span
+            ><br />
+
+            <!-- Reply URL field -->
+
+            <label style="padding-left: 40px" title="Enter a Client URL to use.">Reply URL</label>
+            <span style="padding-left: 50px"
+              ><input style="width: 60%" type="text" placeholder="Client URL to return to with payment result" id="ReplyURL" /></span
+            ><br />
+
+            <!-- Backoffice URL field -->
+
+            <label style="padding-left: 40px" title="Enter a Back Office to use.">Back Office URL</label>
+            <span style="padding-left: 10px"
+              ><input style="width: 60%" type="text" placeholder="System URL to return to with payment result" id="BackOfficeURL" /></span
+            ><br />
+
+            <!-- Order ID field -->
+
+            <label style="padding-left: 40px" title="Use the generated Order ID &#xA;or enter an Order ID to use.">Order ID</label>
+            <span style="padding-left: 60px"
+              ><input style="width: 60%" type="text" placeholder="Unique Order ID number" id="OrderID" /></span
+            ><br />
+
+            <!-- Transaction amount field -->
+
+            <label
+              title="Enter an amount to use (without currency symbol)&#xA;The amount must be within range for the merchant."
+              style="padding-left: 40px"
+              >Amount</label
+            >
+            <span style="padding-left: 65px"
+              ><input style="padding-left: 0px; width: 60%" type="text" placeholder="0.00" id="Amount" /></span
+            ><br />
+
+            <!-- Send Email for 'Email Pay' option flag -->
+
+            <div class="row" style="margin-top: 0px">
+              <a style="margin-top: 10px; margin-left: 40px; cursor: default" title="Check to send a payment link to the client's email"
+                >Send Email</a
+              >
+              <input type="checkbox" style="margin-left: 45px; margin-top: 10px; cursor: pointer" id="SendEmail" />
+            </div>
+            <br />
+
+            <!-- Drop down options list - currency -->
+
+            <label
+              style="padding-left: 40px"
+              title="Choose a currency to use &#xA;The currency must be configured for the merchant and payment type."
+              >Currency</label
+            >
+            <span style="padding-left: 60px">
+              <select id="Currency" style="width: 60%" name="Transaction Type"></select> </span
+            ><br />
+
+            <!-- Drop down options list - payement brand type -->
+
+            <label style="padding-left: 40px" title="Choose a payment type to use&#xA;The payment type must be configured for the merchant."
+              >Payment Type</label
+            >
+            <span style="padding-left: 25px">
+              <select id="PaymentType" style="width: 60%" name="Transaction Type">
+                <option>UnionPay</option>
+                <option>Wechat Pay</option>
+                <option>Alipay</option>
+              </select> </span
+            ><br /><br />
+
+            <!-- Drop down options list - platform to use -->
+
+            <label style="padding-left: 40px" title="Choose the platform to use&#xA;Select Test or Production system.">Platform</label>
+            <span style="padding-left: 63px">
+              <select id="PlatformType" style="width: 60%" name="Platform Type">
+                <option>Test</option>
+                <option>Production</option>
+              </select> </span
+            ><br />
+
+            <!-- The <Submit> Button -->
+
+            <input
+              type="button"
+              class="buttonL"
+              style="margin: auto"
+              value="Submit"
+              onclick="process_payment()"
+              title="Click here to process a payment."
+            /><br />
+            <input
+              type="button"
+              class="buttonL"
+              style="margin: auto"
+              value="Query"
+              onclick="process_query()"
+              title="Click here to process a query."
+            /><br />
+          </fieldset>
+        </form>
+      </div>
+    </section>
+
+    <!-- ******************************************** -->
+    <!-- The 'Client Address' form - input from user  -->
+    <!-- gets the Client Addr, broken down into it's  -->
+    <!-- component parts                              -->
+    <!-- ******************************************** -->
+
+    <section>
+      <div class="row">
+        <!-- The input form Styles, ID etc -->
+
+        <form
+          style="top: 10%; left: 25%; width: 50%; background: rgb(240, 240, 240); border: 2px solid #ccc; position: fixed; display: none"
+          id="ClientDetails"
+        >
+          <fieldset>
+            <!--The form header and Close 'X' button-->
+
+            <div
+              style="
+                position: absolute;
+                width: 100%;
+                padding: 5px;
+                text-align: center;
+                background: rgb(63, 72, 204);
+                color: white;
+                font-size: 20px;
+              "
+            >
+              New Client Details
+            </div>
+            <br />
+            <span class="close" title="Close Client Address Form." onclick="show_client_address_form( 'none' );">X</span>
+
+            <!-- Client ID field -->
+
+            <label style="padding-top: 40px; padding-left: 40px" class="control-label">Client ID</label>
+            <span style="padding-left: 45px"><input style="width: 70%" type="text" placeholder="ID of Client" id="ClientNewID" /></span
+            ><br />
+
+            <!-- Client Name field -->
+
+            <label style="padding-top: 10px; padding-left: 40px" class="control-label">Name</label>
+            <span style="padding-left: 65px"><input style="width: 70%" type="text" placeholder="Name of Client" id="ClientName" /></span
+            ><br />
+
+            <!-- Email Address field -->
+
+            <label style="padding-top: 10px; padding-left: 40px" class="control-label">Email</label>
+            <span style="padding-left: 70px"
+              ><input style="width: 70%" type="text" placeholder="Email address of Client" id="ClientEmail" /></span
+            ><br />
+
+            <!-- Mobile Phone field -->
+
+            <label style="padding-top: 10px; padding-left: 40px" class="control-label">Mobile</label>
+            <span style="padding-left: 58px"
+              ><input style="width: 70%" type="text" placeholder="Mobile number of Client" id="ClientMobile" /></span
+            ><br />
+
+            <!-- Header 'Client Address' -->
+
+            <h3 style="padding-top: 10px; padding-left: 40px; color: rgb(63, 72, 206)">Client Address</h3>
+
+            <!-- Address Number field -->
+
+            <label style="padding-top: 10px; padding-left: 40px" class="control-label">Number</label>
+            <span style="padding-left: 50px"
+              ><input style="width: 70%" type="text" placeholder="Number of residence, house or apartment" id="AddressNumber" /></span
+            ><br />
+
+            <!-- Street Name field -->
+
+            <label style="padding-top: 10px; padding-left: 40px">Street Name</label>
+            <span style="padding-top: 10px; padding-left: 18px"
+              ><input style="width: 70%" type="text" placeholder="Name of street" id="AddressStreet" /></span
+            ><br />
+
+            <!-- Street Suffix field -->
+
+            <label style="padding-top: 10px; padding-left: 40px">Street Suffix</label>
+            <span style="padding-left: 23px"
+              ><input style="width: 70%" type="text" placeholder="Suffix (Road, Street, Avenue, Close etc)" id="AddressSuffix" /></span
+            ><br />
+
+            <!-- City/State of address -->
+
+            <div class="two-colAddr">
+              <div class="col1Addr">
+                <label style="padding-top: 10px; padding-left: 40px">City</label>
+                <span style="padding-left: 40px"
+                  ><input style="width: 70%" type="text" placeholder="Name of city or town" id="AddressCity"
+                /></span>
+              </div>
+
+              <div class="col2Addr">
+                <label style="float: right; padding-top: 10px; padding-right: 280px">State</label>
+                <span
+                  ><input
+                    style="float: right; margin-right: 50px; width: 70%"
+                    type="text"
+                    placeholder="Name of state or region"
+                    id="AddressState"
+                /></span>
+              </div>
+            </div>
+
+            <!-- Postcode and country -->
+
+            <div class="two-colAddr">
+              <div class="col1Addr">
+                <label style="padding-top: 10px; padding-left: 40px">Postcode</label>
+                <span style="padding-left: 40px"
+                  ><input style="width: 70%" type="text" placeholder="Domestic postal or ZIP code" id="AddressPostcode"
+                /></span>
+              </div>
+
+              <div class="col2Addr">
+                <label style="float: right; padding-top: 10px; padding-right: 260px">Country</label>
+                <input
+                  style="float: right; margin-right: 50px; width: 70%"
+                  type="text"
+                  placeholder="Name of country or territory"
+                  id="AddressCountry"
+                />
+              </div>
+            </div>
+            <br />
+
+            <!-- The <Enter> Button -->
+
+            <input type="button" class="buttonL buttonL5" value="Enter" style="margin: auto" onclick="process_client_information()" /><br />
+          </fieldset>
+        </form>
+      </div>
+    </section>
+  </body>
+</html>
+
+<!-- ******************************************************************************************************************************************* -->
+<!-- ***********************************           JS Sample Code Using API Calls           **************************************************** -->
+<!-- **************************************----------------------------------------------******************************************************* -->
+<!-- ******************************************************************************************************************************************* -->
+
+<script>
+  // Versions
+
+  const VERSION = 'v5.06-13';
+  const FORM_HEADER = 'Gateway Sample ' + VERSION + ' ' + MERCHANT_NAME;
+
+  const SIGNATURE_VERSION = '1.0';
+
+  // Base URL for API calls
+
+  const BASE_TEST_URL = 'https://api.test.oneroadpayments.com';
+  const BASE_PROD_URL = 'https://api.oneroadpayments.com';
+
+  // The currency table
+
+  const MERCHANT_CUR_TABLE = ['AUD', 'USD', 'HKD', 'CAD', 'CHF', 'CNY', 'EUR', 'GBP', 'JPY', 'KRW', 'MOP', 'RUB', 'SGD', 'TWD'];
+
+  // Order ID for query
+
+  var queryOrderID = '';
+
+  /**********************************************************/
+  //    Common function used to check the error message     */
+  //    in case server returns a not-OK (Not 2XX) status    */
+  /**********************************************************/
+
+  function set_server_error(msgBody) {
+    var errMsg = '';
+
+    // Make sure this is a JSON format error
+
+    try {
+      var data = JSON.parse(msgBody);
+
+      // All good - Set the error message
+
+      if ('response' in data) {
+        if ('message' in data.response) errMsg = data.response.message;
+        if ('detail' in data.response) errMsg += ' : ' + data.response.detail;
+        if ('reason' in data.response) errMsg += ' : ' + data.response.reason;
+      }
+    } catch (errors) {
+      // Not JSON so get the data
+
+      errMsg = msgBody;
+    }
+
+    if (errMsg == '') errMsg = 'No extra information';
+
+    return errMsg;
+  }
+
+  /**************************************************/
+  /* API Call - Sends a payment to the server       */
+  /* and loads the redirect page (JSON Format)      */
+  /**************************************************/
+
+  function process_payment_JSON(BASE_URL_ADDRESS) {
+    // Create a new AJAX request object
+
+    var xhttp = new XMLHttpRequest();
+
+    // Create a payment info data object
+
+    var paymentData = {
+      clientID: '',
+
+      client: {
+        clientID: '',
+        mobileNumber: '',
+        name: '',
+        emailAddress: '',
+        billingAddress: {
+          streetName: '',
+          city: '',
+          state: '',
+          postCode: '',
+          country: '',
+        },
+      },
+
+      signature: '',
+      signatureVersion: '',
+      echo: '',
+      orderID: '',
+      replyURL: '',
+      backofficeURL: '',
+      amount: '',
+      currency: '',
+      cardType: '',
+      SendEmail: 0,
+    };
+
+    //    Get the Merchant ID and Merchant Key
+
+    var merchantID = document.getElementById('MerchantID').value;
+    var merchantKey = document.getElementById('MerchantKey').value;
+
+    //    Get the other payment transaction data
+
+    var myReplyURL = document.getElementById('ReplyURL').value;
+    var myBackOffURL = document.getElementById('BackOfficeURL').value;
+    var myAmount = document.getElementById('Amount').value;
+    var myCurrency = document.getElementById('Currency').value;
+    var myClientID = document.getElementById('ClientID').value;
+    var myClientNewId = document.getElementById('ClientNewID').value;
+    var myOrderID = document.getElementById('OrderID').value;
+
+    //    Check the required data has been set
+
+    if (!merchantID || !merchantKey || !myAmount || (!myClientID && !myClientNewId) || !myOrderID) {
+      alert('Complete all the fields before submitting payment request');
+      return false;
+    }
+
+    // Add in the Client Information and address
+
+    if (myClientID != '')
+      // If it's an existing client
+      // delete the client field
+
+      delete paymentData.client;
+    else {
+      paymentData.clientID = myClientID = paymentData.client.clientID = myClientNewId;
+      paymentData.client.name = document.getElementById('ClientName').value;
+      paymentData.client.mobileNumber = document.getElementById('ClientMobile').value;
+      paymentData.client.emailAddress = document.getElementById('ClientEmail').value;
+
+      paymentData.client.billingAddress.streetName = document.getElementById('AddressStreet').value;
+      paymentData.client.billingAddress.city = document.getElementById('AddressCity').value;
+      paymentData.client.billingAddress.state = document.getElementById('AddressState').value;
+      paymentData.client.billingAddress.postCode = document.getElementById('AddressPostcode').value;
+      paymentData.client.billingAddress.country = document.getElementById('AddressCountry').value;
+    }
+
+    //    Create the Crypto Signature of the payment data
+    //    using the merchant key
+
+    var clearTxt =
+      myClientID + myOrderID.toLowerCase() + CryptoJS.MD5(merchantKey).toString() + myAmount + myCurrency + myReplyURL + myBackOffURL;
+
+    var mySignature = CryptoJS.MD5(clearTxt).toString();
+
+    //    Create the payment object to send to server
+
+    paymentData.clientID = myClientID;
+    paymentData.signature = mySignature;
+    paymentData.orderID = myOrderID.toLowerCase();
+    paymentData.replyURL = myReplyURL;
+    paymentData.backofficeURL = myBackOffURL;
+    paymentData.amount = myAmount;
+    paymentData.currency = myCurrency;
+
+    paymentData.signatureVersion = SIGNATURE_VERSION;
+
+    // The payment card type (brand)
+
+    paymentData.cardType = document.getElementById('PaymentType').value;
+
+    // Flags whether to use 'Email Link Pay'
+
+    paymentData.sendEmail = document.getElementById('SendEmail').checked ? 1 : 0;
+
+    // Get the payment data in JSON format
+
+    var formattedData = JSON.stringify(paymentData);
+
+    //    Set the target URL (Gateway Server API)
+
+    var myAction = BASE_URL_ADDRESS + '/merchants/' + merchantID + '/transactions/';
+
+    //    And POST the payment request to the
+    //    Gateway Switch using an async call
+
+    xhttp.open('POST', myAction, true);
+    xhttp.setRequestHeader('content-type', 'application/json');
+
+    /************************************************************************************/
+    /*  The call back function - once payment request completes get the result here     */
+    /************************************************************************************/
+
+    xhttp.onload = function () {
+      //    Get the returned data and check for success/failure
+
+      if (Math.floor(xhttp.status / 100) != 2) {
+        // Set the error message
+
+        var errMsg = set_server_error(this.response);
+
+        //    Payment request failed - alert the user
+
+        alert(
+          'Unable to complete payment.\nServer status is ' + xhttp.status + ' : ' + errMsg + '.\n\nCheck your payment request accordingly',
+        );
+      } else if (xhttp.status == 200 || xhttp.status == 210) {
+        //    Successful API call - get the server data and open a new
+        //    window to redirect to the payment page
+
+        var data = this.response;
+        var newW = window.open();
+
+        if (!newW)
+          alert(
+            'Unable to open payment window - if open, close the Developer Tools Console and/or refresh your browser.\nCheck that popups are not disabled',
+          );
+        else {
+          newW.document.open();
+          newW.document.write(data);
+          newW.document.close();
+        }
+      } else if (xhttp.status == 210) {
+        // Successful 'Email Pay' request - inform the client
+        // a payment enablememt email has been sent
+
+        alert(
+          'Your request completed successfully.\nA payment enablement email has been sent to the registered email address for : ' +
+            myClientID,
+        );
+      } else {
+        // Successful payment request - inform the client
+
+        alert('Your request completed successfully with status code : ' + xhttp.status);
+      }
+
+      // Set a new order ID
+
+      document.getElementById('OrderID').value = get_order_id();
+    };
+
+    //    Send the request to the server
+
+    xhttp.send(formattedData);
+    return true;
+  }
+
+  /*********************************************/
+  /* Checks which API call and platform to use */
+  /*********************************************/
+
+  function process_payment() {
+    var baseURLAddress = '';
+
+    // Check which platform to use
+
+    if (document.getElementById('PlatformType').value == 'Test') baseURLAddress = BASE_TEST_URL;
+    else baseURLAddress = BASE_PROD_URL;
+
+    // API call
+
+    process_payment_JSON(baseURLAddress);
+  }
+
+  /**********************************************/
+  /* API Call - Sends a query for last txn to   */
+  /* the server                                 */
+  /**********************************************/
+
+  function process_query() {
+    var baseURLAddress = '';
+
+    // Create a new XML request object
+
+    var xhttp = new XMLHttpRequest();
+
+    // Check which platform to use
+
+    if (document.getElementById('PlatformType').value == 'Test') baseURLAddress = BASE_TEST_URL;
+    else baseURLAddress = BASE_PROD_URL;
+
+    //    Get the Merchant ID and API Key
+
+    var merchantID = document.getElementById('MerchantID').value;
+    var APIKey = document.getElementById('APIKey').value;
+
+    //    Check the required data has been set
+
+    if (!queryOrderID) queryOrderID = document.getElementById('OrderID').value;
+
+    if (!merchantID || !APIKey || !queryOrderID) {
+      if (!queryOrderID) alert('No order to query');
+      else alert('Complete the required fields before submitting query request');
+      return false;
+    }
+
+    //    Set the target URL (Gateway Server API)
+
+    var myAction = baseURLAddress + '/merchants/' + merchantID + '/transactions/' + queryOrderID;
+
+    //    And GET the transaction query from the
+    //    Gateway Switch using an async call
+
+    xhttp.open('GET', myAction, true);
+    xhttp.setRequestHeader('content-type', 'application/json');
+    xhttp.setRequestHeader('x-api-key', APIKey);
+
+    /**********************************************************************************/
+    /*  The call back function - once query request completes get the result here     */
+    /**********************************************************************************/
+
+    xhttp.onload = function () {
+      //    Get the returned data and check for success/failure
+
+      if (Math.floor(xhttp.status / 100) != 2) {
+        // Set the error message
+
+        var errMsg = set_server_error(this.response);
+
+        //    Query request failed - alert the user
+
+        alert('Unable to complete query.\nServer status is ' + xhttp.status + ' : ' + errMsg + '.\n\nCheck your request accordingly');
+      } else if (xhttp.status == 200) {
+        //    Successful API call - get the server data and
+        //    let the user know
+
+        var data = JSON.parse(this.response);
+        var queryResults = '';
+
+        // Get all the results by item
+
+        for (var item in data.reply) queryResults += '\n' + item + ' : ' + data.reply[item];
+
+        alert('Query Response' + queryResults);
+      }
+    };
+
+    //    Send the request to the server
+
+    xhttp.send();
+  }
+
+  /*********************************************/
+  /* Creates and returns a psuedo order number */
+  /*********************************************/
+
+  function get_order_id() {
+    //    Set the order number to something unique
+    //    using the current time and date in ms
+
+    var dateNow = new Date();
+
+    return String(dateNow.getTime()).substring(4);
+  }
+
+  /************************************************************/
+  /* 'turns on/off' (displays) the Client information form    */
+  /************************************************************/
+
+  function show_client_address_form(onOff) {
+    var myForm = document.getElementById('ClientDetails');
+
+    // Set the form display as required
+
+    myForm.style.display = onOff;
+
+    // If we're showing the form, reference it and
+    // put the focus on the first element
+
+    if (onOff == 'inline') {
+      location.href = '#ClientDetails';
+      document.getElementById('ClientName').focus();
+    } else {
+      // If we're closing the window, focus back on the
+      // client information field in the parent form
+
+      document.getElementById('ClientContact').focus();
+    }
+    return true;
+  }
+
+  /**********************************************************/
+  /* Get and store the entered Client Contact Information   */
+  /**********************************************************/
+
+  function process_client_information() {
+    var clientName = document.getElementById('ClientName').value;
+    var clientEmail = document.getElementById('ClientEmail').value;
+    var clientMobile = document.getElementById('ClientMobile').value;
+
+    // Write the client name, email and mobile into the 'Client Details' field
+
+    if (clientName == '' && clientEmail == '' && clientMobile == '') document.getElementById('ClientContact').value = '';
+    else document.getElementById('ClientContact').value = clientName + ' ' + clientEmail + ' ' + clientMobile;
+
+    // Close the client information form
+
+    show_client_address_form('none');
+  }
+
+  /*********************************/
+  /* Initialise the input fields   */
+  /*********************************/
+
+  function init_default_values() {
+    // Write in the form header
+
+    document.getElementById('FormHeader').innerHTML = FORM_HEADER;
+
+    // Set the order number to something unique
+
+    document.getElementById('OrderID').value = get_order_id();
+
+    // Initialise the Merchant MID
+
+    document.getElementById('MerchantID').value = MERCHANT_MID;
+
+    // Initialise the Merchant & API Keys
+
+    document.getElementById('MerchantKey').value = MERCHANT_KEY;
+    document.getElementById('APIKey').value = API_KEY;
+
+    // Initialise the Merchant Currency
+
+    document.getElementById('Currency').value = MERCHANT_CURRENCY == '' ? MERCHANT_CUR_TABLE[0] : MERCHANT_CURRENCY;
+
+    // Initialise the Platform for the API call
+
+    document.getElementById('PlatformType').value = API_PLATFORM;
+
+    // Initialise the Platform for the API call
+
+    document.getElementById('PaymentType').value = PAYMENT_TYPE;
+
+    // Set the Reply URL and Client ID
+
+    document.getElementById('ReplyURL').value = REPLY_URL;
+    document.getElementById('BackOfficeURL').value = BACKOFFICE_URL;
+    document.getElementById('ClientID').value = CLIENT_ID;
+  }
+
+  /*******************************************/
+  /* Entry Point to the Gateway Demo program */
+  /*******************************************/
+
+  var newOption;
+
+  // Adds a list of currencies to the drop down menu
+
+  for (var i = 0; i < MERCHANT_CUR_TABLE.length; i++) {
+    newOption = document.createElement('option');
+
+    newOption.text = MERCHANT_CUR_TABLE[i];
+    document.getElementById('Currency').add(newOption);
+  }
+
+  // Initialise the default values
+
+  init_default_values();
+</script>
