@@ -22,7 +22,26 @@
         <tag>cupa-0.0.1-SNAPSHOT</tag>
         <url>scm:git:git@github.com:vsinkievic/cco_cupa.git</url>
     </scm>
-
+    <repositories>
+            <!-- Allow suppression with comments
+       // CHECKSTYLE:OFF
+       -->
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bpmid</id>
+            <name>BPMID DEV repo</name>
+            <url>http://192.168.11.5:8081/artifactory/repo</url>
+        </repository>
+        <repository>
+            <snapshots />
+            <id>snapshots</id>
+            <name>BPMID DEV repo - SNAPSHOTS</name>
+            <url>http://192.168.11.5:8081/artifactory/repo</url>
+        </repository>
+    </repositories>
+    
     <properties>
         <!--
             Build properties
