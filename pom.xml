@@ -40,7 +40,7 @@
             <url>http://192.168.11.5:8081/artifactory/repo</url>
         </repository>
     </repositories>
-    
+
         <!-- Allow suppression with comments
        // CHECKSTYLE:OFF
        -->
@@ -438,6 +438,7 @@
                 </executions>
                 <configuration>
                     <packageName>cupa</packageName>
+                    <fileName>${project.artifactId}-${project.version}-1.noarch.rpm</fileName>
                     <skipSigning>true</skipSigning>
                     <beforeInstallation>
                         <script>groupadd -g 792 -r -f cupa
