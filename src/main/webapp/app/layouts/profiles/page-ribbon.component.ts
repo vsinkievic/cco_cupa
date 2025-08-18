@@ -9,7 +9,7 @@ import { ProfileService } from './profile.service';
 @Component({
   selector: 'jhi-page-ribbon',
   template: `
-    @if (ribbonEnvSignal(); as ribbonEnv) {
+    @if (ribbonEnvSignal?.(); as ribbonEnv) {
       <div class="ribbon">
         <a href="">{{ { dev: 'Development' }[ribbonEnv] }}</a>
       </div>
