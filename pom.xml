@@ -339,7 +339,6 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <scope>test</scope>
         </dependency>
         <!-- jhipster-needle-maven-add-dependency -->
     </dependencies>
