@@ -17,6 +17,12 @@
         <!-- lookup parent from repository -->
     </parent>
 
+    <scm>
+        <developerConnection>scm:git:git@github.com:vsinkievic/cco_cupa.git</developerConnection>
+        <tag>cupa-0.0.1-SNAPSHOT</tag>
+        <url>scm:git:git@github.com:vsinkievic/cco_cupa.git</url>
+    </scm>
+
     <properties>
         <!--
             Build properties
