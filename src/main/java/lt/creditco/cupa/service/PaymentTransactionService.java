@@ -4,10 +4,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import lt.creditco.cupa.api.Payment;
+import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.api.PaymentRequest;
 import lt.creditco.cupa.domain.Client;
 import lt.creditco.cupa.domain.PaymentTransaction;
@@ -230,6 +232,7 @@ public class PaymentTransactionService {
         upPaymentRequest.setAmount(paymentTransaction.getAmount());
         upPaymentRequest.setCurrency(paymentTransaction.getCurrency().name());
         upPaymentRequest.setCardType(cardTypeFromPaymentBrand(paymentTransaction.getPaymentBrand()));
+        upPaymentRequest.setSendEmail(Objects.equals(paymentTransaction.getPaymentFlow(), PaymentFlow.EMAIL) ? 1 : 0);
 
         upPaymentRequest.setReplyUrl(paymentTransaction.getReplyUrl());
         upPaymentRequest.setBackofficeUrl(paymentTransaction.getBackofficeUrl());
