@@ -48,7 +48,37 @@ public class GatewayResponseDeserializer extends JsonDeserializer<GatewayRespons
         }
 
         if (replyNode != null && replyType != null) {
-            Object reply = mapper.convertValue(replyNode, replyType);
+            Object reply;
+            if (replyNode.isTextual()) {
+                // Handle case where reply is a string (e.g., HTML content)
+                try {
+                    reply = mapper
+                        .getTypeFactory()
+                        .constructType(replyType.getRawClass())
+                        .getRawClass()
+                        .getDeclaredConstructor()
+                        .newInstance();
+                    // Set the html field if it exists
+                    try {
+                        reply.getClass().getMethod("setHtml", String.class).invoke(reply, replyNode.asText());
+                    } catch (Exception e) {
+                        // If setHtml method doesn't exist, try to set the field directly
+                        try {
+                            reply.getClass().getDeclaredField("html").setAccessible(true);
+                            reply.getClass().getDeclaredField("html").set(reply, replyNode.asText());
+                        } catch (Exception ex) {
+                            // If html field doesn't exist, just use the string as is
+                            reply = replyNode.asText();
+                        }
+                    }
+                } catch (Exception e) {
+                    // Fallback to string if object creation fails
+                    reply = replyNode.asText();
+                }
+            } else {
+                // Handle case where reply is a JSON object
+                reply = mapper.convertValue(replyNode, replyType);
+            }
             response.setReply(reply);
         }
 

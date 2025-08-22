@@ -34,6 +34,8 @@ public class PaymentRequest {
 
     private String currency;
     private CardType cardType;
+
+    @JsonProperty("SendEmail")
     private int sendEmail;
 
     @JsonIgnore

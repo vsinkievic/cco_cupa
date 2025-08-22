@@ -155,6 +155,29 @@ class GatewayResponseTest {
     }
 
     @Test
+    void placeTransactionSuccessWithHtml() throws JsonProcessingException {
+        String json =
+            """
+            {
+                "response":{"statusCode":200,"message":"OK"},
+                "reply":"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?><html class=\\"mac chrome chrome5 webkit webkit5\\"><head><base href=\\"\\/\\"><meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1\\"><meta http-equiv=\\"X-UA-Compatible\\" content=\\"IE=edge, chrome=1\\"></head><body><h1>Please click on the link within your email to continue with the deposit process.</h1><br><h1>请点击电子邮件中的链接继续存款流程.</h1></body></html>"
+            }
+            """;
+
+        JavaType type = TypeFactory.defaultInstance().constructParametricType(GatewayResponse.class, PaymentReply.class);
+        GatewayResponse<PaymentReply> response = objectMapper.readValue(json, type);
+
+        assertNotNull(response);
+        assertNotNull(response.getResponse());
+        assertEquals(200, response.getResponse().getStatusCode());
+        assertEquals("OK", response.getResponse().getMessage());
+        assertEquals(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html class=\"mac chrome chrome5 webkit webkit5\"><head><base href=\"/\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge, chrome=1\"></head><body><h1>Please click on the link within your email to continue with the deposit process.</h1><br><h1>请点击电子邮件中的链接继续存款流程.</h1></body></html>",
+            response.getReply().getHtml()
+        );
+    }
+
+    @Test
     void getClientResponse() throws JsonProcessingException {
         String json =
             """

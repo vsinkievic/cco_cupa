@@ -213,7 +213,11 @@ public class PaymentTransactionService {
             if (upResponse.getResponse() == null) {
                 paymentTransaction.setStatus(TransactionStatus.FAILED);
                 statusDescription = "ERROR: Gateway response is null";
-            } else if (upResponse.getResponse().getStatusCode() == 200 || upResponse.getResponse().getStatusCode() == 201) {
+            } else if (
+                upResponse.getResponse().getStatusCode() == 200 ||
+                upResponse.getResponse().getStatusCode() == 201 ||
+                upResponse.getResponse().getStatusCode() == 210
+            ) {
                 paymentTransaction.setStatus(TransactionStatus.SENT_TO_GATEWAY);
                 statusDescription = prepareStatusDescription(upResponse.getResponse());
                 //                paymentTransaction.setTransactionId(upResponse.getResponse().ge

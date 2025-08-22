@@ -53,4 +53,7 @@ public class PaymentReply {
 
     @JsonProperty("url")
     private String url;
+
+    @JsonProperty("html")
+    private String html;
 }
