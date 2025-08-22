@@ -25,7 +25,7 @@
       "fieldType": "TransactionStatus",
       "fieldTypeDocumentation": "Enum for the status of a payment transaction lifecycle.\\nThis helps in tracking the state of each payment.",
       "fieldValidateRules": ["required"],
-      "fieldValues": "RECEIVED,PENDING,AWAITING_CALLBACK,SUCCESS,FAILED,CANCELLED,REFUNDED,QUERY_SUCCESS"
+      "fieldValues": "RECEIVED,PENDING,AWAITING_CALLBACK,SUCCESS,FAILED,ABANDONED,CANCELLED,REFUNDED,QUERY_SUCCESS"
     },
     {
       "fieldName": "statusDescription",
