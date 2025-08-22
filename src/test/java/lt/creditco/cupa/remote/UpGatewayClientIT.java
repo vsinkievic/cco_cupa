@@ -34,7 +34,7 @@ import org.springframework.boot.test.context.SpringBootTest;
         JacksonAutoConfiguration.class,
     }
 )
-@Disabled
+// @Disabled
 @Slf4j
 class UpGatewayClientIT {
 
@@ -177,14 +177,19 @@ class UpGatewayClientIT {
     void testQueryTransaction() throws JsonProcessingException {
         log.info("-------------------------------- testQueryTransaction --------------------------------");
         // Given
-        String orderId = "test-order-1754460577204";
+        String orderId = "ttt-007";
         //        String orderId = "408818978";
         //        String orderId = "2025080501";
         //        String orderId = "408617236";
         //String orderId = "FakeOrderId";
 
         // When
-        GatewayResponse<PaymentReply> transactionResponse = upGatewayClient.queryTransaction(orderId, gatewayConfig);
+        GatewayResponse<PaymentReply> transactionResponse = null;
+        try {
+            transactionResponse = upGatewayClient.queryTransaction(orderId, gatewayConfig);
+        } catch (Exception e) {
+            log.error("Error querying transaction", e);
+        }
 
         // Then
         RestTemplateBodyInterceptor.Trace trace = restTemplateBodyInterceptor.getLastTrace();

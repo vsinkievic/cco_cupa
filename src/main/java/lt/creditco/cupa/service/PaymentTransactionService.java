@@ -17,6 +17,7 @@ import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
+import lt.creditco.cupa.domain.util.Merger;
 import lt.creditco.cupa.remote.CardType;
 import lt.creditco.cupa.remote.ClientDetails;
 import lt.creditco.cupa.remote.GatewayConfig;
@@ -193,11 +194,34 @@ public class PaymentTransactionService {
     public PaymentTransactionDTO queryPaymentFromGateway(String transactionId, CupaApiContext.CupaApiContextData context) {
         LOG.debug("Request to query PaymentTransaction : {}", transactionId);
 
+        if (context.getMerchantContext() == null) {
+            throw new BadRequestAlertException("Merchant context is required", "PaymentTransaction", "merchantContextRequired");
+        }
+
         PaymentTransaction paymentTransaction = paymentTransactionRepository.findById(transactionId).orElse(null);
         if (paymentTransaction == null) {
             throw new BadRequestAlertException("PaymentTransaction not found", "PaymentTransaction", "paymentTransactionNotFound");
         }
 
+        if (!context.canAccessEntity(paymentTransaction)) {
+            throw new BadRequestAlertException(
+                String.format("You cannot query transactions for merchant: %s", paymentTransaction.getMerchantId()),
+                "PaymentTransaction",
+                "accessDenied"
+            );
+        }
+        GatewayConfig config = getGatewayConfig(context, paymentTransaction);
+        bodyInterceptor.clear();
+
+        GatewayResponse<PaymentReply> upResponse = upGatewayClient.queryTransaction(paymentTransaction.getOrderId(), config);
+
+        if (upResponse != null && upResponse.getResponse() != null) {
+            if (upResponse.getResponse().getStatusCode() == 200) {
+                RestTemplateBodyInterceptor.Trace trace = bodyInterceptor.getLastTrace();
+                String responseBody = trace != null ? trace.getResponseBody() : null;
+                paymentTransaction = mergeAndSaveIfNeeded(paymentTransaction, upResponse.getReply(), responseBody);
+            }
+        }
         return enrichWithRelatedData(paymentTransactionMapper.toDto(paymentTransaction));
     }
 
@@ -551,6 +575,104 @@ public class PaymentTransactionService {
 
         // Final fallback
         return "No status description available";
+    }
+
+    /**
+     * Merges fields from PaymentReply into PaymentTransaction and saves if changes were made.
+     * Uses the Merger utility to track changes and build a descriptive log.
+     *
+     * @param paymentTransaction the target PaymentTransaction entity
+     * @param paymentReply the source PaymentReply from gateway response
+     * @return the updated PaymentTransaction (saved if changes were made)
+     */
+    private PaymentTransaction mergeAndSaveIfNeeded(PaymentTransaction paymentTransaction, PaymentReply paymentReply, String responseBody) {
+        if (paymentReply == null) {
+            LOG.debug("PaymentReply is null, no merging needed for transaction: {}", paymentTransaction.getId());
+            return paymentTransaction;
+        }
+
+        // Use the Merger utility to track changes
+        Merger<PaymentTransaction> merger = Merger.of(paymentTransaction);
+
+        // Merge relevant fields from PaymentReply to PaymentTransaction
+        if (paymentReply.getAmount() != null) {
+            merger.mergeBigDecimal("Amount", paymentTransaction::getAmount, paymentReply.getAmount(), paymentTransaction::setAmount);
+        }
+        TransactionStatus newStatus = getTransactionStatusFromReply(paymentReply);
+        merger
+            .mergeBigDecimal("Balance", paymentTransaction::getBalance, paymentReply.getBalance(), paymentTransaction::setBalance)
+            .merge(
+                "Status Description",
+                paymentTransaction::getStatusDescription,
+                paymentReply.getDetail(),
+                paymentTransaction::setStatusDescription
+            )
+            .merge("Status", paymentTransaction::getStatus, newStatus, paymentTransaction::setStatus);
+
+        // Check if any changes were made
+        if (merger.hasChanges()) {
+            if (paymentReply.getDate() != null) {
+                paymentTransaction.setLastQueryData(responseBody);
+            }
+            // Log the changes with main payment fields for context
+            String changeLog = merger.getChangeLog();
+            LOG.info(
+                "Payment transaction updated - ID: {}, MerchantID: {}, OrderID: {}, Changes: {}",
+                paymentTransaction.getId(),
+                paymentTransaction.getMerchantId(),
+                paymentTransaction.getOrderId(),
+                changeLog
+            );
+
+            // Save the updated transaction
+            paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
+        } else {
+            LOG.debug(
+                "No changes detected for payment transaction - ID: {}, MerchantID: {}, OrderID: {}",
+                paymentTransaction.getId(),
+                paymentTransaction.getMerchantId(),
+                paymentTransaction.getOrderId()
+            );
+        }
+
+        return paymentTransaction;
+    }
+
+    /**
+     * Determines the transaction status based on the PaymentReply result and success fields.
+     *
+     * @param paymentReply the payment reply from the gateway
+     * @return the appropriate TransactionStatus
+     */
+    TransactionStatus getTransactionStatusFromReply(PaymentReply paymentReply) {
+        if (paymentReply == null) {
+            return null;
+        }
+
+        String result = paymentReply.getResult();
+        String success = paymentReply.getSuccess();
+
+        // Handle specific result values
+        if ("0".equals(result)) {
+            return TransactionStatus.SUCCESS;
+        }
+        if ("1".equals(result)) {
+            return TransactionStatus.PENDING;
+        }
+        if ("11".equals(result)) {
+            return TransactionStatus.ABANDONED;
+        }
+
+        // Handle other result values based on success field
+        if ("Y".equals(success)) {
+            return TransactionStatus.SUCCESS;
+        }
+        if ("N".equals(success)) {
+            return TransactionStatus.FAILED;
+        }
+
+        // Default case - if we can't determine status, return null
+        return null;
     }
 
     /**

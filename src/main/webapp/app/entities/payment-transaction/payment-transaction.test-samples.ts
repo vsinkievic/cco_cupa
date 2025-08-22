@@ -81,6 +81,19 @@ export const sampleWithNewData: NewPaymentTransaction = {
   version: null,
 };
 
+export const sampleWithAbandonedStatus: IPaymentTransaction = {
+  id: 'abandoned-123',
+  orderId: 'abandoned-order',
+  status: 'ABANDONED',
+  paymentBrand: 'UnionPay',
+  amount: 100.0,
+  currency: 'USD',
+  requestTimestamp: dayjs('2025-08-04T12:00'),
+  statusDescription: 'Transaction abandoned by user',
+  clientId: 'client-abandoned',
+  merchantId: 'merchant-abandoned',
+};
+
 Object.freeze(sampleWithNewData);
 Object.freeze(sampleWithRequiredData);
 Object.freeze(sampleWithPartialData);

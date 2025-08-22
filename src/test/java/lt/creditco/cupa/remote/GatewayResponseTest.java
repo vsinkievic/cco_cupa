@@ -87,6 +87,61 @@ class GatewayResponseTest {
     }
 
     @Test
+    void queryPaymentResponseSuccessWithDateNotZoned() throws JsonProcessingException {
+        String json =
+            """
+            {
+                "response":{"statusCode":200,"message":"OK"},
+                "reply":{
+                    "date":"2025-08-22T06:44:01.980",
+                    "reason":"Could not find this transaction",
+                    "amount":"22.04",
+                    "clientID":"tcln-001",
+                    "orderID":"ttt-006",
+                    "signature":"eae7bc256a2d279d04aa37ad5d66cf0b",
+                    "merchant":"CREDITCO PROCESSING(USD)",
+                    "url":"https://services.creditco.lt/?success=N&merchantID=2b47b788-d503-440d-9a93-2c9c6bea3552&orderID=ttt-006&clientID=tcln-001&detail=Transaction+abandoned&signature=eae7bc256a2d279d04aa37ad5d66cf0b",
+                    "result":"11",
+                    "balance":"0.00",
+                    "merchantID":"2b47b788-d503-440d-9a93-2c9c6bea3552",
+                    "success":"N",
+                    "currency":"USD",
+                    "detail":"Transaction abandoned"
+                }
+            }
+            """;
+
+        JavaType type = TypeFactory.defaultInstance().constructParametricType(GatewayResponse.class, PaymentReply.class);
+        GatewayResponse<PaymentReply> response = objectMapper.readValue(json, type);
+
+        assertNotNull(response);
+        assertNotNull(response.getResponse());
+        assertEquals(200, response.getResponse().getStatusCode());
+        assertEquals("OK", response.getResponse().getMessage());
+
+        PaymentReply reply = response.getReply();
+        assertNotNull(reply);
+        assertEquals(new BigDecimal("22.04"), reply.getAmount());
+        assertEquals(new BigDecimal("0.00"), reply.getBalance());
+        assertEquals("tcln-001", reply.getClientId());
+        assertEquals("USD", reply.getCurrency());
+        assertEquals(Instant.parse("2025-08-22T06:44:01.980Z"), reply.getDate());
+        assertEquals("Transaction abandoned", reply.getDetail());
+        assertEquals("CREDITCO PROCESSING(USD)", reply.getMerchant());
+        assertEquals("2b47b788-d503-440d-9a93-2c9c6bea3552", reply.getMerchantId());
+        assertEquals("ttt-006", reply.getOrderId());
+        assertEquals("Could not find this transaction", reply.getReason());
+        assertEquals("11", reply.getResult());
+        assertNull(reply.getSettlement()); // settlement field is not present in the JSON
+        assertEquals("eae7bc256a2d279d04aa37ad5d66cf0b", reply.getSignature());
+        assertEquals("N", reply.getSuccess());
+        assertEquals(
+            "https://services.creditco.lt/?success=N&merchantID=2b47b788-d503-440d-9a93-2c9c6bea3552&orderID=ttt-006&clientID=tcln-001&detail=Transaction+abandoned&signature=eae7bc256a2d279d04aa37ad5d66cf0b",
+            reply.getUrl()
+        );
+    }
+
+    @Test
     void queryPaymentResponseNotFound() throws JsonProcessingException {
         String json =
             """

@@ -2,6 +2,8 @@ package lt.creditco.cupa.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -18,6 +20,7 @@ import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import lt.creditco.cupa.remote.CardType;
 import lt.creditco.cupa.remote.PaymentCurrency;
+import lt.creditco.cupa.remote.PaymentReply;
 import lt.creditco.cupa.repository.ClientRepository;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.repository.PaymentTransactionRepository;
@@ -35,7 +38,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@Disabled
 class PaymentTransactionServiceTest {
 
     @Mock
@@ -247,5 +249,193 @@ class PaymentTransactionServiceTest {
         assertThat(enrichedDTO.getMerchantClientId()).isEqualTo("merchant-client-id");
         assertThat(enrichedDTO.getClientName()).isEqualTo("Test Client Name");
         assertThat(enrichedDTO.getMerchantName()).isEqualTo("Test Merchant Name");
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_Result0_ShouldReturnSuccess() {
+        // Given
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult("0");
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertEquals(TransactionStatus.SUCCESS, result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_Result1_ShouldReturnPending() {
+        // Given
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult("1");
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertEquals(TransactionStatus.PENDING, result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_Result11_ShouldReturnAbandoned() {
+        // Given
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult("11");
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertEquals(TransactionStatus.ABANDONED, result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_OtherResultWithSuccessY_ShouldReturnSuccess() {
+        // Given
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult("5");
+        paymentReply.setSuccess("Y");
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertEquals(TransactionStatus.SUCCESS, result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_OtherResultWithSuccessN_ShouldReturnFailed() {
+        // Given
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult("5");
+        paymentReply.setSuccess("N");
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertEquals(TransactionStatus.FAILED, result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_Result0WithSuccessN_ShouldReturnSuccess() {
+        // Given - Result "0" should take precedence over success field
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult("0");
+        paymentReply.setSuccess("N");
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertEquals(TransactionStatus.SUCCESS, result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_Result1WithSuccessY_ShouldReturnPending() {
+        // Given - Result "1" should take precedence over success field
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult("1");
+        paymentReply.setSuccess("Y");
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertEquals(TransactionStatus.PENDING, result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_Result11WithSuccessY_ShouldReturnAbandoned() {
+        // Given - Result "11" should take precedence over success field
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult("11");
+        paymentReply.setSuccess("Y");
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertEquals(TransactionStatus.ABANDONED, result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_OtherResultWithSuccessNull_ShouldReturnNull() {
+        // Given
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult("5");
+        paymentReply.setSuccess(null);
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_ResultNullWithSuccessY_ShouldReturnSuccess() {
+        // Given
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult(null);
+        paymentReply.setSuccess("Y");
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertEquals(TransactionStatus.SUCCESS, result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_ResultNullWithSuccessN_ShouldReturnFailed() {
+        // Given
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult(null);
+        paymentReply.setSuccess("N");
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertEquals(TransactionStatus.FAILED, result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_ResultNullWithSuccessNull_ShouldReturnNull() {
+        // Given
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult(null);
+        paymentReply.setSuccess(null);
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_NullPaymentReply_ShouldReturnNull() {
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(null);
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    void testGetTransactionStatusFromReply_OtherResultWithSuccessInvalid_ShouldReturnNull() {
+        // Given
+        PaymentReply paymentReply = new PaymentReply();
+        paymentReply.setResult("5");
+        paymentReply.setSuccess("INVALID");
+
+        // When
+        TransactionStatus result = paymentTransactionService.getTransactionStatusFromReply(paymentReply);
+
+        // Then
+        assertNull(result);
     }
 }

@@ -1,6 +1,7 @@
 package lt.creditco.cupa.remote;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -22,6 +23,7 @@ public class PaymentReply {
     private String currency;
 
     @JsonProperty("date")
+    @JsonDeserialize(using = GatewayInstantDeserializer.class)
     private Instant date;
 
     @JsonProperty("detail")

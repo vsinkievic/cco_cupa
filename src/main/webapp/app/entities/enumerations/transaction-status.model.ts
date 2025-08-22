@@ -9,6 +9,8 @@ export enum TransactionStatus {
 
   FAILED = 'FAILED',
 
+  ABANDONED = 'ABANDONED',
+
   CANCELLED = 'CANCELLED',
 
   REFUNDED = 'REFUNDED',
