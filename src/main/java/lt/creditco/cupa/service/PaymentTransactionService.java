@@ -228,6 +228,7 @@ public class PaymentTransactionService {
                 paymentTransaction = mergeAndSaveIfNeeded(paymentTransaction, upResponse.getReply(), responseBody);
             }
         }
+
         return enrichWithRelatedData(paymentTransactionMapper.toDto(paymentTransaction));
     }
 
@@ -842,12 +843,10 @@ public class PaymentTransactionService {
         }
 
         // Find the payment transaction by merchant ID and order ID
-        Optional<PaymentTransaction> optionalTransaction = paymentTransactionRepository.findByMerchantIdAndOrderId(
-            paymentReply.getMerchantId(),
-            paymentReply.getOrderId()
-        );
-
-        if (optionalTransaction.isEmpty()) {
+        PaymentTransaction paymentTransaction = paymentTransactionRepository
+            .findByMerchantIdAndOrderId(paymentReply.getMerchantId(), paymentReply.getOrderId())
+            .orElse(null);
+        if (paymentTransaction == null) {
             LOG.warn(
                 "No payment transaction found for webhook - MerchantID: {}, OrderID: {}",
                 paymentReply.getMerchantId(),
@@ -855,8 +854,6 @@ public class PaymentTransactionService {
             );
             return false;
         }
-
-        PaymentTransaction paymentTransaction = optionalTransaction.get();
 
         // Get merchant key for signature verification
         String merchantKey = getMerchantKeyForTransaction(paymentTransaction);
