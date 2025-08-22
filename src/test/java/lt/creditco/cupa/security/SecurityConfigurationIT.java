@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +30,42 @@ class SecurityConfigurationIT {
                 post("/api/authenticate").contentType(MediaType.APPLICATION_JSON).content("{\"username\":\"test\",\"password\":\"test\"}")
             )
             .andExpect(status().isUnauthorized()); // This will fail with invalid credentials, but endpoint is accessible
+    }
+
+    @Test
+    void shouldAllowAnonymousAccessToWebhookEndpoint() throws Exception {
+        // Mock signature verification to return true
+        try (
+            MockedStatic<lt.creditco.cupa.remote.SignatureVerifier> mockedSignatureVerifier = org.mockito.Mockito.mockStatic(
+                lt.creditco.cupa.remote.SignatureVerifier.class
+            )
+        ) {
+            mockedSignatureVerifier
+                .when(() ->
+                    lt.creditco.cupa.remote.SignatureVerifier.verifyWebhookSignature(
+                        org.mockito.ArgumentMatchers.any(lt.creditco.cupa.remote.PaymentReply.class),
+                        org.mockito.ArgumentMatchers.anyString()
+                    )
+                )
+                .thenReturn(true);
+
+            // Webhook endpoint should be publicly accessible (GET only) - empty request returns 200
+            mvc.perform(get("/public/webhook")).andExpect(status().isOk());
+
+            // Test with parameters - should return 400 because no transaction found, but endpoint is accessible
+            mvc
+                .perform(
+                    get("/public/webhook")
+                        .param("currency", "AUD")
+                        .param("success", "Y")
+                        .param("merchantID", "5adeaafb-1b6d-4bb2-ba11-1cce35e6b38e")
+                        .param("orderID", "110836419")
+                        .param("clientID", "NewClient")
+                        .param("amount", "25.00")
+                        .param("signature", "3a53e1e7251b08036cc2f9b8de9d2030")
+                )
+                .andExpect(status().isBadRequest()); // 400 because no transaction found, but endpoint is accessible
+        }
     }
 
     @Test

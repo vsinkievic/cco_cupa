@@ -18,6 +18,7 @@ import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import lt.creditco.cupa.domain.util.Merger;
+import lt.creditco.cupa.event.BalanceUpdateEvent;
 import lt.creditco.cupa.remote.CardType;
 import lt.creditco.cupa.remote.ClientDetails;
 import lt.creditco.cupa.remote.GatewayConfig;
@@ -37,6 +38,7 @@ import lt.creditco.cupa.web.context.CupaApiContext;
 import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -65,6 +67,8 @@ public class PaymentTransactionService {
 
     private final RestTemplateBodyInterceptor bodyInterceptor;
 
+    private final ApplicationEventPublisher eventPublisher;
+
     public PaymentTransactionService(
         PaymentTransactionRepository paymentTransactionRepository,
         PaymentTransactionMapper paymentTransactionMapper,
@@ -72,7 +76,8 @@ public class PaymentTransactionService {
         ClientRepository clientRepository,
         MerchantRepository merchantRepository,
         UpGatewayClient upGatewayClient,
-        RestTemplateBodyInterceptor bodyInterceptor
+        RestTemplateBodyInterceptor bodyInterceptor,
+        ApplicationEventPublisher eventPublisher
     ) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.paymentTransactionMapper = paymentTransactionMapper;
@@ -81,6 +86,7 @@ public class PaymentTransactionService {
         this.merchantRepository = merchantRepository;
         this.upGatewayClient = upGatewayClient;
         this.bodyInterceptor = bodyInterceptor;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -807,6 +813,123 @@ public class PaymentTransactionService {
 
             clientRepository.save(newClient);
             LOG.debug("Created new client: {}", clientId);
+        }
+    }
+
+    /**
+     * Process webhook notification from payment gateway.
+     * This method handles incoming webhook notifications and updates the corresponding payment transaction.
+     * Verifies the signature before processing the webhook.
+     *
+     * @param paymentReply the payment reply from the gateway
+     * @return true if webhook was processed successfully, false if signature verification failed or processing failed
+     */
+    public boolean processWebhook(PaymentReply paymentReply) {
+        LOG.info(
+            "Processing webhook for OrderID: {}, MerchantID: {}, Success: {}",
+            paymentReply.getOrderId(),
+            paymentReply.getMerchantId(),
+            paymentReply.getSuccess()
+        );
+
+        if (paymentReply.getOrderId() == null || paymentReply.getMerchantId() == null) {
+            LOG.warn(
+                "Webhook missing required fields - OrderID: {}, MerchantID: {}",
+                paymentReply.getOrderId(),
+                paymentReply.getMerchantId()
+            );
+            return false;
+        }
+
+        // Find the payment transaction by merchant ID and order ID
+        Optional<PaymentTransaction> optionalTransaction = paymentTransactionRepository.findByMerchantIdAndOrderId(
+            paymentReply.getMerchantId(),
+            paymentReply.getOrderId()
+        );
+
+        if (optionalTransaction.isEmpty()) {
+            LOG.warn(
+                "No payment transaction found for webhook - MerchantID: {}, OrderID: {}",
+                paymentReply.getMerchantId(),
+                paymentReply.getOrderId()
+            );
+            return false;
+        }
+
+        PaymentTransaction paymentTransaction = optionalTransaction.get();
+
+        // Get merchant key for signature verification
+        String merchantKey = getMerchantKeyForTransaction(paymentTransaction);
+        if (merchantKey == null) {
+            LOG.error("Cannot verify signature: merchant key not found for MerchantID: {}", paymentReply.getMerchantId());
+            return false;
+        }
+
+        // Verify signature
+        if (!lt.creditco.cupa.remote.SignatureVerifier.verifyWebhookSignature(paymentReply, merchantKey)) {
+            LOG.error(
+                "Signature verification failed for webhook - MerchantID: {}, OrderID: {}",
+                paymentReply.getMerchantId(),
+                paymentReply.getOrderId()
+            );
+            return false;
+        }
+
+        // Update the transaction with webhook data
+        paymentTransaction = mergeAndSaveIfNeeded(paymentTransaction, paymentReply, "Webhook notification");
+
+        // Check if balance is null and fire event for asynchronous balance update
+        if (paymentTransaction.getBalance() == null) {
+            LOG.info(
+                "Balance is null after webhook processing, firing balance update event for transaction: {}",
+                paymentTransaction.getId()
+            );
+            eventPublisher.publishEvent(
+                new BalanceUpdateEvent(
+                    this,
+                    paymentTransaction.getId(),
+                    paymentTransaction.getMerchantId(),
+                    paymentTransaction.getOrderId()
+                )
+            );
+        }
+
+        return true;
+    }
+
+    /**
+     * Get the merchant key for signature verification.
+     * This method retrieves the merchant key from the merchant context.
+     *
+     * @param paymentTransaction the payment transaction
+     * @return the merchant key, or null if not found
+     */
+    private String getMerchantKeyForTransaction(PaymentTransaction paymentTransaction) {
+        try {
+            // Get merchant from repository
+            var merchant = merchantRepository.findById(paymentTransaction.getMerchantId()).orElse(null);
+            if (merchant == null) {
+                LOG.warn("Merchant not found for ID: {}", paymentTransaction.getMerchantId());
+                return null;
+            }
+
+            // Get the appropriate merchant key based on the merchant mode
+            String merchantKey;
+            if (merchant.getMode() == lt.creditco.cupa.domain.enumeration.MerchantMode.LIVE) {
+                merchantKey = merchant.getRemoteProdMerchantKey();
+            } else {
+                merchantKey = merchant.getRemoteTestMerchantKey();
+            }
+
+            if (merchantKey == null || merchantKey.trim().isEmpty()) {
+                LOG.warn("Merchant key not found for MerchantID: {}, Mode: {}", paymentTransaction.getMerchantId(), merchant.getMode());
+                return null;
+            }
+
+            return merchantKey;
+        } catch (Exception e) {
+            LOG.error("Error retrieving merchant key for transaction: {}", paymentTransaction.getId(), e);
+            return null;
         }
     }
 }

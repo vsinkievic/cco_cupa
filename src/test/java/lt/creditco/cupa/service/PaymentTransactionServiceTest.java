@@ -21,6 +21,8 @@ import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import lt.creditco.cupa.remote.CardType;
 import lt.creditco.cupa.remote.PaymentCurrency;
 import lt.creditco.cupa.remote.PaymentReply;
+import lt.creditco.cupa.remote.RestTemplateBodyInterceptor;
+import lt.creditco.cupa.remote.UpGatewayClient;
 import lt.creditco.cupa.repository.ClientRepository;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.repository.PaymentTransactionRepository;
@@ -36,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentTransactionServiceTest {
@@ -54,6 +57,15 @@ class PaymentTransactionServiceTest {
 
     @Mock
     private MerchantRepository merchantRepository;
+
+    @Mock
+    private UpGatewayClient upGatewayClient;
+
+    @Mock
+    private RestTemplateBodyInterceptor bodyInterceptor;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private PaymentTransactionService paymentTransactionService;
@@ -96,7 +108,22 @@ class PaymentTransactionServiceTest {
         validPaymentRequest.setCurrency(PaymentCurrency.USD);
         validPaymentRequest.setCardType(CardType.UnionPay);
 
-        validContext = CupaApiContext.CupaApiContextData.builder().merchantId("MERCH-00001")/* .environment("TEST")*/.build();
+        validContext = CupaApiContext.CupaApiContextData.builder()
+            .merchantId("MERCH-00001")
+            .merchantContext(
+                CupaApiContext.MerchantContext.builder()
+                    .merchantId("MERCH-00001")
+                    .environment("TEST")
+                    .cupaApiKey("test-api-key")
+                    .mode(lt.creditco.cupa.domain.enumeration.MerchantMode.TEST)
+                    .status(lt.creditco.cupa.domain.enumeration.MerchantStatus.ACTIVE)
+                    .gatewayUrl("https://test-gateway.com")
+                    .gatewayMerchantId("test-gateway-merchant-id")
+                    .gatewayMerchantKey("test-gateway-merchant-key")
+                    .gatewayApiKey("test-gateway-api-key")
+                    .build()
+            )
+            .build();
 
         // Setup test data for enrichment tests
         client = new Client();
@@ -117,6 +144,18 @@ class PaymentTransactionServiceTest {
         when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
         when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
+        when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
+        when(bodyInterceptor.getLastTrace()).thenReturn(null);
+
+        // Mock client lookup for placePayment
+        Client testClient = new Client();
+        testClient.setId("CLN-00001");
+        testClient.setMerchantClientId("merchant-client-id");
+        testClient.setName("Test Client");
+        testClient.setEmailAddress("test@example.com");
+        testClient.setMobileNumber("123456789");
+        testClient.setClientPhone("987654321");
+        when(clientRepository.findById("CLN-00001")).thenReturn(Optional.of(testClient));
 
         // When
         PaymentTransactionDTO result = paymentTransactionService.save(validPaymentTransactionDTO, validContext);
