@@ -42,7 +42,7 @@ export class PaymentTransactionDetailComponent {
    */
   isQueryButtonEnabled(): boolean {
     const transaction = this.paymentTransaction();
-    if (!transaction || !transaction.status) {
+    if (!transaction?.status) {
       return false;
     }
 
@@ -66,7 +66,7 @@ export class PaymentTransactionDetailComponent {
       .queryPaymentFromGateway(transaction.id)
       .pipe(finalize(() => this.isQuerying.set(false)))
       .subscribe({
-        next: response => {
+        next(response) {
           if (response.body) {
             // Update the payment transaction with the new data
             // Note: In a real application, you might want to use a service to manage state
@@ -74,7 +74,7 @@ export class PaymentTransactionDetailComponent {
             window.location.reload(); // Simple approach for now
           }
         },
-        error: error => {
+        error(error) {
           console.error('Error querying payment from gateway:', error);
           // You might want to show an error message to the user here
         },

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
 
 import { DataUtils } from 'app/core/util/data-util.service';
@@ -16,6 +17,7 @@ describe('PaymentTransaction Management Detail Component', () => {
     await TestBed.configureTestingModule({
       imports: [PaymentTransactionDetailComponent],
       providers: [
+        provideHttpClient(),
         provideRouter(
           [
             {
