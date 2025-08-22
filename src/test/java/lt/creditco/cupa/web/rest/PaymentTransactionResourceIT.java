@@ -858,4 +858,26 @@ class PaymentTransactionResourceIT {
             .perform(get(ENTITY_API_URL_ID, "any-id").header("X-API-Key", "valid-api-key-for-cupa"))
             .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    @WithMockUser(username = "admin", authorities = "ROLE_ADMIN")
+    void shouldQueryPaymentFromGateway() throws Exception {
+        // Create a payment transaction first
+        PaymentTransaction paymentTransaction = createEntity(em);
+        paymentTransaction.setStatus(TransactionStatus.PENDING);
+        paymentTransaction = paymentTransactionRepository.saveAndFlush(paymentTransaction);
+
+        // Test the query endpoint
+        restPaymentTransactionMockMvc
+            .perform(post(ENTITY_API_URL_ID + "/query", paymentTransaction.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.id").value(paymentTransaction.getId()));
+    }
+
+    @Test
+    void shouldDenyAnonymousAccessToQueryEndpoint() throws Exception {
+        // Test that anonymous users cannot access the query endpoint
+        restPaymentTransactionMockMvc.perform(post(ENTITY_API_URL_ID + "/query", "any-id")).andExpect(status().isUnauthorized());
+    }
 }

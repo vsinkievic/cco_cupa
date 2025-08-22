@@ -68,6 +68,12 @@ export class PaymentTransactionService {
       .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
+  queryPaymentFromGateway(id: string): Observable<EntityResponseType> {
+    return this.http
+      .post<RestPaymentTransaction>(`${this.resourceUrl}/${id}/query`, {}, { observe: 'response' })
+      .pipe(map(res => this.convertResponseFromServer(res)));
+  }
+
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
     return this.http

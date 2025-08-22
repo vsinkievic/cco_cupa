@@ -132,6 +132,34 @@
         <button type="button" [routerLink]="['/payment-transaction', paymentTransactionRef.id, 'edit']" class="btn btn-primary">
           <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Edit</span>
         </button>
+
+        <button
+          type="button"
+          (click)="queryPaymentFromGateway()"
+          class="btn btn-info ms-2"
+          [disabled]="!isQueryButtonEnabled() || isQuerying()"
+          data-cy="queryPaymentButton"
+        >
+          <fa-icon icon="sync" [animation]="isQuerying() ? 'spin' : undefined"></fa-icon>&nbsp;
+          <span>{{ isQuerying() ? 'Querying...' : 'Query Payment' }}</span>
+        </button>
+
+        @if (isQuerying()) {
+          <div class="mt-3">
+            <div class="progress">
+              <div
+                class="progress-bar progress-bar-striped progress-bar-animated"
+                role="progressbar"
+                style="width: 100%"
+                aria-valuenow="100"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                Querying payment from gateway...
+              </div>
+            </div>
+          </div>
+        }
       </div>
     }
   </div>

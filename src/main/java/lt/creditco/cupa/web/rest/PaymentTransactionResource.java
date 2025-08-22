@@ -252,4 +252,34 @@ public class PaymentTransactionResource {
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
             .build();
     }
+
+    /**
+     * {@code POST  /payment-transactions/:id/query} : Query payment from gateway.
+     *
+     * @param id the id of the paymentTransactionDTO to query.
+     * @param request the HTTP request
+     * @param principal the authenticated principal
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated paymentTransactionDTO,
+     * or with status {@code 404 (Not Found)} if the paymentTransaction is not found.
+     */
+    @PostMapping("/{id}/query")
+    public ResponseEntity<PaymentTransactionDTO> queryPaymentFromGateway(
+        @PathVariable("id") String id,
+        HttpServletRequest request,
+        Principal principal
+    ) {
+        LOG.debug("REST request to query PaymentTransaction from gateway : {}", id);
+
+        User currentUser = getCurrentUser(principal);
+        if (currentUser == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        CupaApiContext.CupaApiContextData context = businessLogicService.extractBusinessContext(request, null, principal);
+        PaymentTransactionDTO paymentTransactionDTO = paymentTransactionService.queryPaymentFromGateway(id, context);
+
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, id))
+            .body(paymentTransactionDTO);
+    }
 }

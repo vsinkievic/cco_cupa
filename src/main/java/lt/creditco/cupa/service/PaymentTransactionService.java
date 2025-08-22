@@ -190,6 +190,17 @@ public class PaymentTransactionService {
         return enrichWithRelatedData(paymentTransactionMapper.toDto(paymentTransaction));
     }
 
+    public PaymentTransactionDTO queryPaymentFromGateway(String transactionId, CupaApiContext.CupaApiContextData context) {
+        LOG.debug("Request to query PaymentTransaction : {}", transactionId);
+
+        PaymentTransaction paymentTransaction = paymentTransactionRepository.findById(transactionId).orElse(null);
+        if (paymentTransaction == null) {
+            throw new BadRequestAlertException("PaymentTransaction not found", "PaymentTransaction", "paymentTransactionNotFound");
+        }
+
+        return enrichWithRelatedData(paymentTransactionMapper.toDto(paymentTransaction));
+    }
+
     private void placePayment(PaymentTransaction paymentTransaction, CupaApiContext.CupaApiContextData context) {
         GatewayConfig config = getGatewayConfig(context, paymentTransaction);
         bodyInterceptor.clear();
@@ -213,7 +224,11 @@ public class PaymentTransactionService {
             if (upResponse.getResponse() == null) {
                 paymentTransaction.setStatus(TransactionStatus.FAILED);
                 statusDescription = "ERROR: Gateway response is null";
-            } else if (upResponse.getResponse().getStatusCode() == 200 || upResponse.getResponse().getStatusCode() == 201 || upResponse.getResponse().getStatusCode() == 210) {
+            } else if (
+                upResponse.getResponse().getStatusCode() == 200 ||
+                upResponse.getResponse().getStatusCode() == 201 ||
+                upResponse.getResponse().getStatusCode() == 210
+            ) {
                 paymentTransaction.setStatus(TransactionStatus.PENDING);
                 statusDescription = prepareStatusDescription(upResponse.getResponse());
                 //                paymentTransaction.setTransactionId(upResponse.getResponse().ge
