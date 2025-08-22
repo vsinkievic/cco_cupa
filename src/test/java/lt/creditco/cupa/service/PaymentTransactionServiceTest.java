@@ -39,6 +39,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
+import tech.jhipster.config.JHipsterProperties;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentTransactionServiceTest {
@@ -66,6 +68,15 @@ class PaymentTransactionServiceTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private JHipsterProperties jHipsterProperties;
+
+    @Mock
+    private JHipsterProperties.Mail mailProperties;
+
+    @Mock
+    private Environment environment;
 
     @InjectMocks
     private PaymentTransactionService paymentTransactionService;
@@ -134,6 +145,13 @@ class PaymentTransactionServiceTest {
         merchant = new Merchant();
         merchant.setId("test-merchant-id");
         merchant.setName("Test Merchant Name");
+
+        // Setup JHipsterProperties mock
+        lenient().when(jHipsterProperties.getMail()).thenReturn(mailProperties);
+        lenient().when(mailProperties.getBaseUrl()).thenReturn("http://localhost:8080");
+
+        // Setup Environment mock for non-production profile
+        lenient().when(environment.getActiveProfiles()).thenReturn(new String[] { "dev" });
     }
 
     @Test

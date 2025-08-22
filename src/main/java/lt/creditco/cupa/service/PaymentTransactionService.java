@@ -19,6 +19,7 @@ import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import lt.creditco.cupa.domain.util.Merger;
 import lt.creditco.cupa.event.BalanceUpdateEvent;
+import lt.creditco.cupa.event.MerchantBalanceUpdateEvent;
 import lt.creditco.cupa.remote.CardType;
 import lt.creditco.cupa.remote.ClientDetails;
 import lt.creditco.cupa.remote.GatewayConfig;
@@ -39,10 +40,12 @@ import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tech.jhipster.config.JHipsterProperties;
 
 /**
  * Service Implementation for managing {@link lt.creditco.cupa.domain.PaymentTransaction}.
@@ -69,6 +72,10 @@ public class PaymentTransactionService {
 
     private final ApplicationEventPublisher eventPublisher;
 
+    private final JHipsterProperties jHipsterProperties;
+
+    private final Environment environment;
+
     public PaymentTransactionService(
         PaymentTransactionRepository paymentTransactionRepository,
         PaymentTransactionMapper paymentTransactionMapper,
@@ -77,7 +84,9 @@ public class PaymentTransactionService {
         MerchantRepository merchantRepository,
         UpGatewayClient upGatewayClient,
         RestTemplateBodyInterceptor bodyInterceptor,
-        ApplicationEventPublisher eventPublisher
+        ApplicationEventPublisher eventPublisher,
+        JHipsterProperties jHipsterProperties,
+        Environment environment
     ) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.paymentTransactionMapper = paymentTransactionMapper;
@@ -87,6 +96,22 @@ public class PaymentTransactionService {
         this.upGatewayClient = upGatewayClient;
         this.bodyInterceptor = bodyInterceptor;
         this.eventPublisher = eventPublisher;
+        this.jHipsterProperties = jHipsterProperties;
+        this.environment = environment;
+    }
+
+    /**
+     * Check if the current profile is production.
+     *
+     * @return true if running in production profile, false otherwise
+     */
+    private boolean isProdProfile() {
+        for (String profile : environment.getActiveProfiles()) {
+            if ("prod".equals(profile)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -160,6 +185,15 @@ public class PaymentTransactionService {
         // Validate before saving
         validatePaymentTransaction(paymentTransactionDTO);
 
+        // Set backoffice URL only for production profile
+        if (isProdProfile()) {
+            String baseUrl = jHipsterProperties.getMail().getBaseUrl();
+            if (baseUrl != null && !baseUrl.trim().isEmpty()) {
+                String backofficeUrl = baseUrl.endsWith("/") ? baseUrl + "public/webhook" : baseUrl + "/public/webhook";
+                paymentTransactionDTO.setBackofficeUrl(backofficeUrl);
+            }
+        }
+
         PaymentTransaction paymentTransaction = paymentTransactionMapper.toEntity(paymentTransactionDTO);
 
         if (paymentTransaction.getId() == null) {
@@ -229,6 +263,17 @@ public class PaymentTransactionService {
             }
         }
 
+        // Publish event to update merchant balance
+        if (paymentTransaction.getBalance() != null) {
+            LOG.info(
+                "Publishing merchant balance update event for merchantId: {}, balance: {}",
+                paymentTransaction.getMerchantId(),
+                paymentTransaction.getBalance()
+            );
+            eventPublisher.publishEvent(
+                new MerchantBalanceUpdateEvent(this, paymentTransaction.getMerchantId(), paymentTransaction.getBalance())
+            );
+        }
         return enrichWithRelatedData(paymentTransactionMapper.toDto(paymentTransaction));
     }
 
