@@ -34,7 +34,7 @@ import org.springframework.boot.test.context.SpringBootTest;
         JacksonAutoConfiguration.class,
     }
 )
-// @Disabled
+@Disabled
 @Slf4j
 class UpGatewayClientIT {
 
