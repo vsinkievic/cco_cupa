@@ -54,7 +54,7 @@ enum Currency {
  */
 enum TransactionStatus {
     RECEIVED,           // Initial request received from the merchant
-    SENT_TO_GATEWAY,    // Request forwarded to the remote gateway
+    PENDING,    // Request forwarded to the remote gateway
     AWAITING_CALLBACK,  // Waiting for the asynchronous notification from the gateway
     SUCCESS,            // Payment completed successfully
     FAILED,             // Payment failed

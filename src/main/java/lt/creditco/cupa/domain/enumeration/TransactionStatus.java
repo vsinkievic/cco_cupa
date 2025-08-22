@@ -6,7 +6,7 @@ package lt.creditco.cupa.domain.enumeration;
  */
 public enum TransactionStatus {
     RECEIVED,
-    SENT_TO_GATEWAY,
+    PENDING,
     AWAITING_CALLBACK,
     SUCCESS,
     FAILED,

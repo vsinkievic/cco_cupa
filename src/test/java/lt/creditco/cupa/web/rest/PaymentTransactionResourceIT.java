@@ -73,7 +73,7 @@ class PaymentTransactionResourceIT {
     private static final String UPDATED_GATEWAY_TRANSACTION_ID = "BBBBBBBBBB";
 
     private static final TransactionStatus DEFAULT_STATUS = TransactionStatus.RECEIVED;
-    private static final TransactionStatus UPDATED_STATUS = TransactionStatus.SENT_TO_GATEWAY;
+    private static final TransactionStatus UPDATED_STATUS = TransactionStatus.PENDING;
 
     private static final PaymentFlow DEFAULT_PAYMENT_FLOW = PaymentFlow.EMAIL;
     private static final PaymentFlow UPDATED_PAYMENT_FLOW = PaymentFlow.ONLINE;

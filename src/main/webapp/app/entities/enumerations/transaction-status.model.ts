@@ -1,7 +1,7 @@
 export enum TransactionStatus {
   RECEIVED = 'RECEIVED',
 
-  SENT_TO_GATEWAY = 'SENT_TO_GATEWAY',
+  PENDING = 'PENDING',
 
   AWAITING_CALLBACK = 'AWAITING_CALLBACK',
 
