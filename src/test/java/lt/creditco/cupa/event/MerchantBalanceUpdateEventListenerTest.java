@@ -52,7 +52,8 @@ class MerchantBalanceUpdateEventListenerTest {
         verify(merchantRepository).save(merchantCaptor.capture());
 
         Merchant savedMerchant = merchantCaptor.getValue();
-        assertThat(savedMerchant.getBalance()).isEqualTo(new BigDecimal("150.00"));
+        // The implementation REPLACES the balance, it doesn't add to it
+        assertThat(savedMerchant.getBalance()).isEqualTo(new BigDecimal("50.00"));
     }
 
     @Test
@@ -94,6 +95,31 @@ class MerchantBalanceUpdateEventListenerTest {
 
         // When
         eventListener.handleMerchantBalanceUpdateEvent(testEvent);
+
+        // Then
+        verify(merchantRepository, never()).save(any(Merchant.class));
+    }
+
+    @Test
+    void shouldNotUpdateWhenBalanceIsTheSame() {
+        // Given
+        testMerchant.setBalance(new BigDecimal("50.00")); // Same as event amount
+        when(merchantRepository.findById("test-merchant-id")).thenReturn(Optional.of(testMerchant));
+
+        // When
+        eventListener.handleMerchantBalanceUpdateEvent(testEvent);
+
+        // Then
+        verify(merchantRepository, never()).save(any(Merchant.class));
+    }
+
+    @Test
+    void shouldHandleNullAmount() {
+        // Given
+        MerchantBalanceUpdateEvent eventWithNullAmount = new MerchantBalanceUpdateEvent(this, "test-merchant-id", null);
+
+        // When
+        eventListener.handleMerchantBalanceUpdateEvent(eventWithNullAmount);
 
         // Then
         verify(merchantRepository, never()).save(any(Merchant.class));

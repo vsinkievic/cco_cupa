@@ -19,7 +19,12 @@ public class MerchantBalanceUpdateEventListener {
     @EventListener
     @Async
     public void handleMerchantBalanceUpdateEvent(MerchantBalanceUpdateEvent event) {
-        log.info("Processing merchant balance update event for merchantId: {}, amount: {}", event.getMerchantId(), event.getAmount());
+        log.debug("Processing merchant balance update event for merchantId: {}, amount: {}", event.getMerchantId(), event.getAmount());
+
+        if (event.getAmount() == null) {
+            log.warn("Balance is null for merchant balance update event for merchantId: {}", event.getMerchantId());
+            return;
+        }
 
         try {
             Merchant merchant = merchantRepository.findById(event.getMerchantId()).orElse(null);
@@ -29,17 +34,20 @@ public class MerchantBalanceUpdateEventListener {
             }
 
             BigDecimal currentBalance = merchant.getBalance();
-            BigDecimal newBalance = currentBalance != null ? currentBalance.add(event.getAmount()) : event.getAmount();
 
-            merchant.setBalance(newBalance);
+            if (currentBalance != null && currentBalance.compareTo(event.getAmount()) == 0) {
+                log.debug("Balance is the same for merchant balance update event for merchantId: {}", event.getMerchantId());
+                return;
+            }
+
+            merchant.setBalance(event.getAmount());
             merchantRepository.save(merchant);
 
             log.info(
-                "Successfully updated merchant balance - MerchantID: {}, old balance: {}, amount: {}, new balance: {}",
+                "Successfully updated merchant balance - MerchantID: {}, old balance: {}, new balance: {}",
                 event.getMerchantId(),
                 currentBalance,
-                event.getAmount(),
-                newBalance
+                event.getAmount()
             );
         } catch (Exception e) {
             log.error("Error processing merchant balance update event for merchantId: {}", event.getMerchantId(), e);
