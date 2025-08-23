@@ -12,6 +12,7 @@ import lt.creditco.cupa.api.Payment;
 import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.api.PaymentRequest;
 import lt.creditco.cupa.domain.Client;
+import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.PaymentTransaction;
 import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.domain.enumeration.Currency;
@@ -887,15 +888,24 @@ public class PaymentTransactionService {
             return false;
         }
 
+        Merchant merchant = merchantRepository
+            .findByRemoteTestMerchantId(paymentReply.getMerchantId())
+            .orElse(merchantRepository.findByRemoteProdMerchantId(paymentReply.getMerchantId()).orElse(null));
+        if (merchant == null) {
+            LOG.warn("Merchant not found for remote ID: {}", paymentReply.getMerchantId());
+            return false;
+        }
+
         // Find the payment transaction by merchant ID and order ID
         PaymentTransaction paymentTransaction = paymentTransactionRepository
-            .findByMerchantIdAndOrderId(paymentReply.getMerchantId(), paymentReply.getOrderId())
+            .findByMerchantIdAndOrderId(merchant.getId(), paymentReply.getOrderId())
             .orElse(null);
         if (paymentTransaction == null) {
             LOG.warn(
-                "No payment transaction found for webhook - MerchantID: {}, OrderID: {}",
-                paymentReply.getMerchantId(),
-                paymentReply.getOrderId()
+                "No payment transaction found for webhook - resolvedMerchantID: {}, OrderID: {}, remoteMerchantID: {}",
+                merchant.getId(),
+                paymentReply.getOrderId(),
+                paymentReply.getMerchantId()
             );
             return false;
         }
