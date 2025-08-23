@@ -33,6 +33,22 @@ public interface MerchantRepository extends JpaRepository<Merchant, String> {
      */
     Optional<Merchant> findOneByCupaProdApiKey(String cupaProdApiKey);
 
+    /**
+     * Find a merchant by remote test merchant ID.
+     *
+     * @param remoteTestMerchantId the remote test merchant ID
+     * @return the merchant if found
+     */
+    Optional<Merchant> findByRemoteTestMerchantId(String remoteTestMerchantId);
+
+    /**
+     * Find a merchant by remote production merchant ID.
+     *
+     * @param remoteProdMerchantId the remote production merchant ID
+     * @return the merchant if found
+     */
+    Optional<Merchant> findByRemoteProdMerchantId(String remoteProdMerchantId);
+
     @Query("select merchant from Merchant merchant where merchant.id =:id")
     Optional<Merchant> findOneWithToOneRelationships(@Param("id") String id);
 
