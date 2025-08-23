@@ -11,6 +11,7 @@ import java.util.UUID;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
@@ -350,5 +351,23 @@ public class Merchant extends AbstractAuditingEntity<String> implements Serializ
             ", remoteProdMerchantKey='" + getRemoteProdMerchantKey() + "'" +
             ", remoteProdApiKey='" + getRemoteProdApiKey() + "'" +
             "}";
+    }
+
+    /**
+     * Get the merchant key for signature verification.
+     * This method retrieves the merchant key from the merchant context.
+     *
+     * @return the merchant key, or null if not found
+     */
+    public String getMerchantKeyByMode() {
+        String merchantKey;
+        if (getMode() == lt.creditco.cupa.domain.enumeration.MerchantMode.LIVE) {
+            merchantKey = getRemoteProdMerchantKey();
+        } else {
+            merchantKey = getRemoteTestMerchantKey();
+        }
+        if (StringUtils.isBlank(merchantKey)) return null;
+
+        return merchantKey;
     }
 }

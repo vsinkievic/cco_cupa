@@ -260,6 +260,9 @@ public class PaymentTransactionService {
             if (upResponse.getResponse().getStatusCode() == 200) {
                 RestTemplateBodyInterceptor.Trace trace = bodyInterceptor.getLastTrace();
                 String responseBody = trace != null ? trace.getResponseBody() : null;
+                paymentTransaction = paymentTransactionRepository // reread the payment transaction to get the latest state
+                    .findById(paymentTransaction.getId())
+                    .orElseThrow(() -> new RuntimeException("PaymentTransaction not found id=" + transactionId));
                 paymentTransaction = mergeAndSaveIfNeeded(paymentTransaction, upResponse.getReply(), responseBody);
             }
         }
@@ -896,6 +899,23 @@ public class PaymentTransactionService {
             return false;
         }
 
+        // Get merchant key for signature verification
+        String merchantKey = merchant.getMerchantKeyByMode();
+        if (merchantKey == null) {
+            LOG.error("Cannot verify signature: merchant key not found for MerchantID: {}", paymentReply.getMerchantId());
+            return false;
+        }
+
+        // Verify signature
+        if (!lt.creditco.cupa.remote.SignatureVerifier.verifyWebhookSignature(paymentReply, merchantKey)) {
+            LOG.error(
+                "Signature verification failed for webhook - MerchantID: {}, OrderID: {}",
+                paymentReply.getMerchantId(),
+                paymentReply.getOrderId()
+            );
+            return false;
+        }
+
         // Find the payment transaction by merchant ID and order ID
         PaymentTransaction paymentTransaction = paymentTransactionRepository
             .findByMerchantIdAndOrderId(merchant.getId(), paymentReply.getOrderId())
@@ -910,21 +930,14 @@ public class PaymentTransactionService {
             return false;
         }
 
-        // Get merchant key for signature verification
-        String merchantKey = getMerchantKeyForTransaction(paymentTransaction);
-        if (merchantKey == null) {
-            LOG.error("Cannot verify signature: merchant key not found for MerchantID: {}", paymentReply.getMerchantId());
-            return false;
-        }
-
-        // Verify signature
-        if (!lt.creditco.cupa.remote.SignatureVerifier.verifyWebhookSignature(paymentReply, merchantKey)) {
-            LOG.error(
-                "Signature verification failed for webhook - MerchantID: {}, OrderID: {}",
-                paymentReply.getMerchantId(),
-                paymentReply.getOrderId()
+        // Check if the merchant ID in the payment transaction matches the resolved merchant ID
+        if (!merchant.getId().equals(paymentTransaction.getMerchantId())) {
+            LOG.warn(
+                "Merchant ID mismatch for transaction id = {}: resolvedMerchantID: {}, paymentTransactionMerchantID: {}",
+                paymentTransaction.getId(),
+                merchant.getId(),
+                paymentTransaction.getMerchantId()
             );
-            return false;
         }
 
         // Update the transaction with webhook data
@@ -947,41 +960,5 @@ public class PaymentTransactionService {
         }
 
         return true;
-    }
-
-    /**
-     * Get the merchant key for signature verification.
-     * This method retrieves the merchant key from the merchant context.
-     *
-     * @param paymentTransaction the payment transaction
-     * @return the merchant key, or null if not found
-     */
-    private String getMerchantKeyForTransaction(PaymentTransaction paymentTransaction) {
-        try {
-            // Get merchant from repository
-            var merchant = merchantRepository.findById(paymentTransaction.getMerchantId()).orElse(null);
-            if (merchant == null) {
-                LOG.warn("Merchant not found for ID: {}", paymentTransaction.getMerchantId());
-                return null;
-            }
-
-            // Get the appropriate merchant key based on the merchant mode
-            String merchantKey;
-            if (merchant.getMode() == lt.creditco.cupa.domain.enumeration.MerchantMode.LIVE) {
-                merchantKey = merchant.getRemoteProdMerchantKey();
-            } else {
-                merchantKey = merchant.getRemoteTestMerchantKey();
-            }
-
-            if (merchantKey == null || merchantKey.trim().isEmpty()) {
-                LOG.warn("Merchant key not found for MerchantID: {}, Mode: {}", paymentTransaction.getMerchantId(), merchant.getMode());
-                return null;
-            }
-
-            return merchantKey;
-        } catch (Exception e) {
-            LOG.error("Error retrieving merchant key for transaction: {}", paymentTransaction.getId(), e);
-            return null;
-        }
     }
 }
