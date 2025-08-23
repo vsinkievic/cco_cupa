@@ -268,7 +268,7 @@ public class PaymentTransactionService {
         }
 
         // Publish event to update merchant balance
-        if (paymentTransaction.getBalance() != null) {
+        if (paymentTransaction.isSuccess() && paymentTransaction.getBalance() != null) {
             LOG.info(
                 "Publishing merchant balance update event for merchantId: {}, balance: {}",
                 paymentTransaction.getMerchantId(),

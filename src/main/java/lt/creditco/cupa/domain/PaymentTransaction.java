@@ -443,6 +443,10 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
         return getClass().hashCode();
     }
 
+    public boolean isSuccess() {
+        return getStatus() == TransactionStatus.SUCCESS;
+    }
+
     // prettier-ignore
     @Override
     public String toString() {
