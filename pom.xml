@@ -4,7 +4,7 @@
 
     <groupId>lt.creditco.cupa</groupId>
     <artifactId>cupa</artifactId>
-    <version>0.0.12-SNAPSHOT</version>
+    <version>0.0.12</version>
     <packaging>jar</packaging>
     <name>Cupa</name>
     <description>Description for Cupa</description>
@@ -18,7 +18,7 @@
 
     <scm>
         <developerConnection>scm:git:git@github.com:vsinkievic/cco_cupa.git</developerConnection>
-        <tag>cupa-0.0.1-SNAPSHOT</tag>
+        <tag>cupa-0.0.12</tag>
         <url>scm:git:git@github.com:vsinkievic/cco_cupa.git</url>
     </scm>
     <repositories>
