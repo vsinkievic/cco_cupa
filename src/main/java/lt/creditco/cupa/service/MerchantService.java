@@ -4,8 +4,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.Merchant;
-import lt.creditco.cupa.domain.User;
+import com.bpmid.vapp.domain.User;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.service.dto.MerchantDTO;
 import lt.creditco.cupa.service.mapper.MerchantMapper;
@@ -114,6 +115,17 @@ public class MerchantService {
     }
 
     /**
+     * Get the count of all merchants.
+     *
+     * @return the count of entities.
+     */
+    @Transactional(readOnly = true)
+    public long count() {
+        log.debug("Request to count all Merchants");
+        return merchantRepository.count();
+    }
+
+    /**
      * Find a merchant by CUPA test API key.
      *
      * @param cupaApiKey the test API key
@@ -156,15 +168,15 @@ public class MerchantService {
             return findAll(pageable);
         }
 
-        // Non-admin users get limited data for comboboxes and forms, but only for their merchants
-        Set<String> merchantIds = user.getMerchantIdsSet();
-        if (merchantIds.isEmpty()) {
-            log.warn("User {} has no merchant access - returning empty results", user.getLogin());
-            return Page.empty(pageable);
-        }
+        if (user instanceof CupaUser cupaUser) {
+            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+            if (merchantIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+            Page<Merchant> merchants = merchantRepository.findAllByMerchantIds(merchantIds, pageable);
+            return merchants.map(merchant -> mapToLimitedDto(merchant));
+        } else return Page.empty(pageable);
 
-        Page<Merchant> merchants = merchantRepository.findAllByMerchantIds(merchantIds, pageable);
-        return merchants.map(merchant -> mapToLimitedDto(merchant));
     }
 
     /**
@@ -190,24 +202,15 @@ public class MerchantService {
             return findOne(id);
         }
 
-        // Non-admin users get limited data for comboboxes and forms, but only for their merchants
-        Set<String> merchantIds = user.getMerchantIdsSet();
-        if (merchantIds.isEmpty()) {
-            log.warn("User {} has no merchant access - returning empty result", user.getLogin());
-            return Optional.empty();
-        }
-
-        return merchantRepository.findByIdAndMerchantIds(id, merchantIds).map(merchant -> mapToLimitedDto(merchant));
+        if (user instanceof CupaUser cupaUser) {
+            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+            if (merchantIds.isEmpty()) {
+                return Optional.empty();
+            }
+            return merchantRepository.findByIdAndMerchantIds(id, merchantIds).map(merchant -> mapToLimitedDto(merchant));
+        } else return Optional.empty();
     }
 
-    /**
-     * Maps a Merchant entity to a limited DTO with only essential fields for non-admin users.
-     * This allows non-admin users to see merchant data in comboboxes and forms
-     * while restricting access to sensitive information.
-     *
-     * @param merchant the merchant entity
-     * @return a limited DTO with only id, name, mode, and currency fields
-     */
     private MerchantDTO mapToLimitedDto(Merchant merchant) {
         MerchantDTO dto = new MerchantDTO();
         dto.setId(merchant.getId());

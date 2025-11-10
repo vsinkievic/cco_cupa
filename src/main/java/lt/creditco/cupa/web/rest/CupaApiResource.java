@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
@@ -69,7 +68,7 @@ public class CupaApiResource {
         );
 
         // Check if user can access the specified merchant
-        if (context.getUser() != null && !context.getUser().getMerchantIdsSet().contains(merchantId)) {
+        if (context.getCupaUser() != null && !context.getCupaUser().getMerchantIdsSet().contains(merchantId)) {
             throw new AccessDeniedException(String.format("Access denied for merchant: %s", merchantId));
         }
 

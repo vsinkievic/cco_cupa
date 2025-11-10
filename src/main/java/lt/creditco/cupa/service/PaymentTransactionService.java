@@ -11,10 +11,10 @@ import java.util.UUID;
 import lt.creditco.cupa.api.Payment;
 import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.api.PaymentRequest;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.Client;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.PaymentTransaction;
-import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
@@ -37,7 +37,7 @@ import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
 import lt.creditco.cupa.service.mapper.PaymentMapper;
 import lt.creditco.cupa.service.mapper.PaymentTransactionMapper;
 import lt.creditco.cupa.web.context.CupaApiContext;
-import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
+import com.bpmid.vapp.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -46,6 +46,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.bpmid.vapp.domain.User;
+
 import tech.jhipster.config.JHipsterProperties;
 
 /**
@@ -457,6 +460,17 @@ public class PaymentTransactionService {
     }
 
     /**
+     * Get the count of all payment transactions.
+     *
+     * @return the count of entities.
+     */
+    @Transactional(readOnly = true)
+    public long count() {
+        LOG.debug("Request to count all PaymentTransactions");
+        return paymentTransactionRepository.count();
+    }
+
+    /**
      * Enrich PaymentTransactionDTO with related entity data.
      * This method loads the Client and Merchant entities to populate
      * merchantClientId, clientName, and merchantName fields.
@@ -745,8 +759,11 @@ public class PaymentTransactionService {
         if (user.hasAuthority("ROLE_ADMIN")) {
             return findAll(pageable);
         }
-
-        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (! (user instanceof CupaUser)){
+            return Page.empty(pageable);
+        }
+        CupaUser cupaUser = (CupaUser) user;
+        Set<String> merchantIds = cupaUser.getMerchantIdsSet();
         if (merchantIds.isEmpty()) {
             return Page.empty(pageable);
         }
@@ -771,7 +788,11 @@ public class PaymentTransactionService {
             return findAllWithEagerRelationships(pageable);
         }
 
-        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (! (user instanceof CupaUser)){
+            return Page.empty(pageable);
+        }
+        CupaUser cupaUser = (CupaUser) user;
+        Set<String> merchantIds = cupaUser.getMerchantIdsSet();
         if (merchantIds.isEmpty()) {
             return Page.empty(pageable);
         }
@@ -797,7 +818,11 @@ public class PaymentTransactionService {
             return findOne(id);
         }
 
-        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (! (user instanceof CupaUser)){
+            return Optional.empty();
+        }
+        CupaUser cupaUser = (CupaUser) user;
+        Set<String> merchantIds = cupaUser.getMerchantIdsSet();
         if (merchantIds.isEmpty()) {
             return Optional.empty();
         }

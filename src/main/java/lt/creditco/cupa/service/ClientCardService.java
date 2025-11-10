@@ -2,9 +2,10 @@ package lt.creditco.cupa.service;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
+
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.ClientCard;
-import lt.creditco.cupa.domain.User;
+import com.bpmid.vapp.domain.User;
 import lt.creditco.cupa.repository.ClientCardRepository;
 import lt.creditco.cupa.service.dto.ClientCardDTO;
 import lt.creditco.cupa.service.mapper.ClientCardMapper;
@@ -123,6 +124,17 @@ public class ClientCardService {
     }
 
     /**
+     * Get the count of all client cards.
+     *
+     * @return the count of entities.
+     */
+    @Transactional(readOnly = true)
+    public long count() {
+        LOG.debug("Request to count all ClientCards");
+        return clientCardRepository.count();
+    }
+
+    /**
      * Get all the client cards with access control based on user's merchant access.
      *
      * @param pageable the pagination information.
@@ -142,12 +154,13 @@ public class ClientCardService {
             return findAll(pageable);
         }
 
-        Set<String> merchantIds = user.getMerchantIdsSet();
-        if (merchantIds.isEmpty()) {
-            return Page.empty(pageable);
-        }
-
-        return clientCardRepository.findAllByMerchantIds(merchantIds, pageable).map(clientCardMapper::toDto);
+        if (user instanceof CupaUser cupaUser) {
+            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+            if (merchantIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+            return clientCardRepository.findAllByMerchantIds(merchantIds, pageable).map(clientCardMapper::toDto);
+        } else return Page.empty(pageable);
     }
 
     /**
@@ -169,12 +182,13 @@ public class ClientCardService {
             return findAllWithEagerRelationships(pageable);
         }
 
-        Set<String> merchantIds = user.getMerchantIdsSet();
-        if (merchantIds.isEmpty()) {
-            return Page.empty(pageable);
-        }
-
-        return clientCardRepository.findAllByMerchantIds(merchantIds, pageable).map(clientCardMapper::toDto);
+        if (user instanceof CupaUser cupaUser) {
+            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+            if (merchantIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+            return clientCardRepository.findAllByMerchantIds(merchantIds, pageable).map(clientCardMapper::toDto);
+        } else return Page.empty(pageable);
     }
 
     /**
@@ -197,11 +211,12 @@ public class ClientCardService {
             return findOne(id);
         }
 
-        Set<String> merchantIds = user.getMerchantIdsSet();
-        if (merchantIds.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return clientCardRepository.findByIdAndMerchantIds(id, merchantIds).map(clientCardMapper::toDto);
+        if (user instanceof CupaUser cupaUser) {
+            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+            if (merchantIds.isEmpty()) {
+                return Optional.empty();
+            }
+            return clientCardRepository.findByIdAndMerchantIds(id, merchantIds).map(clientCardMapper::toDto);
+        } else return Optional.empty();
     }
 }

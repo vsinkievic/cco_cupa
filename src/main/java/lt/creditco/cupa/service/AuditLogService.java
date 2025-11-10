@@ -1,11 +1,13 @@
 package lt.creditco.cupa.service;
 
+import com.bpmid.vapp.domain.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
+
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.AuditLog;
-import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.repository.AuditLogRepository;
 import lt.creditco.cupa.service.dto.AuditLogDTO;
 import lt.creditco.cupa.service.mapper.AuditLogMapper;
@@ -128,6 +130,17 @@ public class AuditLogService {
         auditLogRepository.deleteById(id);
     }
 
+    /**
+     * Get the count of all audit logs.
+     *
+     * @return the count of entities.
+     */
+    @Transactional(readOnly = true)
+    public long count() {
+        LOG.debug("Request to count all AuditLogs");
+        return auditLogRepository.count();
+    }
+
     public void updateAuditLogWithResponse(Long requestId, ApiRequestDetails apiRequestDetails) {
         LOG.debug("Request to update AuditLog with response : {}", requestId);
 
@@ -183,12 +196,15 @@ public class AuditLogService {
             return findAll(pageable);
         }
 
-        Set<String> merchantIds = user.getMerchantIdsSet();
-        if (merchantIds.isEmpty()) {
-            return Page.empty(pageable);
-        }
+        if (user instanceof CupaUser cupaUser) {
+            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+            if (merchantIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+            return auditLogRepository.findAllByMerchantIds(merchantIds, pageable).map(auditLogMapper::toDto);
+        } else return Page.empty(pageable);
 
-        return auditLogRepository.findAllByMerchantIds(merchantIds, pageable).map(auditLogMapper::toDto);
+
     }
 
     /**
@@ -210,12 +226,13 @@ public class AuditLogService {
             return findAllWithEagerRelationships(pageable);
         }
 
-        Set<String> merchantIds = user.getMerchantIdsSet();
-        if (merchantIds.isEmpty()) {
-            return Page.empty(pageable);
-        }
-
-        return auditLogRepository.findAllByMerchantIds(merchantIds, pageable).map(auditLogMapper::toDto);
+        if (user instanceof CupaUser cupaUser) {
+            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+            if (merchantIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+            return auditLogRepository.findAllByMerchantIds(merchantIds, pageable).map(auditLogMapper::toDto);
+        } else return Page.empty(pageable);
     }
 
     /**
@@ -238,11 +255,12 @@ public class AuditLogService {
             return findOne(id);
         }
 
-        Set<String> merchantIds = user.getMerchantIdsSet();
-        if (merchantIds.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return auditLogRepository.findByIdAndMerchantIds(id, merchantIds).map(auditLogMapper::toDto);
+        if (user instanceof CupaUser cupaUser) {
+            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+            if (merchantIds.isEmpty()) {
+                return Optional.empty();
+            }
+            return auditLogRepository.findByIdAndMerchantIds(id, merchantIds).map(auditLogMapper::toDto);
+        } else return Optional.empty();
     }
 }

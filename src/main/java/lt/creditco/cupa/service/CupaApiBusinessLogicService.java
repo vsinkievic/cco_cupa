@@ -1,25 +1,22 @@
 package lt.creditco.cupa.service;
 
+import com.bpmid.vapp.domain.User;
+import com.bpmid.vapp.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.time.Instant;
-import lombok.Builder;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.api.PaymentRequest;
+import lt.creditco.cupa.base.users.CupaUser;
+import lt.creditco.cupa.base.users.CupaUserRepository;
 import lt.creditco.cupa.domain.Merchant;
-import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
-import lt.creditco.cupa.domain.enumeration.MerchantStatus;
-import lt.creditco.cupa.repository.UserRepository;
 import lt.creditco.cupa.web.context.CupaApiContext;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * Service for extracting business context from CUPA API requests.
@@ -32,7 +29,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 public class CupaApiBusinessLogicService {
 
     private final MerchantService merchantService;
-    private final UserRepository userRepo;
+    private final CupaUserRepository userRepo;
     private final ObjectMapper objectMapper;
 
     /**
@@ -49,14 +46,18 @@ public class CupaApiBusinessLogicService {
         String requestApiKey = getApiKeyFromHeaders(request);
         contextBuilder.cupaApiKey(requestApiKey);
 
-        User user = null;
+        CupaUser cupaUser = null;
         if (principal != null) {
-            user = userRepo.findOneWithAuthoritiesByLogin(principal.getName()).orElseThrow(() -> new RuntimeException("User not found"));
-            contextBuilder.user(user);
+            User user = userRepo.findOneWithAuthoritiesByLogin(principal.getName()).orElseThrow(() -> new RuntimeException("User not found"));
+            if (user instanceof CupaUser) {
+                cupaUser = (CupaUser) user;
+            } else
+                throw new RuntimeException("User is not a CupaUser");
+            contextBuilder.user(cupaUser);
         }
 
         // Determine merchant and environment based on authentication
-        CupaApiContext.MerchantContext merchantContext = determineMerchantContext(requestApiKey, user);
+        CupaApiContext.MerchantContext merchantContext = determineMerchantContext(requestApiKey, cupaUser);
         contextBuilder.merchantContext(merchantContext);
 
         // Extract orderId from path variables or request body
@@ -112,8 +113,8 @@ public class CupaApiBusinessLogicService {
         return null;
     }
 
-    private CupaApiContext.MerchantContext determineMerchantContext(String requestApiKey, User user) {
-        if (requestApiKey == null && user == null) {
+    private CupaApiContext.MerchantContext determineMerchantContext(String requestApiKey, CupaUser cupaUser) {
+        if (requestApiKey == null && cupaUser == null) {
             log.warn("No API key or principal available for merchant context determination");
             return getDefaultMerchantContext();
         }
@@ -122,22 +123,22 @@ public class CupaApiBusinessLogicService {
         if (requestApiKey != null) {
             merchant = merchantService.findMerchantByCupaApiKey(requestApiKey);
         }
-        if (user != null) {
-            String[] merchantIds = user.getMerchantIds() != null ? user.getMerchantIds().split(",") : new String[0];
+        if (cupaUser != null) {
+            String[] merchantIds = cupaUser.getMerchantIds() != null ? cupaUser.getMerchantIds().split(",") : new String[0];
             if (merchant == null) {
                 if (merchantIds.length == 1) {
                     merchant = merchantService.findMerchantById(merchantIds[0]);
                 } else {
                     log.warn(
                         "No merchant found for user: {}, merchantIds: {}, returning null values",
-                        user.getLogin(),
-                        user.getMerchantIds()
+                        cupaUser.getLogin(),
+                        cupaUser.getMerchantIds()
                     );
                     return getDefaultMerchantContext();
                 }
             } else {
                 if (!StringUtils.containsAny(merchant.getId(), merchantIds)) {
-                    throw new RuntimeException("Merchant (API key) not allowed to use with user " + user.getLogin());
+                    throw new RuntimeException("Merchant (API key) not allowed to use with user " + cupaUser.getLogin());
                 }
             }
         }

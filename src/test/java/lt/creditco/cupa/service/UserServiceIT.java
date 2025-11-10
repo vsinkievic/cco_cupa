@@ -10,14 +10,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import lt.creditco.cupa.IntegrationTest;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.Merchant;
-import lt.creditco.cupa.domain.User;
+import com.bpmid.vapp.domain.User;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 import lt.creditco.cupa.repository.MerchantRepository;
-import lt.creditco.cupa.repository.UserRepository;
-import lt.creditco.cupa.service.dto.AdminUserDTO;
+import com.bpmid.vapp.repository.UserRepository;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tech.jhipster.security.RandomUtil;
 
 /**
- * Integration tests for {@link UserService}.
+ * Integration tests for {@link CupaUserService}.
  */
 @IntegrationTest
 @Transactional
@@ -60,7 +60,7 @@ class UserServiceIT {
     private MerchantRepository merchantRepository;
 
     @Autowired
-    private UserService userService;
+    private CupaUserService userService;
 
     @Autowired
     private AuditingHandler auditingHandler;
@@ -188,13 +188,13 @@ class UserServiceIT {
         user.setActivated(false);
         user.setActivationKey(RandomStringUtils.insecure().next(20));
         User dbUser = userRepository.saveAndFlush(user);
-        dbUser.setCreatedDate(now.minus(4, ChronoUnit.DAYS));
+        dbUser.setCreatedAt(now.minus(4, ChronoUnit.DAYS));
         userRepository.saveAndFlush(user);
         Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
-        List<User> users = userRepository.findAllByActivatedIsFalseAndActivationKeyIsNotNullAndCreatedDateBefore(threeDaysAgo);
+        List<User> users = userRepository.findAllByActivatedIsFalseAndActivationKeyIsNotNullAndCreatedAtBefore(threeDaysAgo);
         assertThat(users).isNotEmpty();
         userService.removeNotActivatedUsers();
-        users = userRepository.findAllByActivatedIsFalseAndActivationKeyIsNotNullAndCreatedDateBefore(threeDaysAgo);
+        users = userRepository.findAllByActivatedIsFalseAndActivationKeyIsNotNullAndCreatedAtBefore(threeDaysAgo);
         assertThat(users).isEmpty();
     }
 
@@ -205,10 +205,10 @@ class UserServiceIT {
         when(dateTimeProvider.getNow()).thenReturn(Optional.of(now.minus(4, ChronoUnit.DAYS)));
         user.setActivated(false);
         User dbUser = userRepository.saveAndFlush(user);
-        dbUser.setCreatedDate(now.minus(4, ChronoUnit.DAYS));
+        dbUser.setCreatedAt(now.minus(4, ChronoUnit.DAYS));
         userRepository.saveAndFlush(user);
         Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
-        List<User> users = userRepository.findAllByActivatedIsFalseAndActivationKeyIsNotNullAndCreatedDateBefore(threeDaysAgo);
+        List<User> users = userRepository.findAllByActivatedIsFalseAndActivationKeyIsNotNullAndCreatedAtBefore(threeDaysAgo);
         assertThat(users).isEmpty();
         userService.removeNotActivatedUsers();
         Optional<User> maybeDbUser = userRepository.findById(dbUser.getId());
@@ -237,27 +237,33 @@ class UserServiceIT {
         merchantRepository.save(merchant2);
 
         // Create AdminUserDTO with merchant IDs
-        AdminUserDTO userDTO = new AdminUserDTO();
-        userDTO.setLogin("testuser");
-        userDTO.setEmail("test@example.com");
-        userDTO.setFirstName("Test");
-        userDTO.setLastName("User");
-        userDTO.setActivated(true);
-        userDTO.setMerchantIds("test-merchant-1,test-merchant-2");
+        CupaUser userRequest = new CupaUser();
+        userRequest.setLogin("testuser");
+        userRequest.setEmail("test@example.com");
+        userRequest.setFirstName("Test");
+        userRequest.setLastName("User");
+        userRequest.setActivated(true);
+        userRequest.setMerchantIds("test-merchant-1,test-merchant-2");
 
         // Create user
-        User user = userService.createUser(userDTO);
+        User user = userService.createUser(userRequest);
+        assertThat(user).isInstanceOf(CupaUser.class);
+
+        CupaUser cupaUser = (CupaUser) user;
 
         // Verify merchant IDs are set
-        assertThat(user.getMerchantIds()).isEqualTo("test-merchant-1,test-merchant-2");
+        assertThat(cupaUser.getMerchantIds()).isEqualTo("test-merchant-1,test-merchant-2");
 
         // Update user with different merchant IDs
-        userDTO.setId(user.getId());
-        userDTO.setMerchantIds("test-merchant-1");
+        userRequest.setId(user.getId());
+        userRequest.setMerchantIds("test-merchant-1");
 
-        Optional<AdminUserDTO> updatedUserDTO = userService.updateUser(userDTO);
-        assertThat(updatedUserDTO).isPresent();
-        assertThat(updatedUserDTO.orElseThrow().getMerchantIds()).isEqualTo("test-merchant-1");
+        User updatedUser = userService.updateUser(userRequest);
+
+        assertThat(updatedUser).isInstanceOf(CupaUser.class);
+        CupaUser updatedCupaUser = (CupaUser) updatedUser;
+        assertThat(updatedCupaUser).isNotNull();
+        assertThat(updatedCupaUser.getMerchantIds()).isEqualTo("test-merchant-1");
 
         // Clean up the created user
         userService.deleteUser("testuser");

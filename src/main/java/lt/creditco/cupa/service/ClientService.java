@@ -3,8 +3,10 @@ package lt.creditco.cupa.service;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.Client;
-import lt.creditco.cupa.domain.User;
+import com.bpmid.vapp.domain.User;
 import lt.creditco.cupa.repository.ClientRepository;
 import lt.creditco.cupa.service.dto.ClientDTO;
 import lt.creditco.cupa.service.mapper.ClientMapper;
@@ -112,12 +114,13 @@ public class ClientService {
             return findAll(pageable);
         }
 
-        Set<String> merchantIds = user.getMerchantIdsSet();
-        if (merchantIds.isEmpty()) {
-            return Page.empty(pageable);
-        }
-
-        return clientRepository.findAllByMerchantIds(merchantIds, pageable).map(clientMapper::toDto);
+        if (user instanceof CupaUser cupaUser) {
+            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+            if (merchantIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+            return clientRepository.findAllByMerchantIds(merchantIds, pageable).map(clientMapper::toDto);
+        } else return Page.empty(pageable);
     }
 
     /**
@@ -148,12 +151,13 @@ public class ClientService {
             return findAllWithEagerRelationships(pageable);
         }
 
-        Set<String> merchantIds = user.getMerchantIdsSet();
-        if (merchantIds.isEmpty()) {
-            return Page.empty(pageable);
-        }
-
-        return clientRepository.findAllByMerchantIds(merchantIds, pageable).map(clientMapper::toDto);
+        if (user instanceof CupaUser cupaUser) {
+            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+            if (merchantIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+            return clientRepository.findAllByMerchantIds(merchantIds, pageable).map(clientMapper::toDto);
+        } else return Page.empty(pageable);
     }
 
     /**
@@ -179,6 +183,17 @@ public class ClientService {
     }
 
     /**
+     * Get the count of all clients.
+     *
+     * @return the count of entities.
+     */
+    @Transactional(readOnly = true)
+    public long count() {
+        LOG.debug("Request to count all Clients");
+        return clientRepository.count();
+    }
+
+    /**
      * Get the "id" client with access control.
      *
      * @param id the id of the entity.
@@ -198,11 +213,12 @@ public class ClientService {
             return findOne(id);
         }
 
-        Set<String> merchantIds = user.getMerchantIdsSet();
+        if (user instanceof CupaUser cupaUser) {
+            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
         if (merchantIds.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return clientRepository.findByIdAndMerchantIds(id, merchantIds).map(clientMapper::toDto);
+                return Optional.empty();
+            }
+            return clientRepository.findByIdAndMerchantIds(id, merchantIds).map(clientMapper::toDto);
+        } else return Optional.empty();
     }
 }

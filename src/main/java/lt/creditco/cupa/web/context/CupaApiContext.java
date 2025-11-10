@@ -3,12 +3,14 @@ package lt.creditco.cupa.web.context;
 import java.time.Instant;
 import lombok.Builder;
 import lombok.Data;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.MerchantOwnedEntity;
-import lt.creditco.cupa.domain.User;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
+
+import com.bpmid.vapp.domain.User;
 
 /**
  * Thread-local context holder for CUPA API request data.
@@ -47,6 +49,14 @@ public class CupaApiContext {
         private Instant requestTimestamp;
         private Long auditLogId;
         private User user;
+        private CupaUser cupaUser;
+
+        public CupaUser getCupaUser() {
+            if (cupaUser == null && user != null && user instanceof CupaUser) {
+                cupaUser = (CupaUser) user;
+            }
+            return cupaUser;
+        }
 
         public String getEnvironment() {
             return merchantContext != null && merchantContext.getMode() != null ? merchantContext.getMode().name() : null;
@@ -61,9 +71,12 @@ public class CupaApiContext {
                 return false;
             }
 
+            if (cupaUser == null && user != null && user instanceof CupaUser) {
+                cupaUser = (CupaUser) user;
+            }
             // If we have a user (authenticated via JWT), use user's access logic
-            if (user != null) {
-                return user.canAccessEntity(entity);
+            if (cupaUser != null) {
+                return cupaUser.canAccessEntity(entity);
             }
 
             // If we have a merchant context (authenticated via API key),
