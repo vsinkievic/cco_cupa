@@ -265,9 +265,8 @@
                     <parameters>true</parameters>
                     <annotationProcessorPaths>
                         <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
                         </path>
                         <path>
                             <groupId>org.mapstruct</groupId>
@@ -275,13 +274,19 @@
                             <version>${mapstruct.version}</version>
                         </path>
                         <path>
+                            <groupId>org.hibernate.orm</groupId>
+                            <artifactId>hibernate-jpamodelgen</artifactId>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <!-- Required since Lombok 1.18.16 - see https://mapstruct.org/documentation/stable/reference/html/#lombok -->
+                        <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok-mapstruct-binding</artifactId>
                             <version>${lombok-mapstruct-binding.version}</version>
-                        </path>
-                        <path>
-                            <groupId>org.hibernate.orm</groupId>
-                            <artifactId>hibernate-jpamodelgen</artifactId>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
@@ -403,6 +408,13 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
+                <!-- Clean build and startup time for Vaadin apps sometimes may exceed
+                     the default Spring Boot's 30sec timeout.  -->
+                <configuration>
+                    <jvmArguments>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5895</jvmArguments>
+                    <wait>500</wait>
+                    <maxAttempts>240</maxAttempts>
+                </configuration>
                 <executions>
                     <execution>
                         <id>build-info</id>
@@ -410,16 +422,7 @@
                             <goal>build-info</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>repackage</id>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
                 </executions>
-                <configuration>
-                    <mainClass>${start-class}</mainClass>
-                </configuration>
             </plugin>
             <!-- Spotless Maven Plugin for Code Formatting -->
             <plugin>
