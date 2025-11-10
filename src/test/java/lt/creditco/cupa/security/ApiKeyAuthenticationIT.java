@@ -1,5 +1,6 @@
 package lt.creditco.cupa.security;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -8,14 +9,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Optional;
 import lt.creditco.cupa.api.Payment;
 import lt.creditco.cupa.config.Constants;
+import lt.creditco.cupa.domain.AuditLog;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
+import lt.creditco.cupa.repository.AuditLogRepository;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.service.PaymentTransactionService;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
 import lt.creditco.cupa.service.mapper.PaymentMapper;
-import lt.creditco.cupa.web.rest.CupaApiResource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,9 @@ class ApiKeyAuthenticationIT {
 
     @MockBean
     private PaymentMapper paymentMapper;
+
+    @MockBean
+    private AuditLogRepository auditLogRepository;
 
     private Merchant testMerchant;
     private Merchant liveMerchant;
@@ -78,6 +83,13 @@ class ApiKeyAuthenticationIT {
             Optional.of(mockPaymentTransaction)
         );
         when(paymentMapper.toPayment(mockPaymentTransaction)).thenReturn(mockPayment);
+
+        // Mock AuditLogRepository.save() to simulate database ID generation
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> {
+            AuditLog auditLog = invocation.getArgument(0);
+            auditLog.setId(1L); // Simulate database-generated ID
+            return auditLog;
+        });
     }
 
     @Test
@@ -193,4 +205,5 @@ class ApiKeyAuthenticationIT {
             .perform(get("/api/v1/payments/non-existent-payment").header(Constants.API_KEY_HEADER, "test-api-key-123"))
             .andExpect(status().isNotFound());
     }
+
 }
