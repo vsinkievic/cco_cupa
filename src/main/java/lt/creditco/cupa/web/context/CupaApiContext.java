@@ -3,6 +3,7 @@ package lt.creditco.cupa.web.context;
 import java.time.Instant;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.MerchantOwnedEntity;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
@@ -17,6 +18,7 @@ import com.bpmid.vapp.domain.User;
  * Provides access to business context extracted once per request.
  */
 @Component
+@Slf4j
 public class CupaApiContext {
 
     private static final ThreadLocal<CupaApiContextData> contextHolder = new ThreadLocal<>();
@@ -81,15 +83,17 @@ public class CupaApiContext {
 
             // If we have a merchant context (authenticated via API key),
             // only allow access to entities of that merchant
-            if (merchantId != null) {
-                return merchantId.equals(entity.getMerchantId());
+            String contextMerchantId = getMerchantId();
+            if (contextMerchantId != null) {
+                return contextMerchantId.equals(entity.getMerchantId());
             }
-
             return false;
         }
 
         public void checkAccessToEntity(MerchantOwnedEntity entity) {
+            log.debug("checkAccessToEntity({} {}) in the context of {}", entity.getClass().getSimpleName(), entity == null ? "null" : entity, this);
             if (!canAccessEntity(entity)) {
+                log.warn("Access denied to entity with merchant ID: {}, context: {}", entity != null ? entity.getMerchantId() : "null", this);
                 throw new AccessDeniedException(
                     "Access denied to entity with merchant ID: " + (entity != null ? entity.getMerchantId() : "null")
                 );

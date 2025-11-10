@@ -1,7 +1,6 @@
 package lt.creditco.cupa.service;
 
 import com.bpmid.vapp.domain.User;
-import com.bpmid.vapp.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
@@ -48,11 +47,10 @@ public class CupaApiBusinessLogicService {
 
         CupaUser cupaUser = null;
         if (principal != null) {
-            User user = userRepo.findOneWithAuthoritiesByLogin(principal.getName()).orElseThrow(() -> new RuntimeException("User not found"));
-            if (user instanceof CupaUser) {
+            User user = userRepo.findOneWithAuthoritiesByLogin(principal.getName()).orElse(null);
+            if (user != null && user instanceof CupaUser) {
                 cupaUser = (CupaUser) user;
-            } else
-                throw new RuntimeException("User is not a CupaUser");
+            }
             contextBuilder.user(cupaUser);
         }
 
