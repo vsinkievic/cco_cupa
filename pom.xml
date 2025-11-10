@@ -62,6 +62,7 @@
         <maven-failsafe-plugin.version>3.5.3</maven-failsafe-plugin.version>
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
         <modernizer-maven-plugin.version>3.1.0</modernizer-maven-plugin.version>
+        <nohttp-checkstyle.version>0.0.11</nohttp-checkstyle.version>
         <profile.api-docs />
         <profile.e2e />
         <profile.no-liquibase />
@@ -301,6 +302,11 @@
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
                         <version>${checkstyle.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.spring.nohttp</groupId>
+                        <artifactId>nohttp-checkstyle</artifactId>
+                        <version>${nohttp-checkstyle.version}</version>
                     </dependency>
                 </dependencies>
                 <configuration>
