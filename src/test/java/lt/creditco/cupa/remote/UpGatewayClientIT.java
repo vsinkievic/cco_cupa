@@ -16,7 +16,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
-import lt.creditco.cupa.config.JacksonConfiguration;
+import com.bpmid.vapp.config.JacksonConfiguration;
 import lt.creditco.cupa.config.RemoteClientConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;

@@ -9,7 +9,7 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
-@AnalyzeClasses(packagesOf = CupaApp.class, importOptions = DoNotIncludeTests.class)
+@AnalyzeClasses(packagesOf = CupaApplication.class, importOptions = DoNotIncludeTests.class)
 class TechnicalStructureTest {
 
     // prettier-ignore
@@ -30,7 +30,7 @@ class TechnicalStructureTest {
         .whereLayer("Persistence").mayOnlyBeAccessedByLayers("Service", "Security", "Web", "Config")
         .whereLayer("Domain").mayOnlyBeAccessedByLayers("Persistence", "Service", "Security", "Web", "Config")
 
-        .ignoreDependency(belongToAnyOf(CupaApp.class), alwaysTrue())
+        .ignoreDependency(belongToAnyOf(CupaApplication.class), alwaysTrue())
         .ignoreDependency(alwaysTrue(), belongToAnyOf(
             lt.creditco.cupa.config.Constants.class,
             lt.creditco.cupa.config.ApplicationProperties.class

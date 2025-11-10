@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import lt.creditco.cupa.config.AsyncSyncConfiguration;
 import lt.creditco.cupa.config.EmbeddedSQL;
-import lt.creditco.cupa.config.JacksonConfiguration;
+import com.bpmid.vapp.config.JacksonConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@SpringBootTest(classes = { CupaApp.class, JacksonConfiguration.class, AsyncSyncConfiguration.class })
+@SpringBootTest(classes = { lt.creditco.cupa.CupaApplication.class, JacksonConfiguration.class, AsyncSyncConfiguration.class })
 @EmbeddedSQL
 public @interface IntegrationTest {
 }

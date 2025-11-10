@@ -1,37 +1,18 @@
 package lt.creditco.cupa.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Primary;
 
 /**
  * Properties specific to Cupa.
  * <p>
  * Properties are configured in the {@code application.yml} file.
- * See {@link tech.jhipster.config.JHipsterProperties} for a good example.
+ * Extends vapp-base ApplicationProperties to inherit common properties (name, shortName, teamName).
+ * Marked as @Primary to take precedence over the parent bean when both are registered.
  */
+@Primary
 @ConfigurationProperties(prefix = "application", ignoreUnknownFields = false)
-public class ApplicationProperties {
+public class ApplicationProperties extends com.bpmid.vapp.config.ApplicationProperties {
 
-    private final Liquibase liquibase = new Liquibase();
 
-    // jhipster-needle-application-properties-property
-
-    public Liquibase getLiquibase() {
-        return liquibase;
-    }
-
-    // jhipster-needle-application-properties-property-getter
-
-    public static class Liquibase {
-
-        private Boolean asyncStart = true;
-
-        public Boolean getAsyncStart() {
-            return asyncStart;
-        }
-
-        public void setAsyncStart(Boolean asyncStart) {
-            this.asyncStart = asyncStart;
-        }
-    }
-    // jhipster-needle-application-properties-property-class
 }

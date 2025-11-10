@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import lt.creditco.cupa.config.JacksonConfiguration;
+import com.bpmid.vapp.config.JacksonConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;

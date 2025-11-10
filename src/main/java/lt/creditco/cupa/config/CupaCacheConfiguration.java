@@ -17,13 +17,14 @@ import tech.jhipster.config.cache.PrefixedKeyGenerator;
 
 @Configuration
 @EnableCaching
-public class CacheConfiguration {
+@Primary
+public class CupaCacheConfiguration {
 
     private GitProperties gitProperties;
     private BuildProperties buildProperties;
     private final javax.cache.configuration.Configuration<Object, Object> jcacheConfiguration;
 
-    public CacheConfiguration(JHipsterProperties jHipsterProperties) {
+    public CupaCacheConfiguration(JHipsterProperties jHipsterProperties) {
         JHipsterProperties.Cache.Ehcache ehcache = jHipsterProperties.getCache().getEhcache();
 
         jcacheConfiguration = Eh107Configuration.fromEhcacheCacheConfiguration(
@@ -45,11 +46,12 @@ public class CacheConfiguration {
     @Bean
     public JCacheManagerCustomizer cacheManagerCustomizer() {
         return cm -> {
-            createCache(cm, lt.creditco.cupa.repository.UserRepository.USERS_BY_LOGIN_CACHE);
-            createCache(cm, lt.creditco.cupa.repository.UserRepository.USERS_BY_EMAIL_CACHE);
-            createCache(cm, lt.creditco.cupa.domain.User.class.getName());
-            createCache(cm, lt.creditco.cupa.domain.Authority.class.getName());
-            createCache(cm, lt.creditco.cupa.domain.User.class.getName() + ".authorities");
+            // CUPA-specific User/Authority caches (CUPA has its own User entity in lt.creditco.cupa.domain)
+//            createCache(cm, lt.creditco.cupa.repository.UserRepository.USERS_BY_LOGIN_CACHE);
+//            createCache(cm, lt.creditco.cupa.repository.UserRepository.USERS_BY_EMAIL_CACHE);
+            createCache(cm, lt.creditco.cupa.base.users.CupaUser.class.getName());
+            createCache(cm, lt.creditco.cupa.base.users.CupaUser.class.getName() + ".authorities");
+            // CUPA business domain caches
             createCache(cm, lt.creditco.cupa.domain.Merchant.class.getName());
             createCache(cm, lt.creditco.cupa.domain.Merchant.class.getName() + ".clients");
             createCache(cm, lt.creditco.cupa.domain.Merchant.class.getName() + ".transactions");

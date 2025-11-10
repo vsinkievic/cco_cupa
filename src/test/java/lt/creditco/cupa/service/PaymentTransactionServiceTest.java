@@ -30,7 +30,7 @@ import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
 import lt.creditco.cupa.service.mapper.PaymentMapper;
 import lt.creditco.cupa.service.mapper.PaymentTransactionMapper;
 import lt.creditco.cupa.web.context.CupaApiContext;
-import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
+import com.bpmid.vapp.web.rest.errors.BadRequestAlertException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
