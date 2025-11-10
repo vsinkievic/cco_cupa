@@ -1,0 +1,140 @@
+package lt.creditco.cupa.ui.merchant;
+
+import com.bpmid.vapp.base.ui.MainLayout;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.CallbackDataProvider;
+import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.RolesAllowed;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
+import lt.creditco.cupa.domain.enumeration.MerchantStatus;
+import lt.creditco.cupa.security.AuthoritiesConstants;
+import lt.creditco.cupa.service.MerchantService;
+import lt.creditco.cupa.service.dto.MerchantDTO;
+import org.springframework.data.domain.PageRequest;
+
+/**
+ * Vaadin view for listing Merchants.
+ */
+@Route(value = "merchants", layout = MainLayout.class)
+@PageTitle("Merchants | CUPA")
+@RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO })
+public class MerchantListView extends VerticalLayout {
+
+    private final MerchantService merchantService;
+    
+    private final Grid<MerchantDTO> grid = new Grid<>(MerchantDTO.class, false);
+    
+    private final TextField nameFilter = new TextField("Name");
+    private final ComboBox<MerchantMode> modeFilter = new ComboBox<>("Mode");
+    private final ComboBox<MerchantStatus> statusFilter = new ComboBox<>("Status");
+    
+    public MerchantListView(MerchantService merchantService) {
+        this.merchantService = merchantService;
+        
+        setSizeFull();
+        setPadding(true);
+        
+        add(createToolbar(), createGrid());
+        
+        refreshGrid();
+    }
+    
+    private HorizontalLayout createToolbar() {
+        // Filters
+        nameFilter.setPlaceholder("Filter by name");
+        nameFilter.setClearButtonVisible(true);
+        nameFilter.setValueChangeMode(ValueChangeMode.LAZY);
+        nameFilter.addValueChangeListener(e -> refreshGrid());
+        
+        modeFilter.setItems(MerchantMode.values());
+        modeFilter.setPlaceholder("All modes");
+        modeFilter.setClearButtonVisible(true);
+        modeFilter.addValueChangeListener(e -> refreshGrid());
+        
+        statusFilter.setItems(MerchantStatus.values());
+        statusFilter.setPlaceholder("All statuses");
+        statusFilter.setClearButtonVisible(true);
+        statusFilter.addValueChangeListener(e -> refreshGrid());
+        
+        // Create button
+        Button createButton = new Button("New Merchant", VaadinIcon.PLUS.create());
+        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate(MerchantFormView.class)));
+        
+        HorizontalLayout toolbar = new HorizontalLayout(nameFilter, modeFilter, statusFilter, createButton);
+        toolbar.setDefaultVerticalComponentAlignment(Alignment.END);
+        toolbar.setWidthFull();
+        toolbar.expand(nameFilter);
+        
+        return toolbar;
+    }
+    
+    private Grid<MerchantDTO> createGrid() {
+        grid.addColumn(MerchantDTO::getId).setHeader("ID").setSortable(true).setAutoWidth(true);
+        grid.addColumn(MerchantDTO::getName).setHeader("Name").setSortable(true).setAutoWidth(true);
+        grid.addColumn(MerchantDTO::getMode).setHeader("Mode").setSortable(true).setAutoWidth(true);
+        grid.addColumn(MerchantDTO::getStatus).setHeader("Status").setSortable(true).setAutoWidth(true);
+        grid.addColumn(MerchantDTO::getBalance).setHeader("Balance").setSortable(true).setAutoWidth(true);
+        grid.addColumn(MerchantDTO::getCurrency).setHeader("Currency").setSortable(true).setAutoWidth(true);
+        
+        // Action buttons
+        grid.addComponentColumn(merchant -> {
+            Button viewButton = new Button("View", VaadinIcon.EYE.create());
+            viewButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
+            viewButton.addClickListener(e -> 
+                getUI().ifPresent(ui -> ui.navigate(MerchantDetailView.class, merchant.getId()))
+            );
+            
+            Button editButton = new Button("Edit", VaadinIcon.EDIT.create());
+            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_PRIMARY);
+            editButton.addClickListener(e -> 
+                getUI().ifPresent(ui -> ui.navigate(MerchantFormView.class, merchant.getId()))
+            );
+            
+            return new HorizontalLayout(viewButton, editButton);
+        }).setHeader("Actions").setAutoWidth(true);
+        
+        grid.setSizeFull();
+        
+        return grid;
+    }
+    
+    private void refreshGrid() {
+        String nameValue = nameFilter.getValue();
+        MerchantMode modeValue = modeFilter.getValue();
+        MerchantStatus statusValue = statusFilter.getValue();
+        
+        CallbackDataProvider<MerchantDTO, Void> dataProvider = DataProvider.fromCallbacks(
+            query -> {
+                int page = query.getPage();
+                int size = query.getPageSize();
+                
+                var pageable = PageRequest.of(page, size);
+                var result = merchantService.findAll(pageable);
+                
+                // Apply filters manually (could be optimized with service-level filtering)
+                return result.stream()
+                    .filter(m -> nameValue == null || nameValue.isEmpty() || 
+                                m.getName().toLowerCase().contains(nameValue.toLowerCase()))
+                    .filter(m -> modeValue == null || m.getMode() == modeValue)
+                    .filter(m -> statusValue == null || m.getStatus() == statusValue);
+            },
+            query -> {
+                return (int) merchantService.count();
+            }
+        );
+        
+        grid.setDataProvider(dataProvider);
+    }
+}
+
