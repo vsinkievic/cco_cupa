@@ -11,8 +11,9 @@
 # ===================================================================
 # Standard Spring Boot properties.
 # Full reference is available at:
-# http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+# https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
+
 
 ---
 # Conditionally disable springdoc on missing api-docs profile
@@ -42,6 +43,7 @@ management:
           - threaddump
           - caches
           - liquibase
+          - mappings
   endpoint:
     health:
       show-details: when_authorized
@@ -93,11 +95,6 @@ management:
 spring:
   application:
     name: cupa
-  docker:
-    compose:
-      enabled: true
-      lifecycle-management: start-only
-      file: src/main/docker/services.yml
   profiles:
     # The commented value for `active` can be replaced with valid Spring profiles to load.
     # Otherwise, it will be filled in by maven when building the JAR file
@@ -120,7 +117,7 @@ spring:
     properties:
       hibernate.jdbc.time_zone: UTC
       hibernate.timezone.default_storage: NORMALIZE
-      hibernate.type.preferred_instant_jdbc_type: TIMESTAMP
+      hibernate.type.preferred_instant_jdbc_type: TIMESTAMP_WITH_TIMEZONE
       hibernate.id.new_generator_mappings: true
       hibernate.connection.provider_disables_autocommit: true
       hibernate.cache.use_second_level_cache: true
@@ -174,7 +171,7 @@ server:
         http-only: true
 
 springdoc:
-  show-actuator: false
+  show-actuator: true
 
 # Properties to be exposed on the /info management endpoint
 info:
@@ -189,7 +186,7 @@ info:
 
 jhipster:
   clientApp:
-    name: 'cupaApp'
+    name: cupa
   # By default CORS is disabled. Uncomment to enable.
   # cors:
   #   allowed-origins: "http://localhost:8100,http://localhost:9000"
@@ -204,16 +201,14 @@ jhipster:
     default-include-pattern: /api/v1/**
     management-include-pattern: /management/**
     title: Creditco Payment Gateway API
-    description: Cupa API documentation
-    version: 0.0.1
+    description: CUPA API documentation
+    version: 0.0.15
     terms-of-service-url:
     contact-name:
     contact-url:
     contact-email:
     license: Creditco
     license-url:
-  security:
-    content-security-policy: "default-src 'self'; frame-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://storage.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
 
 # jhipster-needle-add-application-yaml-document
 ---
@@ -227,3 +222,11 @@ jhipster:
 # ===================================================================
 
 # application:
+
+vaadin:
+  urlMapping: /ui/*
+
+application:
+  name: "CUPA - Creditco UnionPay Acquiring"
+  short-name: CUPA
+  team-name: Creditco Team

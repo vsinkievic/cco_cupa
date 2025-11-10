@@ -16,6 +16,7 @@
 spring:
   application:
     name: cupa
+  datasource:
   # Replace by 'prod, faker' to add the faker context and have sample data loaded in production
   liquibase:
     contexts: test
@@ -59,7 +60,7 @@ server:
 # ===================================================================
 jhipster:
   clientApp:
-    name: 'cupaApp'
+    name: cupa
   mail:
     from: cupa@localhost.com
     base-url: http://127.0.0.1:8080
@@ -71,14 +72,6 @@ jhipster:
       host: localhost
       port: 5000
       ring-buffer-size: 512
-  security:
-    authentication:
-      jwt:
-        # This token must be encoded using Base64 (you can type `echo 'secret-key'|base64` on your command line)
-        base64-secret: NDM1NTFiMTU1YzQwZTVmZjkzOThlNzg0MmRkY2UyNzc1YTEyNzIxN2VmODQ0OThjYjAyNzRlNjljZGJiZDM0YjVkM2I1MzI5MTJjNGYzNjg3ZDgwYzc5MTY4NWI5YWU4YWRkZTU3ZTE4ZjE1YTI1MTk1MTAxZjMxODNkZTg3OGU=
-        # Token is valid 24 hours
-        token-validity-in-seconds: 86400
-        token-validity-in-seconds-for-remember-me: 86400
 
 # ===================================================================
 # Application specific properties
@@ -89,7 +82,10 @@ jhipster:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
-# application:
+application:
+  name: 'CUPA Test'
+  shortName: 'CUPA API Test'
+  teamName: 'Creditco Team'
 management:
   health:
     mail:
