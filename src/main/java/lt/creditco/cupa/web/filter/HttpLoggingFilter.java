@@ -41,36 +41,27 @@ public class HttpLoggingFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {}
 
-    public boolean skipLoggingFor(String servletPath) {
-        // 	log.debug("Check skipLoggingFor({})", servletPath);
-        if ("/".equals(servletPath)) return true;
-        if ("/manifest.webapp".equals(servletPath)) return true;
-        if ("/api/profile-info".equals(servletPath)) return true;
-        if ("/v3/api-docs".equals(servletPath)) return true;
-        if (servletPath.matches("(.*)(\\.)html$")) return true;
-        if (servletPath.matches("(.*)(\\.)js$")) return true;
-        if (servletPath.matches("(.*)(\\.)css$")) return true;
-        if (servletPath.matches("(.*)(\\.)xlsx$")) return true;
-        if (servletPath.matches("(.*)(\\.)txt$")) return true;
-        if (servletPath.matches("(.*)(\\.)json$")) return true;
-        if (servletPath.matches("(.*)(\\.)png$")) return true;
-        if (servletPath.matches("(.*)(\\.)jpeg$")) return true;
-        if (servletPath.matches("(.*)(\\.)jpg$")) return true;
-        if (servletPath.matches("(.*)(\\.)ico$")) return true;
-        if (servletPath.matches("(.*)(\\.)bmp$")) return true;
-        if (servletPath.matches("(.*)(\\.)less$")) return true;
-        if (servletPath.matches("(.*)(\\.)map$")) return true;
-        if (servletPath.matches("/management/(.*)")) return true;
-        if (servletPath.matches("/swagger(.*)")) return true;
-        if (servletPath.matches("/api/account(.*)")) return true;
-        if (servletPath.matches("/api/admin(.*)")) return true;
-        if (servletPath.matches("/api/users(.*)")) return true;
-        if (servletPath.matches("/api/audit-logs(.*)")) return true;
-        if (servletPath.matches("/api/clients(.*)")) return true;
-        if (servletPath.matches("/api/payment-transactions(.*)")) return true;
-        if (servletPath.matches("/api/merchants(.*)")) return true;
-        if (servletPath.matches("/bower_components/(.*)")) return true;
-        if (servletPath.matches("/v3/api-docs/(.*)")) return true;
+    public boolean shouldLogRequest(String servletPath) {
+        // Only log specific API paths to avoid conflicts with Vaadin UI and other resources
+        if (servletPath == null) return false;
+        
+        // Log API requests (excluding internal/admin endpoints)
+        if (servletPath.startsWith("/api/")) {
+            // Skip internal endpoints that are too noisy or not relevant
+            if (servletPath.startsWith("/api/profile-info")) return false;
+            if (servletPath.startsWith("/api/account")) return false;
+            if (servletPath.startsWith("/api/admin")) return false;
+            if (servletPath.startsWith("/api/users")) return false;
+            if (servletPath.startsWith("/api/audit-logs")) return false;
+            return true;
+        }
+        
+        // Log public webhook endpoints
+        if (servletPath.startsWith("/public/webhook")) {
+            return true;
+        }
+        
+        // Skip everything else (UI, static resources, actuator, etc.)
         return false;
     }
 
@@ -79,33 +70,36 @@ public class HttpLoggingFilter implements Filter {
         try {
             HttpServletRequest httpServletRequest = (HttpServletRequest) request;
             HttpServletResponse httpServletResponse = (HttpServletResponse) response;
-            boolean logRequest = !skipLoggingFor(httpServletRequest.getServletPath());
+            boolean logRequest = shouldLogRequest(httpServletRequest.getServletPath());
 
+            // Only wrap request/response and read body if we're actually logging
+            if (!logRequest) {
+                // Pass through without wrapping - avoids reading input stream
+                chain.doFilter(request, response);
+                return;
+            }
+
+            // Logging is enabled - wrap and process
             Map<String, String> requestMap = this.getTypesafeRequestMap(httpServletRequest);
             BufferedRequestWrapper bufferedRequest = new BufferedRequestWrapper(httpServletRequest);
             BufferedResponseWrapper bufferedResponse = new BufferedResponseWrapper(httpServletResponse);
 
             // Create ApiRequestDetails object to collect request and response data
-            ApiRequestDetails apiRequestDetails = null;
-            if (logRequest) {
-                apiRequestDetails = new ApiRequestDetails(httpServletRequest, requestMap, bufferedRequest);
-            }
+            ApiRequestDetails apiRequestDetails = new ApiRequestDetails(httpServletRequest, requestMap, bufferedRequest);
 
             chain.doFilter(bufferedRequest, bufferedResponse);
 
-            if (logRequest && apiRequestDetails != null) {
-                // Set response details
-                apiRequestDetails.setResponseDetails(bufferedResponse);
+            // Set response details and log (we know logRequest is true here)
+            apiRequestDetails.setResponseDetails(bufferedResponse);
 
-                // Log using the collected data
-                log.debug(apiRequestDetails.buildLogMessage());
+            // Log using the collected data
+            log.debug(apiRequestDetails.buildLogMessage());
 
-                // TODO: In the next step, add call to auditLoggingService.saveApiRequestDetails(apiRequestDetails);
-                String responseId = httpServletResponse.getHeader("X-Response-Id");
-                if (responseId != null) {
-                    Long responseIdLong = Long.parseLong(responseId);
-                    auditLogService.updateAuditLogWithResponse(responseIdLong, apiRequestDetails);
-                }
+            // TODO: In the next step, add call to auditLoggingService.saveApiRequestDetails(apiRequestDetails);
+            String responseId = httpServletResponse.getHeader("X-Response-Id");
+            if (responseId != null) {
+                Long responseIdLong = Long.parseLong(responseId);
+                auditLogService.updateAuditLogWithResponse(responseIdLong, apiRequestDetails);
             }
         } catch (Throwable a) {
             if (a.getMessage() == null) log.error("Unknown error:", a);

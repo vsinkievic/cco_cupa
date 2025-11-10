@@ -61,6 +61,15 @@ server:
 jhipster:
   clientApp:
     name: cupa
+  # DEPRECATED, but required by vapp-base. Will be removed in the future.
+  security:
+    authentication:
+      jwt:
+        # This token must be encoded using Base64 (you can type `echo 'secret-key'|base64` on your command line)
+        base64-secret: ZWRkN2ZhOTg4ZDU1Mjc1NDk2ZmU4NGI2ODhlNTMyOTE3YTU0NjY2MmE0NTQ3MzYzMDk5NzJmOTg2ODVlYmU5OTgzODI0ZTk1Y2EzNDg4OTVjYmUwZTJjZjIwMzY1ZDUyNTY2ZDhhNTU4ODY0OTg0OWE1ZTA0YmFiZWJkY2I5NDk=
+        # Token is valid for 10 seconds
+        token-validity-in-seconds: 10
+        token-validity-in-seconds-for-remember-me: 10
   mail:
     from: cupa@localhost.com
     base-url: http://127.0.0.1:8080
