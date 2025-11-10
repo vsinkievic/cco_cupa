@@ -1,17 +1,12 @@
 ######################
-# Node
+# Vaadin Frontend (generated)
 ######################
-/node/
-node_tmp/
+/frontend/
 node_modules/
-npm-debug.log.*
-/.awcache/*
-/.cache-loader/*
-
-######################
-# SASS
-######################
-.sass-cache/
+package-lock.json
+pnpm-lock.yaml
+webpack/
+.vaadin/
 
 ######################
 # Eclipse
@@ -115,7 +110,6 @@ Desktop.ini
 ######################
 # Directories
 ######################
-/bin/
 /deploy/
 
 ######################
@@ -142,13 +136,8 @@ Desktop.ini
 !.mvn/wrapper/maven-wrapper.jar
 
 ######################
-# ESLint
+# Java Code Coverage
 ######################
-.eslintcache
+.jacoco/
 
-######################
-# Code coverage
-######################
-coverage/
-.nyc_output/
 src/test/resources/test_gateway_config.properties
