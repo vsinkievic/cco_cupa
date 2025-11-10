@@ -9,12 +9,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import lt.creditco.cupa.domain.User;
+
+import com.bpmid.vapp.domain.User;
+import com.bpmid.vapp.repository.UserRepository;
+
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.repository.ClientRepository;
-import lt.creditco.cupa.repository.UserRepository;
+
 import lt.creditco.cupa.service.ClientService;
 import lt.creditco.cupa.service.dto.ClientDTO;
-import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
+import com.bpmid.vapp.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +35,7 @@ import tech.jhipster.web.util.ResponseUtil;
 /**
  * REST controller for managing {@link lt.creditco.cupa.domain.Client}.
  */
+@Deprecated
 @RestController
 @RequestMapping("/api/clients")
 public class ClientResource {
@@ -60,7 +65,7 @@ public class ClientResource {
      * @param principal the authenticated principal
      * @return the current user, or null if anonymous
      */
-    private User getCurrentUser(Principal principal) {
+    private CupaUser getCurrentUser(Principal principal) {
         if (principal == null) {
             LOG.warn("Anonymous user access attempt - returning empty results");
             return null;
@@ -68,8 +73,8 @@ public class ClientResource {
 
         // Try to find user by login (principal.getName()) with authorities eagerly loaded
         User user = userRepository.findOneWithAuthoritiesByLogin(principal.getName()).orElse(null);
-        if (user != null) {
-            return user;
+        if (user != null && user instanceof CupaUser) {
+            return (CupaUser) user;
         }
 
         LOG.warn("User not found for principal: {} - returning empty results", principal.getName());

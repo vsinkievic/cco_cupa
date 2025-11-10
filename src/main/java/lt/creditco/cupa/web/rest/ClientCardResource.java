@@ -8,12 +8,12 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import lt.creditco.cupa.domain.User;
+
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.repository.ClientCardRepository;
-import lt.creditco.cupa.repository.UserRepository;
 import lt.creditco.cupa.service.ClientCardService;
 import lt.creditco.cupa.service.dto.ClientCardDTO;
-import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
+import com.bpmid.vapp.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +23,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import com.bpmid.vapp.domain.User;
+import com.bpmid.vapp.repository.UserRepository;
+
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
 import tech.jhipster.web.util.ResponseUtil;
@@ -30,6 +34,7 @@ import tech.jhipster.web.util.ResponseUtil;
 /**
  * REST controller for managing {@link lt.creditco.cupa.domain.ClientCard}.
  */
+@Deprecated
 @RestController
 @RequestMapping("/api/client-cards")
 public class ClientCardResource {
@@ -63,7 +68,7 @@ public class ClientCardResource {
      * @param principal the authenticated principal
      * @return the current user, or null if anonymous
      */
-    private User getCurrentUser(Principal principal) {
+    private CupaUser getCurrentUser(Principal principal) {
         if (principal == null) {
             LOG.warn("Anonymous user access attempt - returning empty results");
             return null;
@@ -71,8 +76,8 @@ public class ClientCardResource {
 
         // Try to find user by login (principal.getName()) with authorities eagerly loaded
         User user = userRepository.findOneWithAuthoritiesByLogin(principal.getName()).orElse(null);
-        if (user != null) {
-            return user;
+        if (user != null && user instanceof CupaUser) {
+            return (CupaUser) user;
         }
 
         LOG.warn("User not found for principal: {} - returning empty results", principal.getName());

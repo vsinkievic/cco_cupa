@@ -8,13 +8,16 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import lt.creditco.cupa.domain.User;
+
+import com.bpmid.vapp.domain.User;
+import com.bpmid.vapp.repository.UserRepository;
+
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.repository.MerchantRepository;
-import lt.creditco.cupa.repository.UserRepository;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.MerchantDTO;
-import lt.creditco.cupa.web.rest.errors.BadRequestAlertException;
+import com.bpmid.vapp.web.rest.errors.BadRequestAlertException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +37,7 @@ import tech.jhipster.web.util.ResponseUtil;
  * REST controller for managing {@link lt.creditco.cupa.domain.Merchant}.
  * All authenticated users can access merchant data with role-based field visibility.
  */
+@Deprecated
 @RestController
 @RequestMapping("/api/merchants")
 public class MerchantResource {
@@ -71,8 +75,8 @@ public class MerchantResource {
 
         // Try to find user by login (principal.getName()) with authorities eagerly loaded
         User user = userRepository.findOneWithAuthoritiesByLogin(principal.getName()).orElse(null);
-        if (user != null) {
-            return user;
+        if (user != null && user instanceof CupaUser) {
+            return (CupaUser) user;
         }
 
         LOG.warn("User not found for principal: {} - returning empty results", principal.getName());
