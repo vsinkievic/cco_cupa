@@ -87,23 +87,19 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
     @Column(name = "request_timestamp", nullable = false)
     private Instant requestTimestamp;
 
-    @Lob
-    @Column(name = "request_data")
+    @Column(name = "request_data" , columnDefinition = "text")
     private String requestData;
 
-    @Lob
-    @Column(name = "initial_response_data")
+    @Column(name = "initial_response_data" , columnDefinition = "text")
     private String initialResponseData;
 
     @Column(name = "callback_timestamp")
     private Instant callbackTimestamp;
 
-    @Lob
-    @Column(name = "callback_data")
+    @Column(name = "callback_data" , columnDefinition = "text")
     private String callbackData;
 
-    @Lob
-    @Column(name = "last_query_data")
+    @Column(name = "last_query_data" , columnDefinition = "text")
     private String lastQueryData;
 
     @Column(name = "client_id")

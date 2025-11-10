@@ -52,12 +52,10 @@ public class AuditLog extends AbstractAuditingEntity<Long> implements Serializab
     @Column(name = "environment")
     private String environment;
 
-    @Lob
-    @Column(name = "request_data")
+    @Column(name = "request_data" , columnDefinition = "text")
     private String requestData;
 
-    @Lob
-    @Column(name = "response_data")
+    @Column(name = "response_data" , columnDefinition = "text")
     private String responseData;
 
     @Column(name = "requester_ip_address")

@@ -14,4 +14,31 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="20251107-01" author="vsinkievic">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="jhi_user"/>
+            <not>
+                <columnExists tableName="jhi_user" columnName="created_at"/>
+            </not>
+        </preConditions>
+        <renameColumn tableName="jhi_user" oldColumnName="created_date" newColumnName="created_at"/>
+        <renameColumn tableName="jhi_user" oldColumnName="created_by" newColumnName="created_by"/>
+        <renameColumn tableName="jhi_user" oldColumnName="last_modified_date" newColumnName="updated_at"/>
+        <renameColumn tableName="jhi_user" oldColumnName="last_modified_by" newColumnName="updated_by"/>
+    </changeSet>
+
+    <changeSet id="20251107-02" author="vsinkievic">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="jhi_user"/>
+            <not>
+                <columnExists tableName="jhi_user" columnName="version"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="jhi_user">
+            <column name="version" type="bigint" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

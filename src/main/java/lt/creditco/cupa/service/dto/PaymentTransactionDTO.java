@@ -1,13 +1,11 @@
 package lt.creditco.cupa.service.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Lob;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.UUID;
 import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.domain.MerchantOwnedEntity;
 import lt.creditco.cupa.domain.enumeration.Currency;
@@ -59,18 +57,14 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
 
     private Instant requestTimestamp;
 
-    @Lob
     private String requestData;
 
-    @Lob
     private String initialResponseData;
 
     private Instant callbackTimestamp;
 
-    @Lob
     private String callbackData;
 
-    @Lob
     private String lastQueryData;
 
     private String clientId;
