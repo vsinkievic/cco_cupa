@@ -61,6 +61,8 @@ out/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/*.md
+!.vscode/*.MD
 *.code-workspace
 
 ######################

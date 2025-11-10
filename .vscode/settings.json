@@ -1,4 +1,32 @@
 {
-  "java.debug.settings.onBuildFailureProceed": true,
-  "java.compile.nullAnalysis.mode": "automatic"
+  // Enable Java annotation processing (MapStruct, Lombok, etc.)
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.configuration.updateBuildConfiguration": "automatic",
+  
+  // Enable incremental compilation - compile on save
+  "java.autobuild.enabled": true,
+  
+  // Maven integration - auto-update project when pom.xml changes
+  "maven.view": "hierarchical",
+  
+  // Optional: Run compile on save using tasks
+  "files.autoSave": "onFocusChange",
+  
+  // Enable annotation processors in Java extension
+  "java.jdt.ls.vmargs": "-Xmx2G -XX:+UseG1GC -XX:+UseStringDeduplication",
+  
+  // Save all files before running tasks
+  "task.autoDetect": "on",
+  "task.saveBeforeRun": "always",
+  
+  // Run on Save configuration (requires emeraldwalk.runonsave extension)
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.java$",
+        "cmd": "./mvnw compile -q",
+        "silent": true
+      }
+    ]
+  }
 }
