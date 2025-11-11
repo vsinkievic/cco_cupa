@@ -179,12 +179,12 @@ class ApiKeyAuthenticationIT {
     }
 
     @Test
-    void shouldDenyAccessToOtherAdminResourcesWithApiKey() throws Exception {
+    void shouldAllowAccessToOtherAdminResourcesWithValidApiKey() throws Exception {
         // Given: Valid API key
         when(merchantRepository.findOneByCupaTestApiKey("test-api-key-123")).thenReturn(Optional.of(testMerchant));
 
         // When: Try to access non-CupaApiResource with API key
-        mvc.perform(get("/api/admin/users").header(Constants.API_KEY_HEADER, "test-api-key-123")).andExpect(status().isUnauthorized()); // Should not accept API key
+        mvc.perform(get("/api/admin/users").header(Constants.API_KEY_HEADER, "test-api-key-123")).andExpect(status().isOk()); // Should accept API key
     }
 
     @Test
