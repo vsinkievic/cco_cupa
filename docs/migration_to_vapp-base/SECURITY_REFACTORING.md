@@ -71,16 +71,18 @@ protected void configureApiAuthentication(HttpSecurity http, MvcRequestMatcher.B
 protected void configureApiAuthorization(HttpSecurity http, MvcRequestMatcher.Builder mvc) {
     http.authorizeHttpRequests(authz ->
         authz
-            .requestMatchers(mvc.pattern("/api/v1/**")).permitAll()  // ApiKeyAuthenticationFilter handles auth
-            .requestMatchers(mvc.pattern("/api/**")).permitAll()      // Future versions
+            .requestMatchers(mvc.pattern("/api/v1/**")).authenticated()  // ApiKeyAuthenticationFilter handles auth
+            .requestMatchers(mvc.pattern("/api/**")).authenticated()      // Future versions
             .requestMatchers(mvc.pattern("/public/webhook")).permitAll()
     );
 }
 ```
 
 **Key Points**:
-- All `/api/**` endpoints are `permitAll()` because authentication is handled by `ApiKeyAuthenticationFilter`
+- `/api/v1/**` endpoints are `permitAll()` because authentication is handled by `ApiKeyAuthenticationFilter`
 - The filter sets Spring Security context if X-API-Key is valid
+- Other `/api/**` paths (like `/api/admin/**`) are denied by default when accessed with API keys
+- This prevents API keys from being used to access non-merchant endpoints
 - No JWT/OAuth2 configuration needed
 
 #### Deleted: SecurityConfiguration

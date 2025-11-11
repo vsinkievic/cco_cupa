@@ -12,6 +12,7 @@ import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.base.users.CupaUserRepository;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
+import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 import lt.creditco.cupa.web.context.CupaApiContext;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -46,7 +47,7 @@ public class CupaApiBusinessLogicService {
         contextBuilder.cupaApiKey(requestApiKey);
 
         CupaUser cupaUser = null;
-        if (principal != null) {
+        if (principal != null && principal.getName() != null) {
             User user = userRepo.findOneWithAuthoritiesByLogin(principal.getName()).orElse(null);
             if (user != null && user instanceof CupaUser) {
                 cupaUser = (CupaUser) user;
@@ -143,6 +144,11 @@ public class CupaApiBusinessLogicService {
 
         if (merchant == null) {
             log.warn("No merchant found for API key: {}, returning null values", requestApiKey);
+            return getDefaultMerchantContext();
+        }
+
+        if (!MerchantStatus.ACTIVE.equals(merchant.getStatus())) {
+            log.warn("Merchant {} is not active (status: {}), returning null values", merchant.getId(), merchant.getStatus());
             return getDefaultMerchantContext();
         }
 

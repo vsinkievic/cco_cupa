@@ -91,6 +91,18 @@ jhipster:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
+logging:
+  level:
+    ROOT: INFO
+    tech.jhipster: DEBUG
+    org.hibernate.SQL: DEBUG
+    com.bpmid: DEBUG
+    lt.creditco: DEBUG
+    lt.creditco.cupa.security: TRACE
+    lt.creditco.cupa.web.filter: TRACE
+    org.springframework.web.servlet.HandlerMapping.Mappings: DEBUG
+
+
 application:
   name: 'CUPA Test'
   shortName: 'CUPA API Test'

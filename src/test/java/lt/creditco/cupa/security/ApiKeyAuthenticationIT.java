@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Optional;
@@ -136,6 +137,18 @@ class ApiKeyAuthenticationIT {
     }
 
     @Test
+    void shouldDenyAccessToOtherAdminResourcesWithInvalidApiKey() throws Exception {
+        // Given: Invalid API key
+        when(merchantRepository.findOneByCupaTestApiKey(anyString())).thenReturn(Optional.empty());
+        when(merchantRepository.findOneByCupaProdApiKey(anyString())).thenReturn(Optional.empty());
+
+        // When: Access CupaApiResource with invalid API key
+        mvc
+            .perform(get("/api/admin/users").header(Constants.API_KEY_HEADER, "invalid-api-key"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void shouldDenyAccessToCupaApiWithoutApiKey() throws Exception {
         // When: Access CupaApiResource without API key
         mvc.perform(get("/api/v1/payments/payment-123")).andExpect(status().isUnauthorized());
@@ -166,12 +179,25 @@ class ApiKeyAuthenticationIT {
     }
 
     @Test
-    void shouldDenyAccessToOtherResourcesWithApiKey() throws Exception {
+    void shouldDenyAccessToOtherAdminResourcesWithApiKey() throws Exception {
         // Given: Valid API key
         when(merchantRepository.findOneByCupaTestApiKey("test-api-key-123")).thenReturn(Optional.of(testMerchant));
 
         // When: Try to access non-CupaApiResource with API key
         mvc.perform(get("/api/admin/users").header(Constants.API_KEY_HEADER, "test-api-key-123")).andExpect(status().isUnauthorized()); // Should not accept API key
+    }
+
+    @Test
+    void shouldDenyAccessToUiResourcesWithApiKey() throws Exception {
+        // Given: Valid API key
+        when(merchantRepository.findOneByCupaTestApiKey("test-api-key-123")).thenReturn(Optional.of(testMerchant));
+
+        // When: Try to access non-CupaApiResource with API key
+        // Then: Should redirect to login (API key is not accepted for UI resources)
+        mvc
+            .perform(get("/ui/admin/users").header(Constants.API_KEY_HEADER, "test-api-key-123"))
+            .andExpect(status().isFound())
+            .andExpect(redirectedUrl("http://localhost/login"));
     }
 
     @Test

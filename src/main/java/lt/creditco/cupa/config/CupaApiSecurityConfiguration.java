@@ -1,11 +1,22 @@
 package lt.creditco.cupa.config;
 
 import com.bpmid.vapp.config.ApiSecurityConfiguration;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.net.MediaType;
+
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.web.filter.ApiKeyAuthenticationFilter;
+
+import java.time.Instant;
+import java.util.Map;
+
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 
@@ -23,9 +34,36 @@ import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
 
     private final MerchantRepository merchantRepository;
-
-    public CupaApiSecurityConfiguration(MerchantRepository merchantRepository) {
+    private final AuthenticationEntryPoint authenticationEntryPoint;
+    
+    public CupaApiSecurityConfiguration(MerchantRepository merchantRepository, @Lazy AuthenticationEntryPoint authenticationEntryPoint) {
         this.merchantRepository = merchantRepository;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+    }
+
+    /**
+     * This bean is responsible for handling authentication failures (e.g., no/bad API key)
+     * and returning a 401 Unauthorized response.
+     */
+    @Bean
+    public AuthenticationEntryPoint customAuthenticationEntryPoint(ObjectMapper objectMapper) {
+        return (request, response, authException) -> {
+            // Set the response status
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType(MediaType.JSON_UTF_8.toString());
+
+            // Create a custom error body
+            Map<String, Object> body = Map.of(
+                "status", HttpStatus.UNAUTHORIZED.value(),
+                "error", "Unauthorized",
+                "message", authException.getMessage(), // This gets the "Invalid X-API-Key" etc.
+                "path", request.getRequestURI(),
+                "timestamp", Instant.now().toString()
+            );
+
+            // Write the JSON body to the response
+            response.getWriter().write(objectMapper.writeValueAsString(body));
+        };
     }
 
     /**
@@ -39,7 +77,7 @@ public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
     @Override
     protected void configureApiAuthentication(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
         // Replace JWT with X-API-Key authentication filter
-        http.addFilterAfter(new ApiKeyAuthenticationFilter(merchantRepository), BasicAuthenticationFilter.class);
+        http.addFilterAfter(new ApiKeyAuthenticationFilter(merchantRepository, authenticationEntryPoint), BasicAuthenticationFilter.class);
         // No JWT/OAuth2 configuration needed
     }
 
@@ -53,12 +91,15 @@ public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
      */
     @Override
     protected void configureApiAuthorization(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
+
+        // First, apply parent rules (for endpoints that DO exist)
+        //super.configureApiAuthorization(http, mvc);  -- we will override all the configuration
+
+        // Then, add our custom rules for /api/** paths
         http.authorizeHttpRequests(authz ->
             authz
                 // Merchant API v1 - authenticated by ApiKeyAuthenticationFilter
-                .requestMatchers(mvc.pattern("/api/v1/**")).permitAll()
-                // Future API versions - also use X-API-Key
-                .requestMatchers(mvc.pattern("/api/**")).permitAll()
+                .requestMatchers(mvc.pattern("/api/**")).authenticated()
                 // Public webhook for external integrations
                 .requestMatchers(mvc.pattern("/public/webhook")).permitAll()
         );

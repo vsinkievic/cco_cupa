@@ -85,13 +85,25 @@ public class CupaApiContext {
             // only allow access to entities of that merchant
             String contextMerchantId = getMerchantId();
             if (contextMerchantId != null) {
-                return contextMerchantId.equals(entity.getMerchantId());
+                if (!contextMerchantId.equals(entity.getMerchantId())) {
+                    return false;
+                }
+                if (this.merchantContext == null)
+                    return false;
+                if (!this.merchantContext.getMerchantId().equals(entity.getMerchantId())) {
+                    return false;
+                }
+                if (!MerchantStatus.ACTIVE.equals(this.merchantContext.getStatus())) {
+                    return false;
+                }
+                return true;
             }
             return false;
         }
 
         public void checkAccessToEntity(MerchantOwnedEntity entity) {
             log.debug("checkAccessToEntity({} {}) in the context of {}", entity.getClass().getSimpleName(), entity == null ? "null" : entity, this);
+
             if (!canAccessEntity(entity)) {
                 log.warn("Access denied to entity with merchant ID: {}, context: {}", entity != null ? entity.getMerchantId() : "null", this);
                 throw new AccessDeniedException(
