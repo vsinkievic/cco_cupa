@@ -62,13 +62,13 @@ public class CupaApiResource {
             "getPaymentByOrderIdForMerchant({}, {}), executed by {}, merchant: {}, environment: {}",
             merchantId,
             orderId,
-            principal.getName(),
-            context.getMerchantId(),
-            context.getEnvironment()
+            principal == null ? "null" : principal.getName(),
+            context == null ? "null" : context.getMerchantId(),
+            context == null ? "null" : context.getEnvironment()
         );
 
         // Check if user can access the specified merchant
-        if (context.getCupaUser() != null && !context.getCupaUser().getMerchantIdsSet().contains(merchantId)) {
+        if (context != null && context.getCupaUser() != null && !context.getCupaUser().getMerchantIdsSet().contains(merchantId)) {
             throw new AccessDeniedException(String.format("Access denied for merchant: %s", merchantId));
         }
 
@@ -90,9 +90,9 @@ public class CupaApiResource {
         log.info(
             "getPaymentById({}), executed by {}, merchant: {}, environment: {}",
             id,
-            principal.getName(),
-            context.getMerchantId(),
-            context.getEnvironment()
+            principal == null ? "null" : principal.getName(),
+            context == null ? "null" : context.getMerchantId(),
+            context == null ? "null" : context.getEnvironment()
         );
 
         Optional<PaymentTransactionDTO> paymentTransaction = paymentTransactionService.findOne(id);
@@ -116,12 +116,12 @@ public class CupaApiResource {
         log.info(
             "createPayment({}), executed by {}, merchant: {}, environment: {}",
             request.getOrderId(),
-            principal.getName(),
-            context.getMerchantId(),
-            context.getEnvironment()
+            principal == null ? "null" : principal.getName(),
+            context == null ? "null" : context.getMerchantId(),
+            context == null ? "null" : context.getEnvironment()
         );
 
-        if (request.getMerchantId() != null && !context.canAccessEntity(request)) {
+        if (context == null || request.getMerchantId() != null && !context.canAccessEntity(request)) {
             throw new AccessDeniedException(String.format("Access denied for merchant: %s", request.getMerchantId()));
         }
 
