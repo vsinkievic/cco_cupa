@@ -13,20 +13,26 @@ import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 import lt.creditco.cupa.repository.MerchantRepository;
+import lt.creditco.cupa.security.AuthoritiesConstants;
+import lt.creditco.cupa.service.CupaApiBusinessLogicService;
 import lt.creditco.cupa.web.context.CupaApiContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Filter for API key authentication.
  * Reads X-API-KEY header and validates it against merchant API keys.
- * If validation fails, continues with normal JWT authentication.
+ * If validation fails, continues with normal Vaadin authentication.
  */
 public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
@@ -36,10 +42,12 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     private final MerchantRepository merchantRepository;
     private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final CupaApiBusinessLogicService cupaApiBusinessLogicService;
 
-    public ApiKeyAuthenticationFilter(MerchantRepository merchantRepository, AuthenticationEntryPoint authenticationEntryPoint) {
+    public ApiKeyAuthenticationFilter(CupaApiBusinessLogicService cupaApiBusinessLogicService, MerchantRepository merchantRepository, AuthenticationEntryPoint authenticationEntryPoint) {
         this.merchantRepository = merchantRepository;
         this.authenticationEntryPoint = authenticationEntryPoint;
+        this.cupaApiBusinessLogicService = cupaApiBusinessLogicService;
     }
 
     @Override
@@ -58,6 +66,8 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         String apiKey = request.getHeader(Constants.API_KEY_HEADER);
         if (apiKey == null || apiKey.trim().isEmpty()) {
             // No API key provided, continue with normal authentication
+
+
             if (LOG.isTraceEnabled()) LOG.trace("doFilterInternal request: {} has no API key, skipping X-API-Key authentication", request.getRequestURI());
 
             filterChain.doFilter(request, response);
@@ -65,11 +75,26 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            // Try to authenticate with API key
-            if (LOG.isTraceEnabled()) LOG.trace("doFilterInternal request: {} has API key, authenticating with X-API-Key", request.getRequestURI());
+            if (StringUtils.hasText(apiKey)) {
+                // Try to authenticate with API key
+                if (LOG.isTraceEnabled()) LOG.trace("doFilterInternal request: {} has API key, authenticating with X-API-Key", request.getRequestURI());
 
-            authenticateWithApiKey(apiKey, request);
-            LOG.debug("API key authentication successful for request: {}", request.getRequestURI());
+                authenticateWithApiKey(apiKey, request);
+                LOG.debug("API key authentication successful for request: {}", request.getRequestURI());
+            } else {
+                if (LOG.isTraceEnabled()) LOG.trace("No X-API-Key, checking Vaadin authentication");
+                Authentication vaadinAuth = SecurityContextHolder.getContext().getAuthentication();
+                if (vaadinAuth != null && vaadinAuth.isAuthenticated() && !(vaadinAuth instanceof AnonymousAuthenticationToken)) {
+                    if (LOG.isTraceEnabled()) LOG.trace("Vaadin authentication successful, creating API-compatible Authentication object");
+                    // Create an API-compatible Authentication object from the Vaadin user
+                    createAuthenticationToken(vaadinAuth.getPrincipal(), MerchantMode.LIVE);
+                    setMerchantContext(vaadinAuth.getPrincipal(), MerchantMode.LIVE);
+                    LOG.debug("Vaadin authentication successful for request: {}", request.getRequestURI());
+                } else {
+                    if (LOG.isTraceEnabled()) LOG.trace("Vaadin authentication failed, skipping X-API-Key authentication");
+                    throw new BadCredentialsException("Vaadin authentication failed.");
+                }
+            }
             filterChain.doFilter(request, response);
 
         } catch (AuthenticationException e) {
@@ -158,7 +183,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
             merchant.getId(),
             null,
-            Collections.emptyList() //            Collections.singletonList(new SimpleGrantedAuthority("ROLE_MERCHANT"))
+            Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.MERCHANT))
         );
 
         // Set authentication details
