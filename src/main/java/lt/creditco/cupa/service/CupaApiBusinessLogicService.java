@@ -115,7 +115,7 @@ public class CupaApiBusinessLogicService {
     private CupaApiContext.MerchantContext determineMerchantContext(String requestApiKey, CupaUser cupaUser) {
         if (requestApiKey == null && cupaUser == null) {
             log.warn("No API key or principal available for merchant context determination");
-            return getDefaultMerchantContext();
+            return getDefaultMerchantContext("Unable to determine merchant context");
         }
 
         Merchant merchant = null;
@@ -133,23 +133,24 @@ public class CupaApiBusinessLogicService {
                         cupaUser.getLogin(),
                         cupaUser.getMerchantIds()
                     );
-                    return getDefaultMerchantContext();
+                    return getDefaultMerchantContext("No merchant found for user");
                 }
             } else {
                 if (!StringUtils.containsAny(merchant.getId(), merchantIds)) {
-                    throw new RuntimeException("Merchant (API key) not allowed to use with user " + cupaUser.getLogin());
+                    return getDefaultMerchantContext("Merchant not allowed to use with user");
+//                    throw new RuntimeException("Merchant (API key) not allowed to use with user " + cupaUser.getLogin());
                 }
             }
         }
 
         if (merchant == null) {
             log.warn("No merchant found for API key: {}, returning null values", requestApiKey);
-            return getDefaultMerchantContext();
+            return getDefaultMerchantContext("No merchant found for API key");
         }
 
         if (!MerchantStatus.ACTIVE.equals(merchant.getStatus())) {
             log.warn("Merchant {} is not active (status: {}), returning null values", merchant.getId(), merchant.getStatus());
-            return getDefaultMerchantContext();
+            return getDefaultMerchantContext("Merchant is not active");
         }
 
         String gatewayUrl = null;
@@ -158,11 +159,19 @@ public class CupaApiBusinessLogicService {
         String gatewayApiKey = null;
 
         if (merchant.getMode() == MerchantMode.LIVE) {
+            if (requestApiKey != null && !requestApiKey.equals(merchant.getCupaProdApiKey())) {
+                log.warn("Merchant {} has invalid API key (prod: {}) for LIVE mode, returning null values", merchant.getId(), merchant.getCupaProdApiKey());
+                return getDefaultMerchantContext("API key doesn't match Merchant mode");
+            }
             gatewayUrl = merchant.getRemoteProdUrl();
             gatewayMerchantId = merchant.getRemoteProdMerchantId();
             gatewayMerchantKey = merchant.getRemoteProdMerchantKey();
             gatewayApiKey = merchant.getRemoteProdApiKey();
         } else {
+            if (requestApiKey != null && !requestApiKey.equals(merchant.getCupaTestApiKey())) {
+                log.warn("Merchant {} has invalid API key (test: {}) for TEST mode, returning null values", merchant.getId(), merchant.getCupaTestApiKey());
+                return getDefaultMerchantContext("API key doesn't match Merchant mode");
+            }
             gatewayUrl = merchant.getRemoteTestUrl();
             gatewayMerchantId = merchant.getRemoteTestMerchantId();
             gatewayMerchantKey = merchant.getRemoteTestMerchantKey();
@@ -198,14 +207,15 @@ public class CupaApiBusinessLogicService {
         }
 
         log.debug("No merchant found for API key: {}, returning null values", apiKey);
-        return getDefaultMerchantContext();
+        return getDefaultMerchantContext("No merchant found for API key");
     }
 
-    private CupaApiContext.MerchantContext getDefaultMerchantContext() {
+    private CupaApiContext.MerchantContext getDefaultMerchantContext(String securityRemarks) {
         return CupaApiContext.MerchantContext.builder()
             .merchantId(null) // Don't set default values when we can't determine them
             .environment(null)
             .cupaApiKey(null)
+            .securityRemarks(securityRemarks)
             .build();
     }
 

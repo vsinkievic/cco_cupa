@@ -5,20 +5,17 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.Principal;
 import java.util.Collections;
-import java.util.Optional;
 
 import lt.creditco.cupa.config.Constants;
-import lt.creditco.cupa.domain.Merchant;
-import lt.creditco.cupa.domain.enumeration.MerchantMode;
-import lt.creditco.cupa.domain.enumeration.MerchantStatus;
-import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.CupaApiBusinessLogicService;
 import lt.creditco.cupa.web.context.CupaApiContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -40,12 +37,10 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 //    private static final String API_PATH = "/api/v1";
     private static final String API_PATH = "/api/";
 
-    private final MerchantRepository merchantRepository;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final CupaApiBusinessLogicService cupaApiBusinessLogicService;
 
-    public ApiKeyAuthenticationFilter(CupaApiBusinessLogicService cupaApiBusinessLogicService, MerchantRepository merchantRepository, AuthenticationEntryPoint authenticationEntryPoint) {
-        this.merchantRepository = merchantRepository;
+    public ApiKeyAuthenticationFilter(CupaApiBusinessLogicService cupaApiBusinessLogicService, AuthenticationEntryPoint authenticationEntryPoint) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.cupaApiBusinessLogicService = cupaApiBusinessLogicService;
     }
@@ -64,37 +59,46 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String apiKey = request.getHeader(Constants.API_KEY_HEADER);
-        if (apiKey == null || apiKey.trim().isEmpty()) {
-            // No API key provided, continue with normal authentication
-
-
-            if (LOG.isTraceEnabled()) LOG.trace("doFilterInternal request: {} has no API key, skipping X-API-Key authentication", request.getRequestURI());
-
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         try {
+            CupaApiContext.CupaApiContextData contextData = CupaApiContext.getContext();
             if (StringUtils.hasText(apiKey)) {
                 // Try to authenticate with API key
                 if (LOG.isTraceEnabled()) LOG.trace("doFilterInternal request: {} has API key, authenticating with X-API-Key", request.getRequestURI());
 
-                authenticateWithApiKey(apiKey, request);
-                LOG.debug("API key authentication successful for request: {}", request.getRequestURI());
+                if (contextData == null || !apiKey.equals(contextData.getCupaApiKey())) {
+                    contextData = cupaApiBusinessLogicService.extractBusinessContext(request, null, null);
+                    CupaApiContext.setContext(contextData);
+                }
+                if ( LOG.isTraceEnabled() &&contextData != null && contextData.isAuthenticated())
+                    LOG.trace("API key authentication successful for request: {}", request.getRequestURI());
             } else {
                 if (LOG.isTraceEnabled()) LOG.trace("No X-API-Key, checking Vaadin authentication");
                 Authentication vaadinAuth = SecurityContextHolder.getContext().getAuthentication();
                 if (vaadinAuth != null && vaadinAuth.isAuthenticated() && !(vaadinAuth instanceof AnonymousAuthenticationToken)) {
                     if (LOG.isTraceEnabled()) LOG.trace("Vaadin authentication successful, creating API-compatible Authentication object");
                     // Create an API-compatible Authentication object from the Vaadin user
-                    createAuthenticationToken(vaadinAuth.getPrincipal(), MerchantMode.LIVE);
-                    setMerchantContext(vaadinAuth.getPrincipal(), MerchantMode.LIVE);
-                    LOG.debug("Vaadin authentication successful for request: {}", request.getRequestURI());
+
+                    if (contextData == null || contextData.getUser() == null || contextData.getUser().getLogin().equals(vaadinAuth.getPrincipal())){
+                        contextData = cupaApiBusinessLogicService.extractBusinessContext(request, null, (Principal) vaadinAuth.getPrincipal());
+                        CupaApiContext.setContext(contextData);
+                    }
+                    if (contextData != null && contextData.isAuthenticated())
+                        LOG.trace("Vaadin authentication successful for request: {}", request.getRequestURI());
                 } else {
                     if (LOG.isTraceEnabled()) LOG.trace("Vaadin authentication failed, skipping X-API-Key authentication");
-                    throw new BadCredentialsException("Vaadin authentication failed.");
+                    throw new BadCredentialsException("Authentication failed");
                 }
             }
+            if (contextData == null|| contextData.getMerchantContext() == null) {
+                throw new AuthenticationServiceException("Unable to determine authentication context");
+            }
+            if (!contextData.isAuthenticated()) {
+                LOG.warn("{}: authentication failed: {}", request.getRequestURI(), contextData.getMerchantContext().getSecurityRemarks());
+                throw new BadCredentialsException(contextData.getMerchantContext().getSecurityRemarks());
+            }
+
+            createAuthenticationToken(contextData);
             filterChain.doFilter(request, response);
 
         } catch (AuthenticationException e) {
@@ -114,109 +118,21 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
         } finally {
             // Always clear the ThreadLocal context after the request
-            CupaApiContext.clearContext();
         }
     }
 
-    /**
-     * Authenticate using API key.
-     *
-     * @param apiKey the API key from header
-     * @param request the HTTP request
-     */
-    private void authenticateWithApiKey(String apiKey, HttpServletRequest request) throws AuthenticationException {
-        // First try to find merchant by production API key
-        Merchant merchant = merchantRepository.findOneByCupaProdApiKey(apiKey).orElse(null);
-
-        if (merchant != null) {
-            validateMerchant(merchant, MerchantMode.LIVE, request);
-            LOG.debug("Merchant {} autenticated in LIVE mode (status: {})", merchant.getId(), merchant.getStatus());
-            return;
-        }
-
-        // If not found or invalid, try test API key
-        merchant = merchantRepository.findOneByCupaTestApiKey(apiKey).orElse(null);
-        if (merchant != null) {
-            validateMerchant(merchant, MerchantMode.TEST, request);
-            LOG.debug("Merchant {} autenticated in TEST mode (status: {})", merchant.getId(), merchant.getStatus());
-            return;
-        }
-        LOG.debug("Invalid API key provided.");
-        throw new BadCredentialsException("Invalid API key.");
-    }
-
-    /**
-     * Validate merchant for authentication.
-     *
-     * @param merchant the merchant to validate
-     * @param expectedMode the expected mode for this API key
-     * @param request the HTTP request
-     */
-    private void validateMerchant(Merchant merchant, MerchantMode expectedMode, HttpServletRequest request) throws AuthenticationException {
-        // Check if merchant status is ACTIVE
-        if (merchant.getStatus() != MerchantStatus.ACTIVE) {
-            LOG.debug("Merchant {} is not active (status: {})", merchant.getId(), merchant.getStatus());
-            throw new BadCredentialsException("Merchant account is inactive.");
-        }
-
-        // Check if merchant mode matches the expected mode for this API key
-        if (merchant.getMode() != expectedMode) {
-            LOG.debug("Merchant {} mode mismatch. Expected: {}, Actual: {}", merchant.getId(), expectedMode, merchant.getMode());
-            throw new BadCredentialsException("API key environment mismatch.");
-        }
-
-        // All validations passed, create authentication token
-        createAuthenticationToken(merchant, expectedMode);
-
-        // Set merchant context for the request
-        setMerchantContext(merchant, expectedMode);
-    }
-
-    /**
-     * Create and set the authentication token.
-     *
-     * @param merchant the authenticated merchant
-     * @param mode the merchant mode
-     */
-    private void createAuthenticationToken(Merchant merchant, MerchantMode mode) {
+    private void createAuthenticationToken(CupaApiContext.CupaApiContextData contextData) {
         // Create a simple authentication token with merchant role
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-            merchant.getId(),
+            contextData.getMerchantId(),
             null,
             Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.MERCHANT))
         );
 
         // Set authentication details
-        authentication.setDetails(merchant);
+        authentication.setDetails(contextData);
 
         // Set the authentication in the security context
         SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
-
-    /**
-     * Set merchant context for the request.
-     *
-     * @param merchant the authenticated merchant
-     * @param mode the merchant mode
-     */
-    private void setMerchantContext(Merchant merchant, MerchantMode mode) {
-        // Create merchant context
-        CupaApiContext.MerchantContext merchantContext = CupaApiContext.MerchantContext.builder()
-            .merchantId(merchant.getId())
-            .environment(mode.name())
-            .cupaApiKey(mode == MerchantMode.TEST ? merchant.getCupaTestApiKey() : merchant.getCupaProdApiKey())
-            .mode(mode)
-            .status(merchant.getStatus())
-            .build();
-
-        // Create API context data
-        CupaApiContext.CupaApiContextData contextData = CupaApiContext.CupaApiContextData.builder()
-            .merchantId(merchant.getId())
-            .cupaApiKey(mode == MerchantMode.TEST ? merchant.getCupaTestApiKey() : merchant.getCupaProdApiKey())
-            .merchantContext(merchantContext)
-            .build();
-
-        // Set the context
-        CupaApiContext.setContext(contextData);
     }
 }

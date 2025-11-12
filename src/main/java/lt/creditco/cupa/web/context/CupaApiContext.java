@@ -100,6 +100,13 @@ public class CupaApiContext {
             }
             return false;
         }
+        public boolean isAuthenticated(){
+            if (merchantContext == null) return false;
+            if (merchantContext.getMerchantId() == null) return false;
+            if (!MerchantStatus.ACTIVE.equals(merchantContext.getStatus())) return false;
+
+            return true;
+        }
 
         public void checkAccessToEntity(MerchantOwnedEntity entity) {
             log.debug("checkAccessToEntity({} {}) in the context of {}", entity.getClass().getSimpleName(), entity == null ? "null" : entity, this);
@@ -126,5 +133,6 @@ public class CupaApiContext {
         private String gatewayMerchantId;
         private String gatewayMerchantKey;
         private String gatewayApiKey;
+        private String securityRemarks;
     }
 }

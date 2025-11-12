@@ -4,7 +4,7 @@ import com.bpmid.vapp.config.ApiSecurityConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.MediaType;
 
-import lt.creditco.cupa.repository.MerchantRepository;
+import lt.creditco.cupa.service.CupaApiBusinessLogicService;
 import lt.creditco.cupa.web.filter.ApiKeyAuthenticationFilter;
 
 import java.time.Instant;
@@ -33,11 +33,11 @@ import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 @EnableMethodSecurity(securedEnabled = true)
 public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
 
-    private final MerchantRepository merchantRepository;
+    private final CupaApiBusinessLogicService cupaApiBusinessLogicService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     
-    public CupaApiSecurityConfiguration(MerchantRepository merchantRepository, @Lazy AuthenticationEntryPoint authenticationEntryPoint) {
-        this.merchantRepository = merchantRepository;
+    public CupaApiSecurityConfiguration(CupaApiBusinessLogicService cupaApiBusinessLogicService, @Lazy AuthenticationEntryPoint authenticationEntryPoint) {
+        this.cupaApiBusinessLogicService = cupaApiBusinessLogicService;
         this.authenticationEntryPoint = authenticationEntryPoint;
     }
 
@@ -77,7 +77,7 @@ public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
     @Override
     protected void configureApiAuthentication(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
         // Replace JWT with X-API-Key authentication filter
-        http.addFilterAfter(new ApiKeyAuthenticationFilter(merchantRepository, authenticationEntryPoint), BasicAuthenticationFilter.class);
+        http.addFilterAfter(new ApiKeyAuthenticationFilter(cupaApiBusinessLogicService, authenticationEntryPoint), BasicAuthenticationFilter.class);
         // No JWT/OAuth2 configuration needed
     }
 

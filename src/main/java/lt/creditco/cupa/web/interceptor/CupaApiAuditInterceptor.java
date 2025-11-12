@@ -32,17 +32,29 @@ public class CupaApiAuditInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         try {
-            // Extract request body if available
-            Object requestBody = extractRequestBody(request);
+            // The context should have been created by ApiKeyAuthenticationFilter.
+            CupaApiContext.CupaApiContextData context = CupaApiContext.getContext();
+            Object requestBody = null;
+            boolean triedToExtractRequestBody = false;
+            if (context == null) {
+                // This is unexpected for API requests and may indicate a configuration issue
+                // where ApiKeyAuthenticationFilter did not run.
+                // For robustness, we can create it here as a fallback.
+                log.warn("CupaApiContext not found, creating in interceptor as fallback for request: {}", request.getRequestURI());
 
-            // Get principal from security context
-            Principal principal = getCurrentPrincipal();
-
-            // Extract all business context (runs once)
-            CupaApiContext.CupaApiContextData context = businessLogicService.extractBusinessContext(request, requestBody, principal);
-
-            // Store context for use in controller methods
-            CupaApiContext.setContext(context);
+                requestBody = extractRequestBody(request);
+                triedToExtractRequestBody = true;
+                Principal principal = getCurrentPrincipal();
+                context = businessLogicService.extractBusinessContext(request, requestBody, principal);
+                CupaApiContext.setContext(context);
+            }
+            if (context != null && context.getRequestData() == null && !triedToExtractRequestBody){
+                requestBody = extractRequestBody(request);
+                if (requestBody != null){
+                    context.setRequestData(objectMapper.writeValueAsString(requestBody));
+                    CupaApiContext.setContext(context);
+                }
+            }
 
             // Create initial audit log entry
             AuditLogDTO auditLog = createInitialAuditLog(context);
@@ -51,8 +63,12 @@ public class CupaApiAuditInterceptor implements HandlerInterceptor {
             response.setHeader("X-Response-Id", savedLog.getId().toString());
 
             // Store audit log ID in context
-            context.setAuditLogId(savedLog.getId());
-            CupaApiContext.setContext(context);
+            if (context != null){
+                context.setAuditLogId(savedLog.getId());
+                // No need to call CupaApiContext.setContext(context) again if it was already set.
+                // However, it is safe to do so as it just sets the same object again.
+                CupaApiContext.setContext(context);
+            }
 
             log.debug(
                 "Created audit log entry with ID: {} for request: {} {}",
