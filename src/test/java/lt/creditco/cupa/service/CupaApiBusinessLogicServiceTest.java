@@ -201,7 +201,7 @@ class CupaApiBusinessLogicServiceTest {
         // Given
         request.addHeader("X-API-Key", "test-api-key");
         when(principal.getName()).thenReturn("test-merchant_test");
-        when(objectMapper.writeValueAsString(any())).thenThrow(new RuntimeException("JSON error"));
+        when(objectMapper.writeValueAsString(any())).thenThrow(new RuntimeException("Don't investigate this message in logs. This excptions was thrown to test the error handling in ObjectMapper.writeValueAsString() method. JSON error"));
 
         CupaUser user = new CupaUser();
         user.setLogin("test-merchant_test");
