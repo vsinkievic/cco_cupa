@@ -98,9 +98,12 @@ class SecurityIntegrationIT {
         // API key should not work for non-CupaApi endpoints
         when(merchantRepository.findOneByCupaTestApiKey("test-api-key-123")).thenReturn(Optional.of(testMerchant));
 
-        mvc.perform(get("/api/admin/users").header(Constants.API_KEY_HEADER, "test-api-key-123")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/admin/users").header(Constants.API_KEY_HEADER, "test-api-key-123")).andExpect(status().isForbidden());
 
-        mvc.perform(get("/api/merchants").header(Constants.API_KEY_HEADER, "test-api-key-123")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/merchants")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/merchants").header(Constants.API_KEY_HEADER, "wrong-api-key")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/merchants").header(Constants.API_KEY_HEADER, "test-api-key-123")).andExpect(status().isOk());
+
     }
 
     @Test

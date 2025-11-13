@@ -4,6 +4,7 @@ import com.bpmid.vapp.config.ApiSecurityConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.MediaType;
 
+import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.CupaApiBusinessLogicService;
 import lt.creditco.cupa.web.filter.ApiKeyAuthenticationFilter;
 
@@ -104,7 +105,8 @@ public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
         http.authorizeHttpRequests(authz ->
             authz
                 // All /api/** endpoints require authentication via ApiKeyAuthenticationFilter
-                .requestMatchers(mvc.pattern("/api/**")).authenticated()
+                .requestMatchers(mvc.pattern("/api/admin/**")).hasAuthority(AuthoritiesConstants.ADMIN)
+                .requestMatchers(mvc.pattern("/api/**")).hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.MERCHANT)
         );
     }
 }

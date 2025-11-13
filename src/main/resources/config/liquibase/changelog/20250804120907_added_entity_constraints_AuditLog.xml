@@ -17,4 +17,9 @@
                                  referencedTableName="merchant"
                                  />
     </changeSet>
+
+    <changeSet id="20251113-01" author="vsinkievic">
+
+        <dropForeignKeyConstraint baseTableName="audit_log" constraintName="fk_audit_log__merchant_id" />
+    </changeSet>
 </databaseChangeLog>

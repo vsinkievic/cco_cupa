@@ -184,7 +184,7 @@ class ApiKeyAuthenticationIT {
         when(merchantRepository.findOneByCupaTestApiKey("test-api-key-123")).thenReturn(Optional.of(testMerchant));
 
         // When: Try to access non-CupaApiResource with API key
-        mvc.perform(get("/api/admin/users").header(Constants.API_KEY_HEADER, "test-api-key-123")).andExpect(status().isOk()); // Should accept API key
+        mvc.perform(get("/api/admin/users").header(Constants.API_KEY_HEADER, "test-api-key-123")).andExpect(status().isForbidden()); // Should accept API key
     }
 
     @Test
