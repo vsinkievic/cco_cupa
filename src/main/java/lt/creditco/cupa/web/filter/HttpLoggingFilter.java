@@ -23,9 +23,7 @@ import lt.creditco.cupa.service.AuditLogService;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-@Component
 public class HttpLoggingFilter implements Filter {
 
     public static final int BODY_LENGTH_LIMIT = 5000;

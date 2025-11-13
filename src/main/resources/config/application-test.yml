@@ -1,0 +1,67 @@
+# ===================================================================
+# Spring Boot configuration for the "test" profile.
+#
+# This configuration is used for unit/integration tests.
+# Activate this profile in tests with @ActiveProfiles("test")
+#
+# More information on profiles: https://www.jhipster.tech/profiles/
+# ===================================================================
+
+spring:
+  application:
+    name: cupa
+  main:
+    allow-bean-definition-overriding: true
+
+# ===================================================================
+# Management endpoints configuration for tests
+# ===================================================================
+management:
+  endpoints:
+    web:
+      base-path: /management
+      exposure:
+        include:
+          - configprops
+          - env
+          - health
+          - info
+          - jhimetrics
+          - loggers
+          - prometheus
+          - threaddump
+          - caches
+          - liquibase
+          - mappings
+  endpoint:
+    health:
+      show-details: always  # Always show details in tests
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState
+  health:
+    mail:
+      enabled: false  # Disable mail health check in tests
+  prometheus:
+    metrics:
+      export:
+        enabled: true  # Enable Prometheus metrics export
+
+# ===================================================================
+# Logging configuration for tests
+# ===================================================================
+logging:
+  level:
+    ROOT: INFO
+    tech.jhipster: DEBUG
+    org.hibernate.SQL: DEBUG
+    com.bpmid: DEBUG
+    lt.creditco: DEBUG
+    lt.creditco.cupa.security: TRACE
+    lt.creditco.cupa.web.filter: TRACE
+    org.springframework.web.servlet.HandlerMapping.Mappings: DEBUG
+

@@ -13,10 +13,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
 @SpringBootTest
+@ActiveProfiles("test")
 class SecurityConfigurationIT {
 
     @Autowired
@@ -140,6 +142,18 @@ class SecurityConfigurationIT {
     void shouldRedirectRootToVaadinLoginPage() throws Exception {
         // Root should redirect to Vaadin UI
         mvc.perform(get("/")).andExpect(status().isFound()).andExpect(redirectedUrl("http://localhost/login"));
+    }
+
+    @Test
+    void shouldRedirectNotExistingFirstLevelPathToVaadinLoginPage() throws Exception {
+        // Root should redirect to Vaadin UI
+        mvc.perform(get("/first-level/not-existing-path")).andExpect(status().isFound()).andExpect(redirectedUrl("http://localhost/login"));
+    }
+
+    @Test
+    void shouldRedirectNotExistingSecondLevelPathToVaadinLoginPage() throws Exception {
+        // Root should redirect to Vaadin UI
+        mvc.perform(get("/first-level/not-existing-path")).andExpect(status().isFound()).andExpect(redirectedUrl("http://localhost/login"));
     }
 
     @Test
