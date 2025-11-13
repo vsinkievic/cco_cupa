@@ -19,7 +19,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 
 /**
  * CUPA API security configuration extending vapp-base's ApiSecurityConfiguration.
@@ -79,11 +78,10 @@ public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
      * Adds ApiKeyAuthenticationFilter to validate X-API-Key header against merchant credentials.
      *
      * @param http the HttpSecurity to configure
-     * @param mvc the MvcRequestMatcher.Builder for path matching (unused but required by signature)
      * @throws Exception if configuration fails
      */
     @Override
-    protected void configureApiAuthentication(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
+    protected void configureApiAuthentication(HttpSecurity http) throws Exception {
         // Replace JWT with X-API-Key authentication filter
         http.addFilterAfter(new ApiKeyAuthenticationFilter(cupaApiBusinessLogicService, authenticationEntryPoint), BasicAuthenticationFilter.class);
         // No JWT/OAuth2 configuration needed
@@ -97,21 +95,20 @@ public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
      * are configured in CupaVaadinSecurityConfiguration (Vaadin filter chain, Order 2).
      *
      * @param http the HttpSecurity to configure
-     * @param mvc the MvcRequestMatcher.Builder for path matching
      * @throws Exception if configuration fails
      */
     @Override
-    protected void configureApiAuthorization(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
+    protected void configureApiAuthorization(HttpSecurity http) throws Exception {
         // Configure authorization for /api/** paths only
         // This filter chain (.securityMatcher("/api/**") in ApiSecurityConfiguration) 
         // only processes requests matching /api/**, so other paths won't reach here
 
-        // super.configureApiAuthorization(http, mvc);  commented out to override the default configuration
+        // super.configureApiAuthorization(http);  commented out to override the default configuration
         http.authorizeHttpRequests(authz ->
             authz
                 // All /api/** endpoints require authentication via ApiKeyAuthenticationFilter
-                .requestMatchers(mvc.pattern("/api/admin/**")).hasAuthority(AuthoritiesConstants.ADMIN)
-                .requestMatchers(mvc.pattern("/api/**")).hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.MERCHANT)
+                .requestMatchers("/api/admin/**").hasAuthority(AuthoritiesConstants.ADMIN)
+                .requestMatchers("/api/**").hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.MERCHANT)
         );
     }
 }
