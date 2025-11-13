@@ -78,7 +78,7 @@ public class CupaApiAuditInterceptor implements HandlerInterceptor {
             );
 
             return true;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             log.error("Error in audit interceptor preHandle", e);
             return true; // Don't block the request
         }

@@ -80,7 +80,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
                     // Create an API-compatible Authentication object from the Vaadin user
 
                     if (contextData == null || contextData.getUser() == null || contextData.getUser().getLogin().equals(vaadinAuth.getPrincipal())){
-                        contextData = cupaApiBusinessLogicService.extractBusinessContext(request, null, (Principal) vaadinAuth.getPrincipal());
+                        contextData = cupaApiBusinessLogicService.extractBusinessContext(request, null, toPrincipal(vaadinAuth.getPrincipal()));
                         CupaApiContext.setContext(contextData);
                     }
                     if (contextData != null && contextData.isAuthenticated())
@@ -119,6 +119,25 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         } finally {
             // Always clear the ThreadLocal context after the request
         }
+    }
+
+    private Principal toPrincipal(Object principal) {
+        if (principal instanceof Principal) {
+            return (Principal) principal;
+        } else if (principal instanceof org.springframework.security.core.userdetails.User user) {
+            // Create a simple Principal implementation that wraps the username
+            // Principal interface requires getName() method, so we map getUsername() to getName()
+            return new Principal() {
+                @Override
+                public String getName() {
+                    return user.getUsername();
+                }
+            };
+        } else if (principal instanceof String username) {
+            // If principal is already a String (username), create a simple Principal wrapper
+            return () -> username;
+        }
+        throw new IllegalArgumentException("Principal is not a supported type: " + principal.getClass().getName());
     }
 
     private void createAuthenticationToken(CupaApiContext.CupaApiContextData contextData) {

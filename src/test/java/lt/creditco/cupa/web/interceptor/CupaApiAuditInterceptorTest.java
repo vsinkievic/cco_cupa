@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.Optional;
+
 import lt.creditco.cupa.service.AuditLogService;
 import lt.creditco.cupa.service.CupaApiBusinessLogicService;
 import lt.creditco.cupa.service.dto.AuditLogDTO;
@@ -85,6 +86,13 @@ class CupaApiAuditInterceptorTest {
         lenient().when(principal.getName()).thenReturn("test-merchant_test");
         lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
+
+        // Mock AuditLogService.save() to simulate database ID generation
+        lenient().when(auditLogService.save(any(AuditLogDTO.class))).thenAnswer(invocation -> {
+            AuditLogDTO auditLogDTO = invocation.getArgument(0);
+            auditLogDTO.setId(1L); // Simulate database-generated ID for testing purposes
+            return auditLogDTO;
+        });
     }
 
     @Test
@@ -141,7 +149,7 @@ class CupaApiAuditInterceptorTest {
         contextData.setAuditLogId(1L);
         CupaApiContext.setContext(contextData);
 
-        Exception testException = new RuntimeException("Test exception");
+        Exception testException = new RuntimeException("Test exception - don't investigate this message in logs. This exception was thrown to test the error handling in AuditLogService.update() method.");
 
         when(auditLogService.findOne(1L)).thenReturn(Optional.of(existingAuditLog));
         when(auditLogService.update(any(AuditLogDTO.class))).thenReturn(existingAuditLog);
@@ -161,7 +169,8 @@ class CupaApiAuditInterceptorTest {
     @Test
     void shouldHandlePreHandleExceptionGracefully() throws Exception {
         // Given
-        when(businessLogicService.extractBusinessContext(any(), any(), any())).thenThrow(new RuntimeException("Test exception"));
+        CupaApiContext.clearContext();
+        when(businessLogicService.extractBusinessContext(any(), any(), any())).thenThrow(new RuntimeException("Test exception 2 - don't investigate this message in logs. This exception was thrown to test the error handling in CupaApiBusinessLogicService.extractBusinessContext() method."));
 
         // When
         boolean result = interceptor.preHandle(request, response, null);
