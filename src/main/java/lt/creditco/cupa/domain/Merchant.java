@@ -2,7 +2,6 @@ package lt.creditco.cupa.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
@@ -21,7 +20,7 @@ import org.hibernate.annotations.NaturalId;
 @Table(name = "merchant")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class Merchant extends AbstractAuditingEntity<String> implements Serializable, MerchantOwnedEntity {
+public class Merchant extends AbstractAuditingEntity<String> implements MerchantOwnedEntity {
 
     private static final long serialVersionUID = 1L;
 

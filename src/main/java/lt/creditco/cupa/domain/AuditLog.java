@@ -2,7 +2,6 @@ package lt.creditco.cupa.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import java.io.Serializable;
 import java.time.Instant;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -14,7 +13,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Table(name = "audit_log")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class AuditLog extends AbstractAuditingEntity<Long> implements Serializable, MerchantOwnedEntity {
+public class AuditLog extends AbstractAuditingEntity<Long> implements MerchantOwnedEntity {
 
     private static final long serialVersionUID = 1L;
 

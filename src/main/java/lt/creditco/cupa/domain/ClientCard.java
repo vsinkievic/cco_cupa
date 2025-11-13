@@ -3,7 +3,6 @@ package lt.creditco.cupa.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import java.io.Serializable;
 import java.util.UUID;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -17,7 +16,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Table(name = "client_card")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class ClientCard extends AbstractAuditingEntity<String> implements Serializable, MerchantOwnedEntity {
+public class ClientCard extends AbstractAuditingEntity<String> implements MerchantOwnedEntity {
 
     private static final long serialVersionUID = 1L;
 

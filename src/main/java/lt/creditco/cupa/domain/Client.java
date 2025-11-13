@@ -3,7 +3,6 @@ package lt.creditco.cupa.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,7 +19,7 @@ import org.hibernate.annotations.NaturalId;
 @Table(name = "client")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class Client extends AbstractAuditingEntity<String> implements Serializable {
+public class Client extends AbstractAuditingEntity<String> {
 
     private static final long serialVersionUID = 1L;
 
