@@ -1,6 +1,9 @@
 package lt.creditco.cupa.config;
 
 import com.bpmid.vapp.config.VaadinSecurityConfiguration;
+
+import tech.jhipster.config.JHipsterProperties;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,8 +16,8 @@ import org.springframework.security.config.annotation.web.configurers.AuthorizeH
 @Configuration
 public class CupaVaadinSecurityConfiguration extends VaadinSecurityConfiguration {
 
-    public CupaVaadinSecurityConfiguration(Environment env) {
-        super(env);
+    public CupaVaadinSecurityConfiguration(Environment env, JHipsterProperties jHipsterProperties) {
+        super(env, jHipsterProperties);
     }
 
     /**

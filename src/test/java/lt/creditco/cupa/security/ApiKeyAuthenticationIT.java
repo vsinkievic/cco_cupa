@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -99,7 +100,13 @@ class ApiKeyAuthenticationIT {
         when(merchantRepository.findOneByCupaTestApiKey("test-api-key-123")).thenReturn(Optional.of(testMerchant));
 
         // When: Access CupaApiResource with test API key
-        mvc.perform(get("/api/v1/payments/payment-123").header(Constants.API_KEY_HEADER, "test-api-key-123")).andExpect(status().isOk());
+        mvc
+            .perform(get("/api/v1/payments/payment-123").header(Constants.API_KEY_HEADER, "test-api-key-123"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+            .andExpect(header().string("X-XSS-Protection", "0"))
+            .andExpect(header().string("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate"))
+            .andExpect(header().exists("Content-Security-Policy"));
     }
 
     @Test
@@ -121,7 +128,10 @@ class ApiKeyAuthenticationIT {
         when(paymentMapper.toPayment(livePaymentTransaction)).thenReturn(livePayment);
 
         // When: Access CupaApiResource with live API key
-        mvc.perform(get("/api/v1/payments/payment-456").header(Constants.API_KEY_HEADER, "live-api-key-456")).andExpect(status().isOk());
+        mvc
+            .perform(get("/api/v1/payments/payment-456").header(Constants.API_KEY_HEADER, "live-api-key-456"))
+            .andExpect(status().isOk())
+            .andExpect(header().exists("Content-Security-Policy"));
     }
 
     @Test
@@ -133,7 +143,8 @@ class ApiKeyAuthenticationIT {
         // When: Access CupaApiResource with invalid API key
         mvc
             .perform(get("/api/v1/payments/payment-123").header(Constants.API_KEY_HEADER, "invalid-api-key"))
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isUnauthorized())
+            .andExpect(header().exists("Content-Security-Policy"));
     }
 
     @Test
@@ -145,7 +156,8 @@ class ApiKeyAuthenticationIT {
         // When: Access CupaApiResource with invalid API key
         mvc
             .perform(get("/api/admin/users").header(Constants.API_KEY_HEADER, "invalid-api-key"))
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isUnauthorized())
+            .andExpect(header().exists("Content-Security-Policy"));
     }
 
     @Test

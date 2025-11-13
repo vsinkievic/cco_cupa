@@ -39,7 +39,12 @@ public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
     private final CupaApiBusinessLogicService cupaApiBusinessLogicService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     
-    public CupaApiSecurityConfiguration(CupaApiBusinessLogicService cupaApiBusinessLogicService, @Lazy AuthenticationEntryPoint authenticationEntryPoint) {
+    public CupaApiSecurityConfiguration(
+            CupaApiBusinessLogicService cupaApiBusinessLogicService,
+            @Lazy AuthenticationEntryPoint authenticationEntryPoint,
+            tech.jhipster.config.JHipsterProperties jHipsterProperties
+    ) {
+        super(jHipsterProperties);
         this.cupaApiBusinessLogicService = cupaApiBusinessLogicService;
         this.authenticationEntryPoint = authenticationEntryPoint;
     }

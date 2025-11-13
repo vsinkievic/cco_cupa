@@ -1,6 +1,5 @@
 package lt.creditco.cupa.security;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -156,9 +155,10 @@ class SecurityIntegrationIT {
 
     @Test
     void shouldHandleCorsAndSecurityHeaders() throws Exception {
-        // Test that CORS and security headers are properly set
+        // Test that security headers are properly set for API endpoints
         // These endpoints should return 401 for anonymous users, but headers should be set
 
+        // Test /api/authenticate endpoint
         mvc
             .perform(get("/api/authenticate"))
             .andExpect(status().isUnauthorized()) // Expected - requires authentication
@@ -167,6 +167,40 @@ class SecurityIntegrationIT {
             .andExpect(header().string("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate"))
             .andExpect(header().string("Pragma", "no-cache"))
             .andExpect(header().string("Expires", "0"))
-            .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"));
+            .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"))
+            .andExpect(header().exists("Content-Security-Policy"));
+
+        // Test other API endpoints also have security headers
+        mvc
+            .perform(get("/api/admin/users"))
+            .andExpect(status().isUnauthorized()) // Expected - requires authentication
+            .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+            .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"))
+            .andExpect(header().string("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate"))
+            .andExpect(header().exists("Content-Security-Policy"));
+
+        // Test /api/v1/** endpoints (merchant API)
+        mvc
+            .perform(get("/api/v1/payments/test-id"))
+            .andExpect(status().isUnauthorized()) // Expected - requires X-API-Key
+            .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+            .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"))
+            .andExpect(header().string("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate"))
+            .andExpect(header().exists("Content-Security-Policy"));
+    }
+
+    @Test
+    void shouldApplySecurityHeadersToVaadinEndpoints() throws Exception {
+        // Test that security headers are also applied to Vaadin UI endpoints
+        mvc
+            .perform(get("/"))
+            .andExpect(status().isFound()) // Expect redirect to /login
+            .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+            .andExpect(header().string("X-XSS-Protection", "0"))
+            .andExpect(header().string("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate"))
+            .andExpect(header().string("Pragma", "no-cache"))
+            .andExpect(header().string("Expires", "0"))
+            .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"))
+            .andExpect(header().exists("Content-Security-Policy"));
     }
 }
