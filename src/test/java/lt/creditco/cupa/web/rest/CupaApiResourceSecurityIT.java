@@ -1,28 +1,44 @@
 package lt.creditco.cupa.web.rest;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+
 import lt.creditco.cupa.api.Payment;
+import lt.creditco.cupa.base.users.CupaUser;
+import lt.creditco.cupa.base.users.CupaUserRepository;
 import lt.creditco.cupa.config.Constants;
+import lt.creditco.cupa.domain.AuditLog;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
+import lt.creditco.cupa.repository.AuditLogRepository;
 import lt.creditco.cupa.repository.MerchantRepository;
+import lt.creditco.cupa.service.CupaApiBusinessLogicService;
+import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.PaymentTransactionService;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
+import lt.creditco.cupa.service.mapper.MerchantMapper;
 import lt.creditco.cupa.service.mapper.PaymentMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.bpmid.vapp.domain.Authority;
+import com.bpmid.vapp.security.AuthoritiesConstants;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -39,6 +55,36 @@ class CupaApiResourceSecurityIT {
 
     @MockBean
     private PaymentMapper paymentMapper;
+
+    @MockBean
+    private AuditLogRepository auditLogRepository;
+
+    @MockBean
+    private CupaUserRepository cupaUserRepository;
+
+    @TestConfiguration
+    static class TestConfig {
+
+        @Bean
+        public MerchantService merchantService(MerchantRepository merchantRepository, MerchantMapper merchantMapper) {
+            Objects.requireNonNull(merchantRepository, "merchantRepository must be set");
+            Objects.requireNonNull(merchantMapper, "merchantMapper must be set");
+            return new MerchantService(merchantRepository, merchantMapper);
+        }
+
+        @Bean
+        public CupaApiBusinessLogicService cupaApiBusinessLogicService(
+            MerchantService merchantService,
+            CupaUserRepository cupaUserRepository,
+            ObjectMapper objectMapper
+        ) {
+            Objects.requireNonNull(merchantService, "merchantService must be set");
+            Objects.requireNonNull(cupaUserRepository, "cupaUserRepository must be set");
+            Objects.requireNonNull(objectMapper, "objectMapper must be set");
+            return new CupaApiBusinessLogicService(merchantService, cupaUserRepository, objectMapper);
+        }
+    }
+
 
     private Merchant testMerchant;
     private PaymentTransactionDTO mockPaymentTransaction;
@@ -63,15 +109,77 @@ class CupaApiResourceSecurityIT {
         mockPayment = new Payment();
         mockPayment.setId("payment-123");
         mockPayment.setOrderId("order-123");
+
+        // Mock AuditLogRepository.save() to simulate database ID generation
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> {
+            AuditLog auditLog = invocation.getArgument(0);
+            auditLog.setId(1L); // Simulate database-generated ID
+            return auditLog;
+        });
     }
 
     @Test
-    void shouldAllowAccessWithValidJwt() throws Exception {
-        // Given: Valid JWT token (this would be set up in a real test with @WithMockUser)
-        // For now, we'll test that the endpoint requires authentication
+    @WithMockUser(username = "admin", authorities = AuthoritiesConstants.ADMIN)
+    void shouldAllowAccessWithAdminAuthorityAndTheSameMerchantIdSet() throws Exception {
+        // given
+        CupaUser adminUser = new CupaUser();
+        adminUser.setLogin("admin");
+        adminUser.setMerchantIds("MER-TEST-001");
+        adminUser.setAuthorities(Set.of(new Authority().name(AuthoritiesConstants.ADMIN)));
+        when(cupaUserRepository.findOneWithAuthoritiesByLogin("admin")).thenReturn(Optional.of(adminUser));
+        when(merchantRepository.findById("MER-TEST-001")).thenReturn(Optional.of(testMerchant));
+        when(paymentTransactionService.findOne("payment-123")).thenReturn(Optional.of(mockPaymentTransaction));
+        
+        // When: Access CupaApiResource with admin authority
+        mvc.perform(get("/api/v1/payments/payment-123")).andExpect(status().isOk());
+    }
 
-        // When: Access CupaApiResource without authentication
+    @Test
+    @WithMockUser(username = "admin", authorities = AuthoritiesConstants.ADMIN)
+    void shouldDenyAccessWithAdminAuthorityAndAnFewMerchantIdSet() throws Exception {
+        // given
+        CupaUser adminUser = new CupaUser();
+        adminUser.setLogin("admin");
+        adminUser.setMerchantIds("MER-TEST-001,MER-TEST-002");
+        adminUser.setAuthorities(Set.of(new Authority().name(AuthoritiesConstants.ADMIN)));
+        when(cupaUserRepository.findOneWithAuthoritiesByLogin("admin")).thenReturn(Optional.of(adminUser));
+        when(merchantRepository.findById("MER-TEST-001")).thenReturn(Optional.of(testMerchant));
+        when(paymentTransactionService.findOne("payment-123")).thenReturn(Optional.of(mockPaymentTransaction));
+        
+        // When: Access CupaApiResource with admin authority
         mvc.perform(get("/api/v1/payments/payment-123")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", authorities = AuthoritiesConstants.ADMIN)
+    void shouldDenyAccessWithAdminAuthorityAndWrongMerchantIdSet() throws Exception {
+        // given
+        CupaUser adminUser = new CupaUser();
+        adminUser.setLogin("admin");
+        adminUser.setMerchantIds("MER-TEST-002");
+        adminUser.setAuthorities(Set.of(new Authority().name(AuthoritiesConstants.ADMIN)));
+        when(cupaUserRepository.findOneWithAuthoritiesByLogin("admin")).thenReturn(Optional.of(adminUser));
+        when(merchantRepository.findById("MER-TEST-001")).thenReturn(Optional.of(testMerchant));
+        when(paymentTransactionService.findOne("payment-123")).thenReturn(Optional.of(mockPaymentTransaction));
+        
+        // When: Access CupaApiResource with admin authority
+        mvc.perform(get("/api/v1/payments/payment-123")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "user", authorities = AuthoritiesConstants.USER)
+    void shouldAllowAccessWithUserAuthorityAndTheSameMerchantIdSet() throws Exception {
+        // given
+        CupaUser user = new CupaUser();
+        user.setLogin("user");
+        user.setMerchantIds("MER-TEST-001");
+        user.setAuthorities(Set.of(new Authority().name(AuthoritiesConstants.USER)));
+        when(cupaUserRepository.findOneWithAuthoritiesByLogin("user")).thenReturn(Optional.of(user));
+        when(merchantRepository.findById("MER-TEST-001")).thenReturn(Optional.of(testMerchant));
+        when(paymentTransactionService.findOne("payment-123")).thenReturn(Optional.of(mockPaymentTransaction));
+        
+        // When: Access CupaApiResource with admin authority
+        mvc.perform(get("/api/v1/payments/payment-123")).andExpect(status().isOk());
     }
 
     @Test

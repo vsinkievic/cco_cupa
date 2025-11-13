@@ -27,7 +27,9 @@ import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
  * Security configuration:
  * - /api/v1/** - Protected by X-API-Key (handled by ApiKeyAuthenticationFilter)
  * - /api/** - Future API versions, also protected by X-API-Key
- * - /public/webhook - Public webhook endpoint for external integrations
+ * 
+ * Note: Public resources like /public/webhook are configured in CupaVaadinSecurityConfiguration
+ * since they are not under /api/** and require the Vaadin filter chain (Order 2).
  */
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
@@ -83,7 +85,10 @@ public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
 
     /**
      * Configure authorization rules for CUPA API endpoints.
-     * All API endpoints are public (permitAll) because authentication is handled by ApiKeyAuthenticationFilter.
+     * All /api/** endpoints require authentication (handled by ApiKeyAuthenticationFilter).
+     * 
+     * Note: This filter chain only handles /api/** paths. Public resources like /public/webhook
+     * are configured in CupaVaadinSecurityConfiguration (Vaadin filter chain, Order 2).
      *
      * @param http the HttpSecurity to configure
      * @param mvc the MvcRequestMatcher.Builder for path matching
@@ -91,17 +96,15 @@ public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
      */
     @Override
     protected void configureApiAuthorization(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
+        // Configure authorization for /api/** paths only
+        // This filter chain (.securityMatcher("/api/**") in ApiSecurityConfiguration) 
+        // only processes requests matching /api/**, so other paths won't reach here
 
-        // First, apply parent rules (for endpoints that DO exist)
-        //super.configureApiAuthorization(http, mvc);  -- we will override all the configuration
-
-        // Then, add our custom rules for /api/** paths
+        // super.configureApiAuthorization(http, mvc);  commented out to override the default configuration
         http.authorizeHttpRequests(authz ->
             authz
-                // Merchant API v1 - authenticated by ApiKeyAuthenticationFilter
+                // All /api/** endpoints require authentication via ApiKeyAuthenticationFilter
                 .requestMatchers(mvc.pattern("/api/**")).authenticated()
-                // Public webhook for external integrations
-                .requestMatchers(mvc.pattern("/public/webhook")).permitAll()
         );
     }
 }

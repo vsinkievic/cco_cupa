@@ -3,6 +3,8 @@ package lt.creditco.cupa.security;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
@@ -100,24 +103,24 @@ class SecurityConfigurationIT {
         mvc.perform(get("/api/merchants").header("X-API-Key", "any-api-key")).andExpect(status().isUnauthorized());
     }
 
-    @Test
+//    @Test  // Not used anymore after JHipster migration to Vaadin UI
     void shouldAllowAccessToStaticResources() throws Exception {
         // Static resources should be accessible
         // In JHipster, these might be at different paths or require authentication
         // Let's test what actually exists
 
         // Root page should be accessible
-        mvc.perform(get("/")).andExpect(status().isOk());
+//        mvc.perform(get("/")).andExpect(status().isOk()); // This is now redirected to Vaadin UI
 
         // Index page should be accessible
-        mvc.perform(get("/index.html")).andExpect(status().isOk());
+//        mvc.perform(get("/index.html")).andExpect(status().isOk()); // This is now redirected to Vaadin UI
 
-        mvc.perform(get("/content/css/loading.css")).andExpect(status().isOk());
+//        mvc.perform(get("/content/css/loading.css")).andExpect(status().isOk()); // Not used anymore after JHipster migration to Vaadin UI
 
         // Test if these paths exist, if not, they'll return 404 which is fine
-        mvc.perform(get("/app/main.js")).andExpect(status().isNotFound()); // Expected if file doesn't exist in test environment
+//        mvc.perform(get("/app/main.js")).andExpect(status().isNotFound()); // Not used anymore after JHipster migration to Vaadin UI
 
-        mvc.perform(get("/content/css/main.css")).andExpect(status().isNotFound()); // Expected if file doesn't exist in test environment
+//        mvc.perform(get("/content/css/main.css")).andExpect(status().isNotFound()); // Expected if file doesn't exist in test environment
     }
 
     @Test
@@ -127,19 +130,23 @@ class SecurityConfigurationIT {
     }
 
     @Test
+    @WithMockUser(authorities = AuthoritiesConstants.USER)
+    void shouldRedirectRootToVaadinUi() throws Exception {
+        // Root should redirect to Vaadin UI
+        mvc.perform(get("/")).andExpect(status().isFound()).andExpect(redirectedUrl("/ui/"));
+    }
+
+    @Test
+    void shouldRedirectRootToVaadinLoginPage() throws Exception {
+        // Root should redirect to Vaadin UI
+        mvc.perform(get("/")).andExpect(status().isFound()).andExpect(redirectedUrl("http://localhost/login"));
+    }
+
+    @Test
     void shouldAllowAccessToHealthEndpoints() throws Exception {
-        // Health endpoints should be accessible without authentication
-        // Note: In test environment, these might return 404 if not fully configured
-        // The important thing is that they don't return 401 (Unauthorized)
-
-        // Test health endpoint - might return 404 in test environment, but not 401
-        mvc.perform(get("/management/health")).andExpect(status().isNotFound()); // Expected in test environment
-
-        // Test health info endpoint
-        mvc.perform(get("/management/info")).andExpect(status().isNotFound()); // Expected in test environment
-
-        // Test prometheus endpoint
-        mvc.perform(get("/management/prometheus")).andExpect(status().isNotFound()); // Expected in test environment
+        mvc.perform(get("/management/health")).andExpect(status().isOk()); // Expected in test environment
+        mvc.perform(get("/management/info")).andExpect(status().isOk()); // Expected in test environment
+        mvc.perform(get("/management/prometheus")).andExpect(status().isOk()); // Expected in test environment
     }
 
     @Test
@@ -151,6 +158,35 @@ class SecurityConfigurationIT {
     @Test
     void shouldRequireAuthenticationForApiDocs() throws Exception {
         // API docs should require authentication
-        mvc.perform(get("/v3/api-docs")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/v3/api-docs")).andExpect(status().isFound()).andExpect(redirectedUrl("http://localhost/login"));
     }
+
+    @Test
+    @WithMockUser(authorities = AuthoritiesConstants.ADMIN)
+    void shouldAllowAccessToApiDocsForAdmin() throws Exception {
+        // API docs should require authentication
+        mvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(authorities = AuthoritiesConstants.USER)
+    void shouldAllowAccessToApiDocsForUser() throws Exception {
+        // API docs should require authentication
+        mvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(authorities = AuthoritiesConstants.CREDITCO)
+    void shouldAllowAccessToApiDocsForCreditco() throws Exception {
+        // API docs should require authentication
+        mvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(authorities = AuthoritiesConstants.MERCHANT)
+    void shouldAllowAccessToApiDocsForMerchant() throws Exception {
+        // API docs should require authentication
+        mvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+    }
+
 }
