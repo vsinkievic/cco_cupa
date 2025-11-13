@@ -14,8 +14,6 @@ import lt.creditco.cupa.service.AuditLogService;
 import lt.creditco.cupa.service.dto.AuditLogDTO;
 import lt.creditco.cupa.ui.util.JsonDisplayComponent;
 
-import java.util.Optional;
-
 /**
  * Vaadin view for viewing Audit Log details (read-only).
  */

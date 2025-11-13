@@ -18,8 +18,6 @@ import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.MerchantDTO;
 
-import java.util.Optional;
-
 /**
  * Vaadin view for viewing Merchant details.
  */

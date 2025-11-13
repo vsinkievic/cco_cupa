@@ -17,8 +17,6 @@ import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.ClientService;
 import lt.creditco.cupa.service.dto.ClientDTO;
 
-import java.util.Optional;
-
 /**
  * Vaadin view for viewing Client details.
  */

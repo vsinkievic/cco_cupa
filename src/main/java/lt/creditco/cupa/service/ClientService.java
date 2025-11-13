@@ -2,7 +2,6 @@ package lt.creditco.cupa.service;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.Client;
@@ -10,7 +9,6 @@ import com.bpmid.vapp.domain.User;
 import lt.creditco.cupa.repository.ClientRepository;
 import lt.creditco.cupa.service.dto.ClientDTO;
 import lt.creditco.cupa.service.mapper.ClientMapper;
-import lt.creditco.cupa.web.context.CupaApiContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;

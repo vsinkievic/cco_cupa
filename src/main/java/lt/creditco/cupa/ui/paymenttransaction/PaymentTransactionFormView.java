@@ -1,12 +1,11 @@
 package lt.creditco.cupa.ui.paymenttransaction;
 
+import java.util.Optional;
+
 import com.bpmid.vapp.base.ui.MainLayout;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -16,8 +15,6 @@ import jakarta.annotation.security.RolesAllowed;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.PaymentTransactionService;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
-
-import java.util.Optional;
 
 /**
  * Simplified form view for PaymentTransaction - can be enhanced later.

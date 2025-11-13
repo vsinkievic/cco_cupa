@@ -2,7 +2,6 @@ package lt.creditco.cupa.domain;
 
 import static lt.creditco.cupa.domain.ClientCardTestSamples.*;
 import static lt.creditco.cupa.domain.ClientTestSamples.*;
-import static lt.creditco.cupa.domain.MerchantTestSamples.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashSet;

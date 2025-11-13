@@ -2,9 +2,7 @@ package lt.creditco.cupa.ui.paymenttransaction;
 
 import com.bpmid.vapp.base.ui.MainLayout;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.*;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -15,8 +13,6 @@ import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.PaymentTransactionService;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
 import lt.creditco.cupa.ui.util.JsonDisplayComponent;
-
-import java.util.Optional;
 
 /**
  * Vaadin view for viewing Payment Transaction details.
