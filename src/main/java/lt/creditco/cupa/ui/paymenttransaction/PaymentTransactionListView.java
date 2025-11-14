@@ -7,28 +7,41 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.data.provider.CallbackDataProvider;
-import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.PaymentTransactionService;
+import lt.creditco.cupa.service.CupaUserService;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.context.annotation.Scope;
+
+import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 /**
  * Vaadin view for listing Payment Transactions.
  */
 @Route(value = "payment-transactions", layout = MainLayout.class)
 @PageTitle("Payment Transactions | CUPA")
+@Scope("prototype")
 @RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO, AuthoritiesConstants.MERCHANT, AuthoritiesConstants.USER })
+@Slf4j
 public class PaymentTransactionListView extends VerticalLayout {
 
     private final PaymentTransactionService paymentTransactionService;
+    private final CupaUserService cupaUserService;
+    private final CupaUser loggedInUser;
     private final Grid<PaymentTransactionDTO> grid = new Grid<>(PaymentTransactionDTO.class, false);
     
-    public PaymentTransactionListView(PaymentTransactionService paymentTransactionService) {
+    public PaymentTransactionListView(PaymentTransactionService paymentTransactionService, CupaUserService cupaUserService) {
+        this.cupaUserService = cupaUserService;
+        this.loggedInUser = cupaUserService.getUserWithAuthorities()
+                .map(CupaUser.class::cast)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         this.paymentTransactionService = paymentTransactionService;
         
         setSizeFull();
@@ -68,13 +81,11 @@ public class PaymentTransactionListView extends VerticalLayout {
     }
     
     private void refreshGrid() {
-        CallbackDataProvider<PaymentTransactionDTO, Void> dataProvider = DataProvider.fromCallbacks(
-            query -> {
-                var pageable = PageRequest.of(query.getPage(), query.getPageSize());
-                return paymentTransactionService.findAll(pageable).stream();
-            },
-            query -> (int) paymentTransactionService.count()
-        );
+        // Load all payment transactions (with pagination to limit initial load)
+        var pageable = PageRequest.of(0, 1000);
+        List<PaymentTransactionDTO> allTransactions = paymentTransactionService.findAllWithAccessControl(pageable, loggedInUser).getContent();
+        
+        ListDataProvider<PaymentTransactionDTO> dataProvider = new ListDataProvider<>(allTransactions);
         grid.setDataProvider(dataProvider);
     }
 }

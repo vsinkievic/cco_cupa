@@ -33,5 +33,11 @@
         </loadData>
     </changeSet>
 
+    <changeSet id="20251114-02" author="vsinkievic">
+        <sql>
+            UPDATE jhi_user SET dtype = 'CUPA_USER' WHERE dtype = 'VAPP_USER';
+        </sql>
+    </changeSet>
+
 
 </databaseChangeLog>

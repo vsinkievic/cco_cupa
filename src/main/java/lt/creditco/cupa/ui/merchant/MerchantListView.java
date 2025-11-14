@@ -9,25 +9,31 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.provider.CallbackDataProvider;
-import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 import lt.creditco.cupa.security.AuthoritiesConstants;
+import lt.creditco.cupa.service.CupaUserService;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.MerchantDTO;
+
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.PageRequest;
+
+import java.util.List;
 
 /**
  * Vaadin view for listing Merchants.
  */
 @Route(value = "merchants", layout = MainLayout.class)
 @PageTitle("Merchants | CUPA")
-@RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO })
+@Scope("prototype")
+@RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO, AuthoritiesConstants.MERCHANT })
 public class MerchantListView extends VerticalLayout {
 
     private final MerchantService merchantService;
@@ -37,9 +43,15 @@ public class MerchantListView extends VerticalLayout {
     private final TextField nameFilter = new TextField("Name");
     private final ComboBox<MerchantMode> modeFilter = new ComboBox<>("Mode");
     private final ComboBox<MerchantStatus> statusFilter = new ComboBox<>("Status");
+    private final CupaUser loggedInUser;
+    private final CupaUserService cupaUserService;
     
-    public MerchantListView(MerchantService merchantService) {
+    public MerchantListView(MerchantService merchantService, CupaUserService cupaUserService) {
         this.merchantService = merchantService;
+        this.cupaUserService = cupaUserService;
+        this.loggedInUser = cupaUserService.getUserWithAuthorities()
+                .map(CupaUser.class::cast)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         
         setSizeFull();
         setPadding(true);
@@ -110,29 +122,37 @@ public class MerchantListView extends VerticalLayout {
     }
     
     private void refreshGrid() {
-        String nameValue = nameFilter.getValue();
-        MerchantMode modeValue = modeFilter.getValue();
-        MerchantStatus statusValue = statusFilter.getValue();
+        // Load all accessible merchants (with pagination to limit initial load)
+        var pageable = PageRequest.of(0, 1000);
+        List<MerchantDTO> allMerchants = merchantService.findAllWithAccessControl(pageable, loggedInUser).getContent();
         
-        CallbackDataProvider<MerchantDTO, Void> dataProvider = DataProvider.fromCallbacks(
-            query -> {
-                int page = query.getPage();
-                int size = query.getPageSize();
-                
-                var pageable = PageRequest.of(page, size);
-                var result = merchantService.findAll(pageable);
-                
-                // Apply filters manually (could be optimized with service-level filtering)
-                return result.stream()
-                    .filter(m -> nameValue == null || nameValue.isEmpty() || 
-                                m.getName().toLowerCase().contains(nameValue.toLowerCase()))
-                    .filter(m -> modeValue == null || m.getMode() == modeValue)
-                    .filter(m -> statusValue == null || m.getStatus() == statusValue);
-            },
-            query -> {
-                return (int) merchantService.count();
+        // Create ListDataProvider with the loaded data
+        ListDataProvider<MerchantDTO> dataProvider = new ListDataProvider<>(allMerchants);
+        
+        // Configure filters
+        dataProvider.setFilter(merchant -> {
+            String nameValue = nameFilter.getValue();
+            MerchantMode modeValue = modeFilter.getValue();
+            MerchantStatus statusValue = statusFilter.getValue();
+            
+            // Name filter
+            if (nameValue != null && !nameValue.isEmpty() && 
+                (merchant.getName() == null || !merchant.getName().toLowerCase().contains(nameValue.toLowerCase()))) {
+                return false;
             }
-        );
+            
+            // Mode filter
+            if (modeValue != null && merchant.getMode() != modeValue) {
+                return false;
+            }
+            
+            // Status filter
+            if (statusValue != null && merchant.getStatus() != statusValue) {
+                return false;
+            }
+            
+            return true;
+        });
         
         grid.setDataProvider(dataProvider);
     }

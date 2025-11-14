@@ -1,5 +1,7 @@
 package lt.creditco.cupa.ui.clientcard;
 
+import org.springframework.context.annotation.Scope;
+
 import com.bpmid.vapp.base.ui.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -13,8 +15,11 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.ClientCardService;
+import lt.creditco.cupa.service.CupaUserService;
 import lt.creditco.cupa.service.dto.ClientCardDTO;
 
 /**
@@ -22,18 +27,26 @@ import lt.creditco.cupa.service.dto.ClientCardDTO;
  */
 @Route(value = "client-cards/view", layout = MainLayout.class)
 @PageTitle("Client Card Details | CUPA")
+@Scope("prototype")
 @RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO, AuthoritiesConstants.MERCHANT, AuthoritiesConstants.USER })
+@Slf4j
 public class ClientCardDetailView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final ClientCardService clientCardService;
+    private final CupaUserService cupaUserService;
+    private final CupaUser loggedInUser;
     
     private ClientCardDTO card;
     
     private final VerticalLayout contentLayout = new VerticalLayout();
     
-    public ClientCardDetailView(ClientCardService clientCardService) {
+    public ClientCardDetailView(ClientCardService clientCardService, CupaUserService cupaUserService) {
         this.clientCardService = clientCardService;
-        
+        this.cupaUserService = cupaUserService;
+        this.loggedInUser = cupaUserService.getUserWithAuthorities()
+                .map(CupaUser.class::cast)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+                
         setSizeFull();
         setPadding(true);
         setSpacing(true);
@@ -43,7 +56,8 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
     
     @Override
     public void setParameter(BeforeEvent event, String cardId) {
-        ClientCardDTO card = clientCardService.findOne(cardId).orElse(null);
+        log.debug("Loading client card: {} for user: {}", cardId, loggedInUser.getLogin());
+        ClientCardDTO card = clientCardService.findOneWithAccessControl(cardId, loggedInUser).orElse(null);
         if (card != null) {
             this.card = card;
             buildContent();

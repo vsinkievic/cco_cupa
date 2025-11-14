@@ -18,25 +18,34 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.*;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
 import lt.creditco.cupa.security.AuthoritiesConstants;
+import lt.creditco.cupa.service.CupaUserService;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.MerchantDTO;
 
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.context.annotation.Scope;
+
 /**
  * Vaadin view for creating/editing a Merchant.
  */
 @Route(value = "merchants/edit", layout = MainLayout.class)
 @PageTitle("Edit Merchant | CUPA")
+@Scope("prototype")
 @RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO })
+@Slf4j
 public class MerchantFormView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final MerchantService merchantService;
+    private final CupaUserService cupaUserService;
+    private final CupaUser loggedInUser;
     
     private final Binder<MerchantDTO> binder = new BeanValidationBinder<>(MerchantDTO.class);
     
@@ -64,8 +73,12 @@ public class MerchantFormView extends VerticalLayout implements HasUrlParameter<
     private final TextField remoteProdMerchantKeyField = new TextField("Remote Production Merchant Key");
     private final TextField remoteProdApiKeyField = new TextField("Remote Production API Key");
     
-    public MerchantFormView(MerchantService merchantService) {
+    public MerchantFormView(MerchantService merchantService, CupaUserService cupaUserService) {
         this.merchantService = merchantService;
+        this.cupaUserService = cupaUserService;
+        this.loggedInUser = cupaUserService.getUserWithAuthorities()
+                .map(CupaUser.class::cast)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         
         setSizeFull();
         setPadding(true);
@@ -220,7 +233,8 @@ public class MerchantFormView extends VerticalLayout implements HasUrlParameter<
     }
     
     private void loadMerchant(String id) {
-        MerchantDTO merchant = merchantService.findOne(id).orElse(null);
+        log.debug("Loading merchant: {} for user: {}", id, loggedInUser.getLogin());
+        MerchantDTO merchant = merchantService.findOneWithAccessControl(id, loggedInUser).orElse(null);
         if (merchant != null) {
             binder.setBean(merchant);
         } else {

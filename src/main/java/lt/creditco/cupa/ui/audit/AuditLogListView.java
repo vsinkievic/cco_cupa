@@ -6,8 +6,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.data.provider.CallbackDataProvider;
-import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
@@ -15,6 +14,8 @@ import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.AuditLogService;
 import lt.creditco.cupa.service.dto.AuditLogDTO;
 import org.springframework.data.domain.PageRequest;
+
+import java.util.List;
 
 /**
  * Vaadin view for listing Audit Logs (read-only).
@@ -56,13 +57,11 @@ public class AuditLogListView extends VerticalLayout {
     }
     
     private void refreshGrid() {
-        CallbackDataProvider<AuditLogDTO, Void> dataProvider = DataProvider.fromCallbacks(
-            query -> {
-                var pageable = PageRequest.of(query.getPage(), query.getPageSize());
-                return auditLogService.findAll(pageable).stream();
-            },
-            query -> (int) auditLogService.count()
-        );
+        // Load all audit logs (with pagination to limit initial load)
+        var pageable = PageRequest.of(0, 1000);
+        List<AuditLogDTO> allLogs = auditLogService.findAll(pageable).getContent();
+        
+        ListDataProvider<AuditLogDTO> dataProvider = new ListDataProvider<>(allLogs);
         grid.setDataProvider(dataProvider);
     }
 }

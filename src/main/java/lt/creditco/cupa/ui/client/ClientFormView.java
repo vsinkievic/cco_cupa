@@ -17,11 +17,16 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.*;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.ClientService;
+import lt.creditco.cupa.service.CupaUserService;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.ClientDTO;
 import lt.creditco.cupa.service.dto.MerchantDTO;
+
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.Optional;
@@ -32,11 +37,15 @@ import java.util.UUID;
  */
 @Route(value = "clients/edit", layout = MainLayout.class)
 @PageTitle("Edit Client | CUPA")
+@Scope("prototype")
 @RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO, AuthoritiesConstants.MERCHANT, AuthoritiesConstants.USER })
+@Slf4j
 public class ClientFormView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final ClientService clientService;
     private final MerchantService merchantService;
+    private final CupaUserService cupaUserService;
+    private final CupaUser loggedInUser;
     
     private final Binder<ClientDTO> binder = new BeanValidationBinder<>(ClientDTO.class);
     
@@ -63,9 +72,13 @@ public class ClientFormView extends VerticalLayout implements HasUrlParameter<St
     private final TextField postCodeField = new TextField("Post Code");
     private final TextField countryField = new TextField("Country");
     
-    public ClientFormView(ClientService clientService, MerchantService merchantService) {
+    public ClientFormView(ClientService clientService, MerchantService merchantService, CupaUserService cupaUserService) {
         this.clientService = clientService;
         this.merchantService = merchantService;
+        this.cupaUserService = cupaUserService;
+        this.loggedInUser = cupaUserService.getUserWithAuthorities()
+                .map(CupaUser.class::cast)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         
         setSizeFull();
         setPadding(true);
@@ -134,7 +147,7 @@ public class ClientFormView extends VerticalLayout implements HasUrlParameter<St
     }
     
     private void loadMerchants() {
-        var merchants = merchantService.findAll(PageRequest.of(0, 100)).getContent();
+        var merchants = merchantService.findAllWithAccessControl(PageRequest.of(0, 100), loggedInUser).getContent();
         merchantField.setItems(merchants);
         merchantField.setItemLabelGenerator(MerchantDTO::getName);
     }
@@ -174,7 +187,8 @@ public class ClientFormView extends VerticalLayout implements HasUrlParameter<St
     }
     
     private void loadClient(String id) {
-        ClientDTO client = clientService.findOne(id).orElse(null);
+        log.debug("Loading client: {} for user: {}", id, loggedInUser.getLogin());
+        ClientDTO client = clientService.findOneWithAccessControl(id, loggedInUser).orElse(null);
         if (client != null) {
             binder.setBean(client);
         } else {

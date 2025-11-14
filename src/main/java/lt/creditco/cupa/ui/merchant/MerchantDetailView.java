@@ -1,5 +1,7 @@
 package lt.creditco.cupa.ui.merchant;
 
+import org.springframework.context.annotation.Scope;
+
 import com.bpmid.vapp.base.ui.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -14,7 +16,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.security.AuthoritiesConstants;
+import lt.creditco.cupa.service.CupaUserService;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.MerchantDTO;
 
@@ -23,17 +28,25 @@ import lt.creditco.cupa.service.dto.MerchantDTO;
  */
 @Route(value = "merchants/view", layout = MainLayout.class)
 @PageTitle("Merchant Details | CUPA")
+@Scope("prototype")
 @RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO })
+@Slf4j
 public class MerchantDetailView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final MerchantService merchantService;
+    private final CupaUserService cupaUserService;
+    private final CupaUser loggedInUser;
     
     private MerchantDTO merchant;
     
     private final VerticalLayout contentLayout = new VerticalLayout();
     
-    public MerchantDetailView(MerchantService merchantService) {
+    public MerchantDetailView(MerchantService merchantService, CupaUserService cupaUserService) {
         this.merchantService = merchantService;
+        this.cupaUserService = cupaUserService;
+        this.loggedInUser = cupaUserService.getUserWithAuthorities()
+                .map(CupaUser.class::cast)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         
         setSizeFull();
         setPadding(true);
@@ -44,7 +57,8 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
     
     @Override
     public void setParameter(BeforeEvent event, String merchantId) {
-        MerchantDTO merchant = merchantService.findOne(merchantId).orElse(null);
+        log.debug("Loading merchant: {} for user: {}", merchantId, loggedInUser.getLogin());
+        MerchantDTO merchant = merchantService.findOneWithAccessControl(merchantId, loggedInUser).orElse(null);
         if (merchant != null) {
             this.merchant = merchant;
             buildContent();

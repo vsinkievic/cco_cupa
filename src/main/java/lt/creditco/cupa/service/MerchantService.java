@@ -77,29 +77,6 @@ public class MerchantService {
             .map(merchantMapper::toDto);
     }
 
-    /**
-     * Get all the merchants.
-     *
-     * @param pageable the pagination information.
-     * @return the list of entities.
-     */
-    @Transactional(readOnly = true)
-    public Page<MerchantDTO> findAll(Pageable pageable) {
-        log.debug("Request to get all Merchants");
-        return merchantRepository.findAll(pageable).map(merchantMapper::toDto);
-    }
-
-    /**
-     * Get one merchant by id.
-     *
-     * @param id the id of the entity.
-     * @return the entity.
-     */
-    @Transactional(readOnly = true)
-    public Optional<MerchantDTO> findOne(String id) {
-        log.debug("Request to get Merchant : {}", id);
-        return merchantRepository.findById(id).map(merchantMapper::toDto);
-    }
 
     /**
      * Delete the merchant by id.
@@ -162,7 +139,7 @@ public class MerchantService {
 
         if (user.hasAuthority("ROLE_ADMIN")) {
             // Admin gets full data
-            return findAll(pageable);
+            return merchantRepository.findAll(pageable).map(merchantMapper::toDto);
         }
 
         if (user instanceof CupaUser cupaUser) {
@@ -196,7 +173,7 @@ public class MerchantService {
 
         if (user.hasAuthority("ROLE_ADMIN")) {
             // Admin gets full data
-            return findOne(id);
+            return merchantRepository.findById(id).map(merchantMapper::toDto);
         }
 
         if (user instanceof CupaUser cupaUser) {

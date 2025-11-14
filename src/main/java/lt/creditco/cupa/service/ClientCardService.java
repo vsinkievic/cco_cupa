@@ -80,17 +80,6 @@ public class ClientCardService {
             .map(clientCardMapper::toDto);
     }
 
-    /**
-     * Get all the clientCards.
-     *
-     * @param pageable the pagination information.
-     * @return the list of entities.
-     */
-    @Transactional(readOnly = true)
-    public Page<ClientCardDTO> findAll(Pageable pageable) {
-        LOG.debug("Request to get all ClientCards");
-        return clientCardRepository.findAll(pageable).map(clientCardMapper::toDto);
-    }
 
     /**
      * Get all the clientCards with eager load of many-to-many relationships.
@@ -101,17 +90,6 @@ public class ClientCardService {
         return clientCardRepository.findAllWithEagerRelationships(pageable).map(clientCardMapper::toDto);
     }
 
-    /**
-     * Get one clientCard by id.
-     *
-     * @param id the id of the entity.
-     * @return the entity.
-     */
-    @Transactional(readOnly = true)
-    public Optional<ClientCardDTO> findOne(String id) {
-        LOG.debug("Request to get ClientCard : {}", id);
-        return clientCardRepository.findOneWithEagerRelationships(id).map(clientCardMapper::toDto);
-    }
 
     /**
      * Delete the clientCard by id.
@@ -151,7 +129,7 @@ public class ClientCardService {
         LOG.debug("Request to get all ClientCards with access control for user: {}", user.getLogin());
 
         if (user.hasAuthority("ROLE_ADMIN")) {
-            return findAll(pageable);
+            return clientCardRepository.findAll(pageable).map(clientCardMapper::toDto);
         }
 
         if (user instanceof CupaUser cupaUser) {
@@ -208,7 +186,7 @@ public class ClientCardService {
         LOG.debug("Request to get ClientCard : {} with access control for user: {}", id, user.getLogin());
 
         if (user.hasAuthority("ROLE_ADMIN")) {
-            return findOne(id);
+            return clientCardRepository.findById(id).map(clientCardMapper::toDto);
         }
 
         if (user instanceof CupaUser cupaUser) {

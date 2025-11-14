@@ -11,22 +11,38 @@ import com.vaadin.flow.router.*;
 import jakarta.annotation.security.RolesAllowed;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.PaymentTransactionService;
+import lt.creditco.cupa.service.CupaUserService;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
 import lt.creditco.cupa.ui.util.JsonDisplayComponent;
+
+import org.springframework.context.annotation.Scope;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Vaadin view for viewing Payment Transaction details.
  */
 @Route(value = "payment-transactions/view", layout = MainLayout.class)
 @PageTitle("Payment Transaction Details | CUPA")
+@Scope("prototype")
 @RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO, AuthoritiesConstants.MERCHANT, AuthoritiesConstants.USER })
+@Slf4j
 public class PaymentTransactionDetailView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final PaymentTransactionService paymentTransactionService;
+    private final CupaUserService cupaUserService;
+    private final CupaUser loggedInUser;
+
     private PaymentTransactionDTO transaction;
     private final VerticalLayout contentLayout = new VerticalLayout();
     
-    public PaymentTransactionDetailView(PaymentTransactionService paymentTransactionService) {
+    public PaymentTransactionDetailView(PaymentTransactionService paymentTransactionService, CupaUserService cupaUserService) {
+        this.cupaUserService = cupaUserService;
+        this.loggedInUser = cupaUserService.getUserWithAuthorities()
+                .map(CupaUser.class::cast)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
         this.paymentTransactionService = paymentTransactionService;
         setSizeFull();
         setPadding(true);
@@ -35,7 +51,8 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
     
     @Override
     public void setParameter(BeforeEvent event, String transactionId) {
-        PaymentTransactionDTO transaction = paymentTransactionService.findOne(transactionId).orElse(null);
+        log.debug("Loading payment transaction: {} for user: {}", transactionId, loggedInUser.getLogin());
+        PaymentTransactionDTO transaction = paymentTransactionService.findOneWithAccessControl(transactionId, loggedInUser).orElse(null);
         if (transaction != null) {
             this.transaction = transaction;
             buildContent();

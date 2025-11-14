@@ -9,38 +9,52 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.provider.CallbackDataProvider;
-import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.ClientCardService;
+import lt.creditco.cupa.service.CupaUserService;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.ClientCardDTO;
 import lt.creditco.cupa.service.dto.MerchantDTO;
+
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.PageRequest;
+
+import java.util.List;
 
 /**
  * Vaadin view for listing Client Cards.
  */
 @Route(value = "client-cards", layout = MainLayout.class)
 @PageTitle("Client Cards | CUPA")
+@Scope("prototype")
 @RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO, AuthoritiesConstants.MERCHANT, AuthoritiesConstants.USER })
+@Slf4j
 public class ClientCardListView extends VerticalLayout {
 
     private final ClientCardService clientCardService;
     private final MerchantService merchantService;
+    private final CupaUserService cupaUserService;
+    private final CupaUser loggedInUser;
     
     private final Grid<ClientCardDTO> grid = new Grid<>(ClientCardDTO.class, false);
     
     private final ComboBox<MerchantDTO> merchantFilter = new ComboBox<>("Merchant");
     private final TextField cardNumberFilter = new TextField("Card Number");
     
-    public ClientCardListView(ClientCardService clientCardService, MerchantService merchantService) {
+    public ClientCardListView(ClientCardService clientCardService, MerchantService merchantService, CupaUserService cupaUserService) {
         this.clientCardService = clientCardService;
         this.merchantService = merchantService;
+        this.cupaUserService = cupaUserService;
+        this.loggedInUser = cupaUserService.getUserWithAuthorities()
+                .map(CupaUser.class::cast)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         
         setSizeFull();
         setPadding(true);
@@ -52,7 +66,7 @@ public class ClientCardListView extends VerticalLayout {
     }
     
     private void loadMerchants() {
-        var merchants = merchantService.findAll(PageRequest.of(0, 100)).getContent();
+        var merchants = merchantService.findAllWithAccessControl(PageRequest.of(0, 100), loggedInUser).getContent();
         merchantFilter.setItems(merchants);
         merchantFilter.setItemLabelGenerator(MerchantDTO::getName);
     }
@@ -121,29 +135,33 @@ public class ClientCardListView extends VerticalLayout {
     }
     
     private void refreshGrid() {
-        MerchantDTO merchantValue = merchantFilter.getValue();
-        String cardNumberValue = cardNumberFilter.getValue();
+        // Load all accessible client cards (with pagination to limit initial load)
+        var pageable = PageRequest.of(0, 1000);
+        List<ClientCardDTO> allCards = clientCardService.findAllWithAccessControl(pageable, loggedInUser).getContent();
         
-        CallbackDataProvider<ClientCardDTO, Void> dataProvider = DataProvider.fromCallbacks(
-            query -> {
-                int page = query.getPage();
-                int size = query.getPageSize();
-                
-                var pageable = PageRequest.of(page, size);
-                var result = clientCardService.findAll(pageable);
-                
-                // Apply filters manually
-                return result.stream()
-                    .filter(c -> merchantValue == null || 
-                                (c.getClient() != null && c.getClient().getMerchantId() != null && 
-                                 c.getClient().getMerchantId().equals(merchantValue.getId())))
-                    .filter(c -> cardNumberValue == null || cardNumberValue.isEmpty() || 
-                                (c.getMaskedPan() != null && c.getMaskedPan().contains(cardNumberValue)));
-            },
-            query -> {
-                return (int) clientCardService.count();
+        // Create ListDataProvider with the loaded data
+        ListDataProvider<ClientCardDTO> dataProvider = new ListDataProvider<>(allCards);
+        
+        // Configure filters
+        dataProvider.setFilter(card -> {
+            MerchantDTO merchantValue = merchantFilter.getValue();
+            String cardNumberValue = cardNumberFilter.getValue();
+            
+            // Merchant filter
+            if (merchantValue != null && 
+                (card.getClient() == null || card.getClient().getMerchantId() == null || 
+                 !card.getClient().getMerchantId().equals(merchantValue.getId()))) {
+                return false;
             }
-        );
+            
+            // Card number filter
+            if (cardNumberValue != null && !cardNumberValue.isEmpty() && 
+                (card.getMaskedPan() == null || !card.getMaskedPan().contains(cardNumberValue))) {
+                return false;
+            }
+            
+            return true;
+        });
         
         grid.setDataProvider(dataProvider);
     }

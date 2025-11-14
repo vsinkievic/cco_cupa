@@ -9,29 +9,39 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.provider.CallbackDataProvider;
-import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.ClientService;
+import lt.creditco.cupa.service.CupaUserService;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.ClientDTO;
 import lt.creditco.cupa.service.dto.MerchantDTO;
+
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.PageRequest;
+
+import java.util.List;
 
 /**
  * Vaadin view for listing Clients.
  */
 @Route(value = "clients", layout = MainLayout.class)
 @PageTitle("Clients | CUPA")
+@Scope("prototype")
 @RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO, AuthoritiesConstants.MERCHANT, AuthoritiesConstants.USER })
+@Slf4j
 public class ClientListView extends VerticalLayout {
 
     private final ClientService clientService;
     private final MerchantService merchantService;
+    private final CupaUserService cupaUserService;
+    private final CupaUser loggedInUser;
     
     private final Grid<ClientDTO> grid = new Grid<>(ClientDTO.class, false);
     
@@ -39,9 +49,13 @@ public class ClientListView extends VerticalLayout {
     private final TextField nameFilter = new TextField("Name");
     private final TextField emailFilter = new TextField("Email");
     
-    public ClientListView(ClientService clientService, MerchantService merchantService) {
+    public ClientListView(ClientService clientService, MerchantService merchantService, CupaUserService cupaUserService) {
         this.clientService = clientService;
         this.merchantService = merchantService;
+        this.cupaUserService = cupaUserService;
+        this.loggedInUser = cupaUserService.getUserWithAuthorities()
+                .map(CupaUser.class::cast)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         
         setSizeFull();
         setPadding(true);
@@ -53,7 +67,8 @@ public class ClientListView extends VerticalLayout {
     }
     
     private void loadMerchants() {
-        var merchants = merchantService.findAll(PageRequest.of(0, 100)).getContent();
+        log.debug("Loading merchants for user: {}", loggedInUser.getLogin());
+        var merchants = merchantService.findAllWithAccessControl(PageRequest.of(0, 100), loggedInUser).getContent();
         merchantFilter.setItems(merchants);
         merchantFilter.setItemLabelGenerator(MerchantDTO::getName);
     }
@@ -117,31 +132,42 @@ public class ClientListView extends VerticalLayout {
     }
     
     private void refreshGrid() {
-        MerchantDTO merchantValue = merchantFilter.getValue();
-        String nameValue = nameFilter.getValue();
-        String emailValue = emailFilter.getValue();
+        log.debug("Refreshing clients grid for user: {}", loggedInUser.getLogin());
         
-        CallbackDataProvider<ClientDTO, Void> dataProvider = DataProvider.fromCallbacks(
-            query -> {
-                int page = query.getPage();
-                int size = query.getPageSize();
-                
-                var pageable = PageRequest.of(page, size);
-                var result = clientService.findAll(pageable);
-                
-                // Apply filters manually (could be optimized with service-level filtering)
-                return result.stream()
-                    .filter(c -> merchantValue == null || 
-                                (c.getMerchantId() != null && c.getMerchantId().equals(merchantValue.getId())))
-                    .filter(c -> nameValue == null || nameValue.isEmpty() || 
-                                (c.getName() != null && c.getName().toLowerCase().contains(nameValue.toLowerCase())))
-                    .filter(c -> emailValue == null || emailValue.isEmpty() || 
-                                (c.getEmailAddress() != null && c.getEmailAddress().toLowerCase().contains(emailValue.toLowerCase())));
-            },
-            query -> {
-                return (int) clientService.count();
+        // Load all accessible clients (with pagination to limit initial load)
+        // For production with large datasets, consider implementing server-side filtering
+        var pageable = PageRequest.of(0, 1000); // Adjust size based on expected data volume
+        List<ClientDTO> allClients = clientService.findAllWithAccessControl(pageable, loggedInUser).getContent();
+        
+        // Create ListDataProvider with the loaded data
+        ListDataProvider<ClientDTO> dataProvider = new ListDataProvider<>(allClients);
+        
+        // Configure filters
+        dataProvider.setFilter(client -> {
+            MerchantDTO merchantValue = merchantFilter.getValue();
+            String nameValue = nameFilter.getValue();
+            String emailValue = emailFilter.getValue();
+            
+            // Merchant filter
+            if (merchantValue != null && client.getMerchantId() != null && 
+                !client.getMerchantId().equals(merchantValue.getId())) {
+                return false;
             }
-        );
+            
+            // Name filter
+            if (nameValue != null && !nameValue.isEmpty() && 
+                (client.getName() == null || !client.getName().toLowerCase().contains(nameValue.toLowerCase()))) {
+                return false;
+            }
+            
+            // Email filter
+            if (emailValue != null && !emailValue.isEmpty() && 
+                (client.getEmailAddress() == null || !client.getEmailAddress().toLowerCase().contains(emailValue.toLowerCase()))) {
+                return false;
+            }
+            
+            return true;
+        });
         
         grid.setDataProvider(dataProvider);
     }

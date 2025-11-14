@@ -394,17 +394,6 @@ public class PaymentTransactionService {
             .map(this::enrichWithRelatedData);
     }
 
-    /**
-     * Get all the paymentTransactions.
-     *
-     * @param pageable the pagination information.
-     * @return the list of entities.
-     */
-    @Transactional(readOnly = true)
-    public Page<PaymentTransactionDTO> findAll(Pageable pageable) {
-        LOG.debug("Request to get all PaymentTransactions");
-        return paymentTransactionRepository.findAll(pageable).map(paymentTransactionMapper::toDto).map(this::enrichWithRelatedData);
-    }
 
     /**
      * Get all the paymentTransactions with eager load of many-to-many relationships.
@@ -757,7 +746,7 @@ public class PaymentTransactionService {
         LOG.debug("Request to get all PaymentTransactions with access control for user: {}", user.getLogin());
 
         if (user.hasAuthority("ROLE_ADMIN")) {
-            return findAll(pageable);
+            return paymentTransactionRepository.findAll(pageable).map(paymentTransactionMapper::toDto).map(this::enrichWithRelatedData);
         }
         if (! (user instanceof CupaUser)){
             return Page.empty(pageable);
@@ -815,7 +804,10 @@ public class PaymentTransactionService {
         LOG.debug("Request to get PaymentTransaction : {} with access control for user: {}", id, user.getLogin());
 
         if (user.hasAuthority("ROLE_ADMIN")) {
-            return findOne(id);
+            return paymentTransactionRepository
+                .findOneWithEagerRelationships(id)
+                .map(paymentTransactionMapper::toDto)
+                .map(this::enrichWithRelatedData);
         }
 
         if (! (user instanceof CupaUser)){

@@ -17,11 +17,15 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.*;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.ClientCardService;
 import lt.creditco.cupa.service.ClientService;
+import lt.creditco.cupa.service.CupaUserService;
 import lt.creditco.cupa.service.dto.ClientCardDTO;
 import lt.creditco.cupa.service.dto.ClientDTO;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.Optional;
@@ -32,11 +36,15 @@ import java.util.UUID;
  */
 @Route(value = "client-cards/edit", layout = MainLayout.class)
 @PageTitle("Edit Client Card | CUPA")
+@Scope("prototype")
 @RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO, AuthoritiesConstants.MERCHANT, AuthoritiesConstants.USER })
+@Slf4j
 public class ClientCardFormView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final ClientCardService clientCardService;
     private final ClientService clientService;
+    private final CupaUserService cupaUserService;
+    private final CupaUser loggedInUser;
     
     private final Binder<ClientCardDTO> binder = new BeanValidationBinder<>(ClientCardDTO.class);
     
@@ -50,9 +58,13 @@ public class ClientCardFormView extends VerticalLayout implements HasUrlParamete
     private final Checkbox isDefaultField = new Checkbox("Is Default");
     private final Checkbox isValidField = new Checkbox("Is Valid");
     
-    public ClientCardFormView(ClientCardService clientCardService, ClientService clientService) {
+    public ClientCardFormView(ClientCardService clientCardService, ClientService clientService, CupaUserService cupaUserService) {
         this.clientCardService = clientCardService;
         this.clientService = clientService;
+        this.cupaUserService = cupaUserService;
+        this.loggedInUser = cupaUserService.getUserWithAuthorities()
+                .map(CupaUser.class::cast)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         
         setSizeFull();
         setPadding(true);
@@ -141,7 +153,8 @@ public class ClientCardFormView extends VerticalLayout implements HasUrlParamete
     }
     
     private void loadCard(String id) {
-        ClientCardDTO card = clientCardService.findOne(id).orElse(null);
+        log.debug("Loading client card: {} for user: {}", id, loggedInUser.getLogin());
+        ClientCardDTO card = clientCardService.findOneWithAccessControl(id, loggedInUser).orElse(null);
         if (card != null) {
             binder.setBean(card);
         } else {

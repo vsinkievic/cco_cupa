@@ -13,26 +13,40 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import jakarta.annotation.security.RolesAllowed;
+import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.ClientService;
+import lt.creditco.cupa.service.CupaUserService;
 import lt.creditco.cupa.service.dto.ClientDTO;
+
+import org.springframework.context.annotation.Scope;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Vaadin view for viewing Client details.
  */
 @Route(value = "clients/view", layout = MainLayout.class)
 @PageTitle("Client Details | CUPA")
+@Scope("prototype")
 @RolesAllowed({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.CREDITCO, AuthoritiesConstants.MERCHANT, AuthoritiesConstants.USER })
+@Slf4j
 public class ClientDetailView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final ClientService clientService;
+    private final CupaUserService cupaUserService;
+    private final CupaUser loggedInUser;
     
     private ClientDTO client;
     
     private final VerticalLayout contentLayout = new VerticalLayout();
     
-    public ClientDetailView(ClientService clientService) {
+    public ClientDetailView(ClientService clientService, CupaUserService cupaUserService) {
         this.clientService = clientService;
+        this.cupaUserService = cupaUserService;
+        this.loggedInUser = cupaUserService.getUserWithAuthorities()
+                .map(CupaUser.class::cast)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         
         setSizeFull();
         setPadding(true);
@@ -43,7 +57,8 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
     
     @Override
     public void setParameter(BeforeEvent event, String clientId) {
-        ClientDTO client = clientService.findOne(clientId).orElse(null);
+        log.debug("Loading client: {} for user: {}", clientId, loggedInUser.getLogin());
+        ClientDTO client = clientService.findOneWithAccessControl(clientId, loggedInUser).orElse(null);
         if (client != null) {
             this.client = client;
             buildContent();
