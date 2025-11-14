@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 
 import com.bpmid.vapp.repository.UserRepository;
 
+@Primary
 public interface CupaUserRepository extends UserRepository{
     @Query("SELECT u FROM CupaUser u WHERE u.merchantIds LIKE %:merchantId%")
     List<CupaUser> findByMerchantId(String merchantId);

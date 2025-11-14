@@ -11,6 +11,7 @@ import lt.creditco.cupa.repository.MerchantRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional
+@Primary
 public class CupaUserService extends com.bpmid.vapp.service.UserService{
 
     private static final Logger LOG = LoggerFactory.getLogger(CupaUserService.class);
