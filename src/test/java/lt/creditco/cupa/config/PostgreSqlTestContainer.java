@@ -17,10 +17,12 @@ public class PostgreSqlTestContainer implements SqlTestContainer {
     public void destroy() {
         if (null != postgreSQLContainer && postgreSQLContainer.isRunning()) {
             postgreSQLContainer.stop();
+            postgreSQLContainer.close();
         }
     }
 
     @Override
+    @SuppressWarnings("resource")
     public void afterPropertiesSet() {
         if (null == postgreSQLContainer) {
             postgreSQLContainer = new PostgreSQLContainer<>("postgres:17.4")
