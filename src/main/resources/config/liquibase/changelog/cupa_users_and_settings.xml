@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+
+    <changeSet id="20251114-01" author="vsinkievic">
+        <loadData
+                  file="config/liquibase/data/cupa_authority.csv"
+                  separator=";"
+                  tableName="jhi_authority"
+                  usePreparedStatements="true">
+            <column name="name" type="string"/>
+        </loadData>
+        <loadData
+                  file="config/liquibase/data/cupa_user.csv"
+                  separator=";"
+                  tableName="jhi_user"
+                  usePreparedStatements="true">
+            <column name="id" type="numeric"/>
+            <column name="activated" type="boolean"/>
+            <column name="created_at" type="timestamp with time zone"/>
+        </loadData>
+        <loadData
+                  file="config/liquibase/data/cupa_user_authority.csv"
+                  separator=";"
+                  tableName="jhi_user_authority"
+                  usePreparedStatements="true">
+            <column name="user_id" type="numeric"/>
+        </loadData>
+    </changeSet>
+
+
+</databaseChangeLog>

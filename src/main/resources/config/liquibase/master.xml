@@ -35,5 +35,6 @@
     <include file="config/liquibase/changelog/20250804120905_added_entity_constraints_ClientCard.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20250804120906_added_entity_constraints_PaymentTransaction.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20250804120907_added_entity_constraints_AuditLog.xml" relativeToChangelogFile="false"/>
-
+    <include file="config/liquibase/changelog/cupa_users_and_settings.xml" relativeToChangelogFile="false"/>
+    
 </databaseChangeLog>
