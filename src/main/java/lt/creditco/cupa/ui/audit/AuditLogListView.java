@@ -46,11 +46,17 @@ public class AuditLogListView extends VerticalLayout {
         grid.addColumn(AuditLogDTO::getHttpStatusCode).setHeader("Status").setSortable(true).setAutoWidth(true);
         
         grid.addComponentColumn(log -> {
-            Button viewButton = new Button("View", VaadinIcon.EYE.create());
-            viewButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
+            Button viewButton = new Button(VaadinIcon.EYE.create());
+            viewButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            viewButton.setTooltipText("View Audit Log");
             viewButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate(AuditLogDetailView.class, log.getId())));
             return viewButton;
-        }).setHeader("Actions").setAutoWidth(true);
+        }).setHeader("Actions").setWidth("100px").setFlexGrow(0);
+        
+        // Add double-click navigation
+        grid.addItemDoubleClickListener(event -> 
+            getUI().ifPresent(ui -> ui.navigate(AuditLogDetailView.class, event.getItem().getId()))
+        );
         
         grid.setSizeFull();
         return grid;
