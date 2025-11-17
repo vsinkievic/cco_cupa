@@ -1,0 +1,50 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "CupaApplication",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "lt.creditco.cupa.CupaApp",
+      "projectName": "cupa",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env",
+      "vmArgs": "-Dspring.profiles.active=dev"
+    },
+    {
+      "type": "java",
+      "name": "CupaApplication hotswap",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "lt.creditco.cupa.CupaApp",
+      "projectName": "cupa",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env",
+      "vmArgs": "-XX:+AllowEnhancedClassRedefinition -Dspring.profiles.active=dev"
+    },
+    {
+      "type": "java",
+      "name": "CupaApplication dev-pg",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "lt.creditco.cupa.CupaApp",
+      "projectName": "cupa",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env",
+      "vmArgs": "-Dspring.profiles.active=dev-pg"
+    },
+    {
+      "type": "java",
+      "name": "CupaApplication dev-pg hotswap",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "lt.creditco.cupa.CupaApp",
+      "projectName": "cupa",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env",
+      "vmArgs": "-XX:+AllowEnhancedClassRedefinition -Dspring.profiles.active=dev-pg"
+    }
+  ]
+}
+
