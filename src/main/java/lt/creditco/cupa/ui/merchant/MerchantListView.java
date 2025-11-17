@@ -9,6 +9,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
@@ -81,7 +82,10 @@ public class MerchantListView extends VerticalLayout {
         // Create button
         Button createButton = new Button("New Merchant", VaadinIcon.PLUS.create());
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate(MerchantFormView.class)));
+        createButton.addClickListener(e -> { 
+            getUI().ifPresent(ui -> ui.navigate(MerchantNewRouteHandler.class)); 
+        });
+
         
         HorizontalLayout toolbar = new HorizontalLayout(nameFilter, modeFilter, statusFilter, createButton);
         toolbar.setDefaultVerticalComponentAlignment(Alignment.END);
@@ -101,20 +105,17 @@ public class MerchantListView extends VerticalLayout {
         
         // Action buttons
         grid.addComponentColumn(merchant -> {
-            Button viewButton = new Button("View", VaadinIcon.EYE.create());
-            viewButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
-            viewButton.addClickListener(e -> 
-                getUI().ifPresent(ui -> ui.navigate(MerchantDetailView.class, merchant.getId()))
-            );
-            
-            Button editButton = new Button("Edit", VaadinIcon.EDIT.create());
-            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_PRIMARY);
-            editButton.addClickListener(e -> 
-                getUI().ifPresent(ui -> ui.navigate(MerchantFormView.class, merchant.getId()))
-            );
-            
-            return new HorizontalLayout(viewButton, editButton);
-        }).setHeader("Actions").setAutoWidth(true);
+            RouterLink viewLink = new RouterLink("", MerchantDetailView.class, merchant.getId());
+            viewLink.add(VaadinIcon.EYE.create());
+            viewLink.addClassNames("button", "button-tertiary-inline", "button-small");
+            viewLink.getElement().setAttribute("title", "View Merchant");
+            return viewLink;
+        }).setHeader(" ").setWidth("70px").setFlexGrow(0);
+        
+        // Add double-click navigation
+        grid.addItemDoubleClickListener(event -> 
+            getUI().ifPresent(ui -> ui.navigate(MerchantDetailView.class, event.getItem().getId()))
+        );
         
         grid.setSizeFull();
         
