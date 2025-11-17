@@ -89,6 +89,16 @@
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
     </changeSet>
+    
+    <!--
+        Remove unique constraint from gateway_client_id to allow multiple null values.
+        Empty strings were being saved as null, causing unique constraint violations.
+    -->
+    <changeSet id="20251117-01" author="vsinkievic">
+        <dropUniqueConstraint 
+            tableName="client" 
+            constraintName="client_gateway_client_id_key"/>
+    </changeSet>
 
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
 

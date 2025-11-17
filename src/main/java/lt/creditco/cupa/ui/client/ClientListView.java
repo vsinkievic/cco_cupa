@@ -13,6 +13,7 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouterLink;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.base.users.CupaUser;
@@ -92,7 +93,7 @@ public class ClientListView extends VerticalLayout {
         // Create button
         Button createButton = new Button("New Client", VaadinIcon.PLUS.create());
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate(ClientFormView.class, "new")));
+        createButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate(ClientNewRouteHandler.class)));
         
         HorizontalLayout toolbar = new HorizontalLayout(merchantFilter, nameFilter, emailFilter, createButton);
         toolbar.setDefaultVerticalComponentAlignment(Alignment.END);
@@ -109,22 +110,18 @@ public class ClientListView extends VerticalLayout {
         grid.addColumn(ClientDTO::getMobileNumber).setHeader("Phone").setSortable(true).setAutoWidth(true);
         grid.addColumn(ClientDTO::getMerchantName).setHeader("Merchant").setSortable(true).setAutoWidth(true);
         
-        // Action buttons
+        // Action buttons - use RouterLink to enable URL preview and "Open in Tab"
         grid.addComponentColumn(client -> {
-            Button viewButton = new Button("View", VaadinIcon.EYE.create());
-            viewButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
-            viewButton.addClickListener(e -> 
-                getUI().ifPresent(ui -> ui.navigate(ClientDetailView.class, client.getId()))
-            );
-            
-            Button editButton = new Button("Edit", VaadinIcon.EDIT.create());
-            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_PRIMARY);
-            editButton.addClickListener(e -> 
-                getUI().ifPresent(ui -> ui.navigate(ClientFormView.class, client.getId()))
-            );
-            
-            return new HorizontalLayout(viewButton, editButton);
-        }).setHeader("Actions").setAutoWidth(true);
+            RouterLink viewLink = new RouterLink("", ClientDetailView.class, client.getId());
+            viewLink.add(VaadinIcon.EYE.create());
+            viewLink.getElement().setAttribute("title", "View Client");
+            return viewLink;
+        }).setHeader(" ").setWidth("70px").setFlexGrow(0);
+        
+        // Add double-click navigation
+        grid.addItemDoubleClickListener(event -> 
+            getUI().ifPresent(ui -> ui.navigate(ClientDetailView.class, event.getItem().getId()))
+        );
         
         grid.setSizeFull();
         
