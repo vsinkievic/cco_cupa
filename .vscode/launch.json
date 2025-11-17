@@ -6,44 +6,48 @@
       "name": "CupaApplication",
       "request": "launch",
       "cwd": "${workspaceFolder}",
-      "mainClass": "lt.creditco.cupa.CupaApp",
+      "mainClass": "lt.creditco.cupa.CupaApplication",
       "projectName": "cupa",
       "args": "",
       "envFile": "${workspaceFolder}/.env",
-      "vmArgs": "-Dspring.profiles.active=dev"
+      "vmArgs": "-Dspring.profiles.active=dev -Dspring.jmx.enabled=false ",
+      "preLaunchTask": "cleanup-vapp-base-artifacts"
     },
     {
       "type": "java",
       "name": "CupaApplication hotswap",
       "request": "launch",
       "cwd": "${workspaceFolder}",
-      "mainClass": "lt.creditco.cupa.CupaApp",
+      "mainClass": "lt.creditco.cupa.CupaApplication",
       "projectName": "cupa",
       "args": "",
       "envFile": "${workspaceFolder}/.env",
-      "vmArgs": "-XX:+AllowEnhancedClassRedefinition -Dspring.profiles.active=dev"
+      "vmArgs": "-XX:+AllowEnhancedClassRedefinition -Dspring.profiles.active=dev -Dspring.jmx.enabled=false ",
+      "preLaunchTask": "cleanup-vapp-base-artifacts"
     },
     {
       "type": "java",
       "name": "CupaApplication dev-pg",
       "request": "launch",
       "cwd": "${workspaceFolder}",
-      "mainClass": "lt.creditco.cupa.CupaApp",
+      "mainClass": "lt.creditco.cupa.CupaApplication",
       "projectName": "cupa",
       "args": "",
       "envFile": "${workspaceFolder}/.env",
-      "vmArgs": "-Dspring.profiles.active=dev-pg"
+      "vmArgs": "-Dspring.profiles.active=dev-pg -Dspring.jmx.enabled=false ",
+      "preLaunchTask": "cleanup-vapp-base-artifacts"
     },
     {
       "type": "java",
       "name": "CupaApplication dev-pg hotswap",
       "request": "launch",
       "cwd": "${workspaceFolder}",
-      "mainClass": "lt.creditco.cupa.CupaApp",
+      "mainClass": "lt.creditco.cupa.CupaApplication",
       "projectName": "cupa",
       "args": "",
       "envFile": "${workspaceFolder}/.env",
-      "vmArgs": "-XX:+AllowEnhancedClassRedefinition -Dspring.profiles.active=dev-pg"
+      "vmArgs": "-XX:+AllowEnhancedClassRedefinition -Dspring.profiles.active=dev-pg  -Dspring.jmx.enabled=false ",
+      "preLaunchTask": "cleanup-vapp-base-artifacts"
     }
   ]
 }

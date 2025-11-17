@@ -51,8 +51,23 @@
           "endsPattern": "^.*Started .* in .* seconds.*$"
         }
       }
+    },
+    {
+      "label": "cleanup-vapp-base-artifacts",
+      "type": "shell",
+      "command": "find ../bpmid_vapp-base -name DevVApplication.class -delete -print && find ../bpmid_vapp-base/target -name master.xml -delete -print && echo 'Cleanup complete' || echo 'Cleanup completed with warnings'",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
     }
   ]
 }
-
-
