@@ -191,6 +191,9 @@ public class MerchantService {
         dto.setName(merchant.getName());
         dto.setMode(merchant.getMode());
         dto.setCurrency(merchant.getCurrency());
+        // Include API keys for payment transaction creation
+        dto.setCupaTestApiKey(merchant.getCupaTestApiKey());
+        dto.setCupaProdApiKey(merchant.getCupaProdApiKey());
         // All other fields remain null/default values
         return dto;
     }

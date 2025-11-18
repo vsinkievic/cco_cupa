@@ -803,6 +803,9 @@ public class PaymentTransactionService {
     public Optional<PaymentTransactionDTO> findOneWithAccessControl(String id, User user) {
         LOG.debug("Request to get PaymentTransaction : {} with access control for user: {}", id, user.getLogin());
 
+        PaymentTransaction paymentTransaction = paymentTransactionRepository.findOneWithEagerRelationships(id).orElse(null);
+
+        
         if (user.hasAuthority("ROLE_ADMIN")) {
             return paymentTransactionRepository
                 .findOneWithEagerRelationships(id)

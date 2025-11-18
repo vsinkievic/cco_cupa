@@ -219,4 +219,17 @@ public class ClientService {
             return clientRepository.findByIdAndMerchantIds(id, merchantIds).map(clientMapper::toDto);
         } else return Optional.empty();
     }
+
+    /**
+     * Get all clients for a specific merchant (for dropdown population).
+     *
+     * @param merchantId the merchant ID.
+     * @param pageable the pagination information.
+     * @return the list of clients for the merchant.
+     */
+    @Transactional(readOnly = true)
+    public Page<ClientDTO> findByMerchantId(String merchantId, Pageable pageable) {
+        LOG.debug("Request to get all Clients for merchant: {}", merchantId);
+        return clientRepository.findByMerchantId(merchantId, pageable).map(clientMapper::toDto);
+    }
 }

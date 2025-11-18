@@ -50,4 +50,7 @@ public interface ClientRepository extends JpaRepository<Client, String> {
 
     @Query("select client from Client client where client.id = :id and client.merchantId in :merchantIds")
     Optional<Client> findByIdAndMerchantIds(@Param("id") String id, @Param("merchantIds") Set<String> merchantIds);
+
+    @Query("select client from Client client where client.merchantId = :merchantId")
+    Page<Client> findByMerchantId(@Param("merchantId") String merchantId, Pageable pageable);
 }

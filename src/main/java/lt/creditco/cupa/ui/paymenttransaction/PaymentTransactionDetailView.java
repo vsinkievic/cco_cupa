@@ -456,34 +456,6 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
         }
         
         statusField.setValue(transaction.getStatus().name());
-        
-        // Remove all status classes first
-        statusField.removeClassName("status-success");
-        statusField.removeClassName("status-error");
-        statusField.removeClassName("status-pending");
-        statusField.removeClassName("status-warning");
-        
-        // Add appropriate class based on status
-        switch (transaction.getStatus()) {
-            case SUCCESS:
-            case QUERY_SUCCESS:
-                statusField.addClassName("status-success");
-                break;
-            case FAILED:
-            case CANCELLED:
-                statusField.addClassName("status-error");
-                break;
-            case PENDING:
-            case AWAITING_CALLBACK:
-                statusField.addClassName("status-pending");
-                break;
-            case ABANDONED:
-            case REFUNDED:
-                statusField.addClassName("status-warning");
-                break;
-            default:
-                break;
-        }
     }
     
     private void refreshTransaction() {
