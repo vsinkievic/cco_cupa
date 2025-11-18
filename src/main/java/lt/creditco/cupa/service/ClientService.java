@@ -108,11 +108,11 @@ public class ClientService {
 
         LOG.debug("Request to get all Clients with access control for user: {}", user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            return findAll(pageable);
-        }
-
         if (user instanceof CupaUser cupaUser) {
+            if (cupaUser.hasAccessToAllMerchants()) {
+                return findAll(pageable);
+            }
+            
             Set<String> merchantIds = cupaUser.getMerchantIdsSet();
             if (merchantIds.isEmpty()) {
                 return Page.empty(pageable);
@@ -145,11 +145,11 @@ public class ClientService {
 
         LOG.debug("Request to get all Clients with eager relationships and access control for user: {}", user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            return findAllWithEagerRelationships(pageable);
-        }
-
         if (user instanceof CupaUser cupaUser) {
+            if (cupaUser.hasAccessToAllMerchants()) {
+                return findAllWithEagerRelationships(pageable);
+            }
+            
             Set<String> merchantIds = cupaUser.getMerchantIdsSet();
             if (merchantIds.isEmpty()) {
                 return Page.empty(pageable);
@@ -207,11 +207,11 @@ public class ClientService {
 
         LOG.debug("Request to get Client : {} with access control for user: {}", id, user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            return findOne(id);
-        }
-
         if (user instanceof CupaUser cupaUser) {
+            if (cupaUser.hasAccessToAllMerchants()) {
+                return findOne(id);
+            }
+            
             Set<String> merchantIds = cupaUser.getMerchantIdsSet();
         if (merchantIds.isEmpty()) {
                 return Optional.empty();

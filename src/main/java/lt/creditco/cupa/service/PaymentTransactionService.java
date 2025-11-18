@@ -749,13 +749,14 @@ public class PaymentTransactionService {
     public Page<PaymentTransactionDTO> findAllWithAccessControl(Pageable pageable, User user) {
         LOG.debug("Request to get all PaymentTransactions with access control for user: {}", user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            return paymentTransactionRepository.findAll(pageable).map(paymentTransactionMapper::toDto).map(this::enrichWithRelatedData);
-        }
         if (! (user instanceof CupaUser)){
             return Page.empty(pageable);
         }
         CupaUser cupaUser = (CupaUser) user;
+        
+        if (cupaUser.hasAccessToAllMerchants()) {
+            return paymentTransactionRepository.findAll(pageable).map(paymentTransactionMapper::toDto).map(this::enrichWithRelatedData);
+        }
         Set<String> merchantIds = cupaUser.getMerchantIdsSet();
         if (merchantIds.isEmpty()) {
             return Page.empty(pageable);
@@ -777,14 +778,14 @@ public class PaymentTransactionService {
     public Page<PaymentTransactionDTO> findAllWithEagerRelationshipsWithAccessControl(Pageable pageable, User user) {
         LOG.debug("Request to get all PaymentTransactions with eager relationships and access control for user: {}", user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            return findAllWithEagerRelationships(pageable);
-        }
-
         if (! (user instanceof CupaUser)){
             return Page.empty(pageable);
         }
         CupaUser cupaUser = (CupaUser) user;
+        
+        if (cupaUser.hasAccessToAllMerchants()) {
+            return findAllWithEagerRelationships(pageable);
+        }
         Set<String> merchantIds = cupaUser.getMerchantIdsSet();
         if (merchantIds.isEmpty()) {
             return Page.empty(pageable);
@@ -807,20 +808,17 @@ public class PaymentTransactionService {
     public Optional<PaymentTransactionDTO> findOneWithAccessControl(String id, User user) {
         LOG.debug("Request to get PaymentTransaction : {} with access control for user: {}", id, user.getLogin());
 
-        PaymentTransaction paymentTransaction = paymentTransactionRepository.findOneWithEagerRelationships(id).orElse(null);
+        if (! (user instanceof CupaUser)){
+            return Optional.empty();
+        }
+        CupaUser cupaUser = (CupaUser) user;
 
-
-        if (user.hasAuthority("ROLE_ADMIN")) {
+        if (cupaUser.hasAccessToAllMerchants()) {
             return paymentTransactionRepository
                 .findOneWithEagerRelationships(id)
                 .map(paymentTransactionMapper::toDto)
                 .map(this::enrichWithRelatedData);
         }
-
-        if (! (user instanceof CupaUser)){
-            return Optional.empty();
-        }
-        CupaUser cupaUser = (CupaUser) user;
         Set<String> merchantIds = cupaUser.getMerchantIdsSet();
         if (merchantIds.isEmpty()) {
             return Optional.empty();

@@ -128,11 +128,11 @@ public class ClientCardService {
 
         LOG.debug("Request to get all ClientCards with access control for user: {}", user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            return clientCardRepository.findAll(pageable).map(clientCardMapper::toDto);
-        }
-
         if (user instanceof CupaUser cupaUser) {
+            if (cupaUser.hasAccessToAllMerchants()) {
+                return clientCardRepository.findAll(pageable).map(clientCardMapper::toDto);
+            }
+            
             Set<String> merchantIds = cupaUser.getMerchantIdsSet();
             if (merchantIds.isEmpty()) {
                 return Page.empty(pageable);
@@ -156,11 +156,11 @@ public class ClientCardService {
 
         LOG.debug("Request to get all ClientCards with eager relationships and access control for user: {}", user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            return findAllWithEagerRelationships(pageable);
-        }
-
         if (user instanceof CupaUser cupaUser) {
+            if (cupaUser.hasAccessToAllMerchants()) {
+                return findAllWithEagerRelationships(pageable);
+            }
+            
             Set<String> merchantIds = cupaUser.getMerchantIdsSet();
             if (merchantIds.isEmpty()) {
                 return Page.empty(pageable);
@@ -185,11 +185,11 @@ public class ClientCardService {
 
         LOG.debug("Request to get ClientCard : {} with access control for user: {}", id, user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            return clientCardRepository.findById(id).map(clientCardMapper::toDto);
-        }
-
         if (user instanceof CupaUser cupaUser) {
+            if (cupaUser.hasAccessToAllMerchants()) {
+                return clientCardRepository.findById(id).map(clientCardMapper::toDto);
+            }
+            
             Set<String> merchantIds = cupaUser.getMerchantIdsSet();
             if (merchantIds.isEmpty()) {
                 return Optional.empty();

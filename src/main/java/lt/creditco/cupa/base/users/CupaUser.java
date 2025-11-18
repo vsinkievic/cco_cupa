@@ -49,4 +49,15 @@ public class CupaUser extends com.bpmid.vapp.domain.User {
         return Arrays.stream(merchantIds.split(",")).map(String::trim).filter(id -> !id.isEmpty()).collect(Collectors.toSet());
     }
 
+    /**
+     * Check if user has access to all merchants (ADMIN or CREDITCO roles).
+     * This centralizes the access control logic in one place.
+     * 
+     * @return true if user is ADMIN or CREDITCO, false otherwise
+     */
+    public boolean hasAccessToAllMerchants() {
+        return hasAuthority(AuthoritiesConstants.ADMIN) || 
+               hasAuthority(AuthoritiesConstants.CREDITCO);
+    }
+
 }

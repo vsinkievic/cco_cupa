@@ -137,12 +137,12 @@ public class MerchantService {
 
         log.debug("Request to get all Merchants with access control for user: {}", user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            // Admin gets full data
-            return merchantRepository.findAll(pageable).map(merchantMapper::toDto);
-        }
-
         if (user instanceof CupaUser cupaUser) {
+            if (cupaUser.hasAccessToAllMerchants()) {
+                // Admin/CreditCo gets full data
+                return merchantRepository.findAll(pageable).map(merchantMapper::toDto);
+            }
+            
             Set<String> merchantIds = cupaUser.getMerchantIdsSet();
             if (merchantIds.isEmpty()) {
                 return Page.empty(pageable);
@@ -171,12 +171,12 @@ public class MerchantService {
 
         log.debug("Request to get Merchant : {} with access control for user: {}", id, user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            // Admin gets full data
-            return merchantRepository.findById(id).map(merchantMapper::toDto);
-        }
-
         if (user instanceof CupaUser cupaUser) {
+            if (cupaUser.hasAccessToAllMerchants()) {
+                // Admin/CreditCo gets full data
+                return merchantRepository.findById(id).map(merchantMapper::toDto);
+            }
+            
             Set<String> merchantIds = cupaUser.getMerchantIdsSet();
             if (merchantIds.isEmpty()) {
                 return Optional.empty();
