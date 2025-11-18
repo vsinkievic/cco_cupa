@@ -8,7 +8,6 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 import com.bpmid.vapp.domain.User;
 import com.bpmid.vapp.repository.UserRepository;
@@ -19,6 +18,8 @@ import lt.creditco.cupa.repository.ClientRepository;
 import lt.creditco.cupa.service.ClientService;
 import lt.creditco.cupa.service.dto.ClientDTO;
 import com.bpmid.vapp.web.rest.errors.BadRequestAlertException;
+import com.github.f4b6a3.ulid.UlidCreator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -96,7 +97,7 @@ public class ClientResource {
                 throw new BadRequestAlertException("Such ID already exists", ENTITY_NAME, "idexists");
             }
         } else {
-            clientDTO.setId(UUID.randomUUID().toString());
+            clientDTO.setId(UlidCreator.getUlid().toString());
         }
         clientDTO = clientService.save(clientDTO);
         return ResponseEntity.created(new URI("/api/clients/" + clientDTO.getId()))

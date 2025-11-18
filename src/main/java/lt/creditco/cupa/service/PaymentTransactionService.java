@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import lt.creditco.cupa.api.Payment;
 import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.api.PaymentRequest;
@@ -38,6 +37,8 @@ import lt.creditco.cupa.service.mapper.PaymentMapper;
 import lt.creditco.cupa.service.mapper.PaymentTransactionMapper;
 import lt.creditco.cupa.web.context.CupaApiContext;
 import com.bpmid.vapp.web.rest.errors.BadRequestAlertException;
+import com.github.f4b6a3.ulid.UlidCreator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -201,7 +202,10 @@ public class PaymentTransactionService {
         PaymentTransaction paymentTransaction = paymentTransactionMapper.toEntity(paymentTransactionDTO);
 
         if (paymentTransaction.getId() == null) {
-            paymentTransaction.setId(UUID.randomUUID().toString());
+            paymentTransaction.setId(UlidCreator.getUlid().toString());
+        }
+        if (paymentTransaction.getRequestTimestamp() == null) {
+            paymentTransaction.setRequestTimestamp(Instant.now());
         }
 
         // Check for duplicate orderId for the merchant
@@ -805,7 +809,7 @@ public class PaymentTransactionService {
 
         PaymentTransaction paymentTransaction = paymentTransactionRepository.findOneWithEagerRelationships(id).orElse(null);
 
-        
+
         if (user.hasAuthority("ROLE_ADMIN")) {
             return paymentTransactionRepository
                 .findOneWithEagerRelationships(id)
@@ -871,7 +875,7 @@ public class PaymentTransactionService {
         } else {
             // Create new client
             Client newClient = new Client();
-            newClient.setId(UUID.randomUUID().toString());
+            newClient.setId(UlidCreator.getUlid().toString());
             newClient.setMerchantClientId(clientId);
             newClient.setMerchantId(merchantId);
             newClient.setName(paymentClient.getName());
