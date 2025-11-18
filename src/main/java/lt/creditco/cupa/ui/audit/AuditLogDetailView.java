@@ -39,9 +39,9 @@ public class AuditLogDetailView extends VerticalLayout implements HasUrlParamete
     private final TextField merchantIdField = new TextField("Merchant ID");
     private final IntegerField httpStatusCodeField = new IntegerField("Status Code");
     
-    // JSON display components
-    private final JsonDisplayComponent requestDataComponent = new JsonDisplayComponent();
-    private final JsonDisplayComponent responseDataComponent = new JsonDisplayComponent();
+    // JSON display components (3-40 rows for audit logs)
+    private final JsonDisplayComponent requestDataComponent = new JsonDisplayComponent().setRowRange(3, 40);
+    private final JsonDisplayComponent responseDataComponent = new JsonDisplayComponent().setRowRange(3, 40);
     
     // Buttons
     private final Button backButton = new Button("Back");
