@@ -37,8 +37,8 @@ import tech.jhipster.web.util.ResponseUtil;
  * REST controller for managing {@link lt.creditco.cupa.domain.Client}.
  */
 @Deprecated
-@RestController
-@RequestMapping("/api/clients")
+// @RestController
+// @RequestMapping("/api/clients")
 public class ClientResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClientResource.class);

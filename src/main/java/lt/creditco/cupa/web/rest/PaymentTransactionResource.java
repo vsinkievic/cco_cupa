@@ -38,8 +38,8 @@ import tech.jhipster.web.util.ResponseUtil;
  * REST controller for managing {@link lt.creditco.cupa.domain.PaymentTransaction}.
  */
 @Deprecated
-@RestController
-@RequestMapping("/api/payment-transactions")
+// @RestController
+// @RequestMapping("/api/payment-transactions")
 public class PaymentTransactionResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(PaymentTransactionResource.class);

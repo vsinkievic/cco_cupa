@@ -38,8 +38,8 @@ import tech.jhipster.web.util.ResponseUtil;
  * All authenticated users can access merchant data with role-based field visibility.
  */
 @Deprecated
-@RestController
-@RequestMapping("/api/merchants")
+// @RestController
+// @RequestMapping("/api/merchants")
 public class MerchantResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(MerchantResource.class);
