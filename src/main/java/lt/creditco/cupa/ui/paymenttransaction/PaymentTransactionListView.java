@@ -77,8 +77,18 @@ public class PaymentTransactionListView extends VerticalLayout {
             RouterLink viewLink = new RouterLink("", PaymentTransactionDetailView.class, tx.getId());
             viewLink.add(VaadinIcon.EYE.create());
             viewLink.getElement().setAttribute("title", "View Transaction");
-            return viewLink;
-        }).setHeader(" ").setWidth("70px").setFlexGrow(0);
+            
+            RouterLink cloneLink = new RouterLink("", PaymentTransactionCreateView.class);
+            cloneLink.add(VaadinIcon.COPY.create());
+            cloneLink.getElement().setAttribute("title", "Clone payment");
+            cloneLink.setQueryParameters(new com.vaadin.flow.router.QueryParameters(
+                java.util.Map.of("cloneFrom", java.util.List.of(tx.getId()))
+            ));
+            
+            HorizontalLayout actions = new HorizontalLayout(viewLink, cloneLink);
+            actions.setSpacing(true);
+            return actions;
+        }).setHeader(" ").setWidth("100px").setFlexGrow(0);
         
         // Add double-click navigation
         grid.addItemDoubleClickListener(event -> 

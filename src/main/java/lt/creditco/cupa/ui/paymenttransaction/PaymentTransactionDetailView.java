@@ -98,6 +98,7 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
     
     // Buttons
     private final Button refreshButton = new Button("Refresh", VaadinIcon.REFRESH.create());
+    private final Button cloneButton = new Button("Clone", VaadinIcon.COPY.create());
     private final Button queryGatewayButton = new Button("Query Gateway", VaadinIcon.SEARCH.create());
     private final Button backButton = new Button("Back to List");
     
@@ -142,10 +143,11 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
     
     private HorizontalLayout createHeader() {
         refreshButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+        cloneButton.setTooltipText("Clone payment");
         queryGatewayButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         
-        headerLayout.add(titleLabel, refreshButton, queryGatewayButton, backButton);
+        headerLayout.add(titleLabel, refreshButton, cloneButton, queryGatewayButton, backButton);
         headerLayout.setDefaultVerticalComponentAlignment(Alignment.CENTER);
         headerLayout.setWidthFull();
         headerLayout.expand(titleLabel);
@@ -381,6 +383,7 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
     
     private void configureButtons() {
         refreshButton.addClickListener(e -> refreshTransaction());
+        cloneButton.addClickListener(e -> clonePayment());
         queryGatewayButton.addClickListener(e -> queryGateway());
         backButton.addClickListener(e -> navigateToList());
     }
@@ -615,6 +618,20 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
     
     protected void navigateToList() {
         getUI().ifPresent(ui -> ui.navigate(PaymentTransactionListView.class));
+    }
+    
+    private void clonePayment() {
+        if (currentTransaction == null || currentTransaction.getId() == null) {
+            return;
+        }
+        
+        // Navigate to create view with cloneFrom query parameter
+        getUI().ifPresent(ui -> ui.navigate(
+            PaymentTransactionCreateView.class,
+            new com.vaadin.flow.router.QueryParameters(
+                java.util.Map.of("cloneFrom", java.util.List.of(currentTransaction.getId()))
+            )
+        ));
     }
     
     /**
