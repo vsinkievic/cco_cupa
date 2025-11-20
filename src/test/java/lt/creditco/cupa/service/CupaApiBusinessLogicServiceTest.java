@@ -95,7 +95,7 @@ class CupaApiBusinessLogicServiceTest {
         assertThat(context.getOrderId()).isEqualTo("test-order-123");
         assertThat(context.getClientId()).isEqualTo("test-client-456");
         assertThat(context.getMerchantId()).isEqualTo("test-merchant");
-        assertThat(context.getEnvironment()).isEqualTo("TEST");
+        assertThat(context.getEnvironment()).isEqualTo(MerchantMode.TEST);
         assertThat(context.getCupaApiKey()).isEqualTo("test-api-key");
         assertThat(context.getApiEndpoint()).isEqualTo("/api/v1/payments");
         assertThat(context.getHttpMethod()).isEqualTo("POST");
@@ -192,7 +192,7 @@ class CupaApiBusinessLogicServiceTest {
         CupaApiContext.CupaApiContextData context = businessLogicService.extractBusinessContext(request, paymentRequest, principal);
 
         // Then
-        assertThat(context.getEnvironment()).isEqualTo("LIVE");
+        assertThat(context.getEnvironment()).isEqualTo(MerchantMode.LIVE);
         assertThat(context.getCupaApiKey()).isEqualTo("live-api-key");
     }
 

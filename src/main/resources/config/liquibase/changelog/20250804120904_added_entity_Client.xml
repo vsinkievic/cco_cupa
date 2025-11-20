@@ -95,9 +95,26 @@
         Empty strings were being saved as null, causing unique constraint violations.
     -->
     <changeSet id="20251117-01" author="vsinkievic">
-        <dropUniqueConstraint 
-            tableName="client" 
-            constraintName="client_gateway_client_id_key"/>
+        <!-- Step 1: Add temporary column without unique constraint -->
+        <addColumn tableName="client">
+            <column name="gateway_client_id_new" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        
+        <!-- Step 2: Copy data from old column to new column -->
+        <sql>
+            UPDATE client SET gateway_client_id_new = gateway_client_id
+        </sql>
+        
+        <!-- Step 3: Drop old column (removes unique constraint automatically) -->
+        <dropColumn tableName="client" columnName="gateway_client_id"/>
+        
+        <!-- Step 4: Rename new column to original name -->
+        <renameColumn tableName="client" 
+                      oldColumnName="gateway_client_id_new" 
+                      newColumnName="gateway_client_id" 
+                      columnDataType="varchar(50)"/>
     </changeSet>
 
     <!--

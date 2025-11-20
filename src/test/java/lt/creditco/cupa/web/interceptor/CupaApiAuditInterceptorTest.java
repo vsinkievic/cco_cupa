@@ -117,7 +117,7 @@ class CupaApiAuditInterceptorTest {
         CupaApiContext.CupaApiContextData context = CupaApiContext.getContext();
         assert context != null;
         assert "test-merchant".equals(context.getMerchantId());
-        assert "TEST".equals(context.getEnvironment());
+        assert MerchantMode.TEST.equals(context.getEnvironment());
     }
 
     @Test
