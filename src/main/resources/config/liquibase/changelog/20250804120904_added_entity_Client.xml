@@ -100,6 +100,22 @@
             constraintName="client_gateway_client_id_key"/>
     </changeSet>
 
+    <!--
+        Add environment column to track which remote environment (TEST or LIVE) the client belongs to.
+    -->
+    <changeSet id="20251120-01" author="vsinkievic">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="client" columnName="environment"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="client">
+            <column name="environment" type="varchar(10)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
 
     <!--
@@ -134,6 +150,7 @@
             <column name="is_blacklisted" type="boolean"/>
             <column name="is_correlated_blacklisted" type="boolean"/>
             <column name="merchant_id" type="string"/>
+            <column name="environment" type="string"/>
             <column name="created_in_gateway" type="timestamp with time zone"/>
             <column name="updated_in_gateway" type="timestamp with time zone"/>
             <column name="version" type="bigint" />

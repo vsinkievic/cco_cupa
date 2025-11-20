@@ -17,6 +17,7 @@ import com.vaadin.flow.router.RouterLink;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.base.users.CupaUser;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.ClientService;
 import lt.creditco.cupa.service.CupaUserService;
@@ -46,9 +47,11 @@ public class ClientListView extends VerticalLayout {
     
     private final Grid<ClientDTO> grid = new Grid<>(ClientDTO.class, false);
     
+    private final TextField clientIdFilter = new TextField("Client ID");
     private final ComboBox<MerchantDTO> merchantFilter = new ComboBox<>("Merchant");
     private final TextField nameFilter = new TextField("Name");
     private final TextField emailFilter = new TextField("Email");
+    private final ComboBox<MerchantMode> environmentFilter = new ComboBox<>("Environment");
     
     public ClientListView(ClientService clientService, MerchantService merchantService, CupaUserService cupaUserService) {
         this.clientService = clientService;
@@ -71,11 +74,16 @@ public class ClientListView extends VerticalLayout {
         log.debug("Loading merchants for user: {}", loggedInUser.getLogin());
         var merchants = merchantService.findAllWithAccessControl(PageRequest.of(0, 100), loggedInUser).getContent();
         merchantFilter.setItems(merchants);
-        merchantFilter.setItemLabelGenerator(MerchantDTO::getName);
+        merchantFilter.setItemLabelGenerator(merchant -> merchant.getId() + " - " + merchant.getName());
     }
     
     private HorizontalLayout createToolbar() {
         // Filters
+        clientIdFilter.setPlaceholder("Client ID");
+        clientIdFilter.setClearButtonVisible(true);
+        clientIdFilter.setValueChangeMode(ValueChangeMode.LAZY);
+        clientIdFilter.addValueChangeListener(e -> refreshGrid());
+        
         merchantFilter.setPlaceholder("All merchants");
         merchantFilter.setClearButtonVisible(true);
         merchantFilter.addValueChangeListener(e -> refreshGrid());
@@ -90,12 +98,18 @@ public class ClientListView extends VerticalLayout {
         emailFilter.setValueChangeMode(ValueChangeMode.LAZY);
         emailFilter.addValueChangeListener(e -> refreshGrid());
         
+        // Environment filter
+        environmentFilter.setPlaceholder("All environments");
+        environmentFilter.setClearButtonVisible(true);
+        environmentFilter.setItems(MerchantMode.values());
+        environmentFilter.addValueChangeListener(e -> refreshGrid());
+        
         // Create button
         Button createButton = new Button("New Client", VaadinIcon.PLUS.create());
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate(ClientNewRouteHandler.class)));
         
-        HorizontalLayout toolbar = new HorizontalLayout(merchantFilter, nameFilter, emailFilter, createButton);
+        HorizontalLayout toolbar = new HorizontalLayout(clientIdFilter, nameFilter, emailFilter, merchantFilter, environmentFilter, createButton);
         toolbar.setDefaultVerticalComponentAlignment(Alignment.END);
         toolbar.setWidthFull();
         toolbar.expand(nameFilter);
@@ -108,7 +122,8 @@ public class ClientListView extends VerticalLayout {
         grid.addColumn(ClientDTO::getName).setHeader("Name").setSortable(true).setAutoWidth(true);
         grid.addColumn(ClientDTO::getEmailAddress).setHeader("Email").setSortable(true).setAutoWidth(true);
         grid.addColumn(ClientDTO::getMobileNumber).setHeader("Phone").setSortable(true).setAutoWidth(true);
-        grid.addColumn(ClientDTO::getMerchantName).setHeader("Merchant").setSortable(true).setAutoWidth(true);
+        grid.addColumn(ClientDTO::getMerchantId).setHeader("Merchant").setSortable(true).setAutoWidth(true);
+        grid.addColumn(ClientDTO::getEnvironment).setHeader("Env").setSortable(true).setWidth("80px");
         
         // Action buttons - use RouterLink to enable URL preview and "Open in Tab"
         grid.addComponentColumn(client -> {
@@ -141,9 +156,17 @@ public class ClientListView extends VerticalLayout {
         
         // Configure filters
         dataProvider.setFilter(client -> {
+            String clientIdValue = clientIdFilter.getValue();
             MerchantDTO merchantValue = merchantFilter.getValue();
             String nameValue = nameFilter.getValue();
             String emailValue = emailFilter.getValue();
+            MerchantMode envValue = environmentFilter.getValue();
+            
+            // Client ID filter (exact match)
+            if (clientIdValue != null && !clientIdValue.isEmpty() && 
+                (client.getMerchantClientId() == null || !client.getMerchantClientId().equals(clientIdValue))) {
+                return false;
+            }
             
             // Merchant filter
             if (merchantValue != null && client.getMerchantId() != null && 
@@ -161,6 +184,18 @@ public class ClientListView extends VerticalLayout {
             if (emailValue != null && !emailValue.isEmpty() && 
                 (client.getEmailAddress() == null || !client.getEmailAddress().toLowerCase().contains(emailValue.toLowerCase()))) {
                 return false;
+            }
+            
+            // Environment filter
+            if (envValue != null) {
+                // Skip clients with null environment if a filter is applied
+                if (client.getEnvironment() == null) {
+                    return false;
+                }
+                // Skip clients that don't match the selected environment
+                if (!client.getEnvironment().equals(envValue)) {
+                    return false;
+                }
             }
             
             return true;

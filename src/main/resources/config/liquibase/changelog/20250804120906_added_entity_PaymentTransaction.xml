@@ -101,6 +101,22 @@
         <dropDefaultValue tableName="payment_transaction" columnName="callback_timestamp" columnDataType="${datetimeType}"/>
     </changeSet>
 
+    <!--
+        Add environment column to track which remote environment (TEST or LIVE) the transaction belongs to.
+    -->
+    <changeSet id="20251120-02" author="vsinkievic">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="payment_transaction" columnName="environment"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_transaction">
+            <column name="environment" type="varchar(10)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
 
     <!--
@@ -140,6 +156,7 @@
             <column name="last_query_data" type="string"/>
             <column name="client_id" type="string"/>
             <column name="merchant_id" type="string"/>
+            <column name="environment" type="string"/>
             <column name="version" type="bigint" />
             <column name="created_by" type="string"/>
             <column name="created_date" type="timestamp with time zone"/>

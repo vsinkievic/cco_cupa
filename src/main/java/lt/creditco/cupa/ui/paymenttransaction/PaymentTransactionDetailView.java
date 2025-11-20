@@ -82,6 +82,7 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
     private final TextField signatureVersionField = new TextField("Signature Version");
     private final TextField gatewayTransactionIdField = new TextField("Gateway Transaction ID");
     private final TextField callbackTimestampField = new TextField("Callback Timestamp");
+    private final TextField environmentField = new TextField("Environment");
     
     // Section 4: Audit Trail (JSON Components) (3-25 rows for payment transactions)
     private final JsonDisplayComponent requestDataComponent = new JsonDisplayComponent().setRowRange(3, 25);
@@ -211,6 +212,7 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
         formLayout.add(replyUrlField, signatureField);
         formLayout.add(backofficeUrlField, signatureVersionField);
         formLayout.add(gatewayTransactionIdField, callbackTimestampField);
+        formLayout.add(environmentField);
         
         section.add(title, formLayout);
         return section;
@@ -298,6 +300,7 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
         signatureVersionField.setWidthFull();
         gatewayTransactionIdField.setWidthFull();
         callbackTimestampField.setWidthFull();
+        environmentField.setWidthFull();
         
         // Section 5: System Audit
         createdByField.setWidthFull();
@@ -365,6 +368,11 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
         binder.forField(gatewayTransactionIdField).bind(PaymentTransactionDTO::getGatewayTransactionId, (dto, value) -> {});
         binder.forField(callbackTimestampField).bind(
             dto -> dto.getCallbackTimestamp() != null ? dto.getCallbackTimestamp().toString() : "",
+            (dto, value) -> {}
+        );
+        
+        binder.forField(environmentField).bind(
+            dto -> dto.getEnvironment() != null ? dto.getEnvironment().toString() : "",
             (dto, value) -> {}
         );
         

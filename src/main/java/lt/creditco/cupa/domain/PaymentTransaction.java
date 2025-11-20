@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.domain.enumeration.Currency;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import org.hibernate.annotations.Cache;
@@ -104,6 +105,10 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
 
     @Column(name = "merchant_id")
     private String merchantId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "environment")
+    private MerchantMode environment;
 
     @Version
     private Long version;
@@ -409,6 +414,19 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
         return this;
     }
 
+    public MerchantMode getEnvironment() {
+        return this.environment;
+    }
+
+    public void setEnvironment(MerchantMode environment) {
+        this.environment = environment;
+    }
+
+    public PaymentTransaction environment(MerchantMode environment) {
+        this.setEnvironment(environment);
+        return this;
+    }
+
     public Long getVersion() {
         return this.version;
     }
@@ -447,6 +465,7 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
             "id=" + getId() +
             ", clientId='" + getClientId() + "'" +
             ", merchantId='" + getMerchantId() + "'" +
+            ", environment='" + getEnvironment() + "'" +
             ", gatewayTransactionId='" + getGatewayTransactionId() + "'" +
             ", status='" + getStatus() + "'" +
             ", statusDescription='" + getStatusDescription() + "'" +

@@ -23,6 +23,7 @@ import com.vaadin.flow.router.*;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.base.users.CupaUser;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.ClientService;
 import lt.creditco.cupa.service.CupaUserService;
@@ -56,6 +57,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
     // Section 1: Client Details (most used fields)
     private final ComboBox<MerchantDTO> merchantField = new ComboBox<>("Merchant");
     private final TextField merchantClientIdField = new TextField("Merchant Client ID");
+    private final ComboBox<MerchantMode> environmentField = new ComboBox<>("Environment");
     private final TextField nameField = new TextField("Name");
     private final TextField emailAddressField = new TextField("Email");
     private final TextField mobileNumberField = new TextField("Mobile");
@@ -195,7 +197,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
             new FormLayout.ResponsiveStep("500px", 2)
         );
         
-        // All fields in this section are readonly
+        // Gateway-managed fields are readonly
         idField.setReadOnly(true);
         gatewayClientIdField.setReadOnly(true);
         validField.setReadOnly(true);
@@ -205,8 +207,8 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
         updatedInGatewayField.setReadOnly(true);
         
         formLayout.add(idField, gatewayClientIdField);
-        formLayout.add(validField, isBlacklistedField);
-        formLayout.add(isCorrelatedBlacklistedField);
+        formLayout.add(environmentField, validField);
+        formLayout.add(isBlacklistedField, isCorrelatedBlacklistedField);
         formLayout.add(createdInGatewayField);
         formLayout.add(updatedInGatewayField);
         
@@ -222,6 +224,12 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
         merchantClientIdField.setWidthFull();
         gatewayClientIdField.setWidthFull();
         merchantField.setWidthFull();
+        
+        environmentField.setWidthFull();
+        environmentField.setItems(MerchantMode.values());
+        environmentField.setHelperText("Environment for this client");
+        environmentField.setRequiredIndicatorVisible(true);
+        
         nameField.setWidthFull();
         emailAddressField.setWidthFull();
         mobileNumberField.setWidthFull();
@@ -231,7 +239,15 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
     private void loadMerchants() {
         var merchants = merchantService.findAllWithAccessControl(PageRequest.of(0, 100), loggedInUser).getContent();
         merchantField.setItems(merchants);
-        merchantField.setItemLabelGenerator(MerchantDTO::getName);
+        merchantField.setItemLabelGenerator(merchant -> merchant.getId() + " - " + merchant.getName());
+        
+        // Add value change listener to set default environment from merchant mode (only in NEW mode)
+        merchantField.addValueChangeListener(e -> {
+            MerchantDTO selectedMerchant = e.getValue();
+            if (isNewMode && selectedMerchant != null && selectedMerchant.getMode() != null) {
+                environmentField.setValue(selectedMerchant.getMode());
+            }
+        });
         
         // Auto-select merchant if only one is available in NEW mode
         if (isNewMode && merchants.size() == 1) {
@@ -277,6 +293,11 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
                     }
                 }
             );
+        
+        // Environment field binding
+        binder.forField(environmentField)
+            .asRequired("Environment is required")
+            .bind(ClientDTO::getEnvironment, ClientDTO::setEnvironment);
         
         // Required fields
         binder.forField(nameField)
@@ -391,6 +412,31 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
         
         // Merchant Client ID: editable only in NEW mode, readonly in EDIT mode
         merchantClientIdField.setReadOnly(!isNewMode);
+        
+        // Environment: editable in edit mode (not a gateway-managed field)
+        environmentField.setReadOnly(!edit);
+        
+        // In NEW mode: hide all system information fields except Environment
+        if (isNewMode) {
+            idField.setVisible(false);
+            gatewayClientIdField.setVisible(false);
+            validField.setVisible(false);
+            isBlacklistedField.setVisible(false);
+            isCorrelatedBlacklistedField.setVisible(false);
+            createdInGatewayField.setVisible(false);
+            updatedInGatewayField.setVisible(false);
+            environmentField.setVisible(true);
+        } else {
+            // In EDIT/VIEW mode: show all system information fields
+            idField.setVisible(true);
+            gatewayClientIdField.setVisible(true);
+            validField.setVisible(true);
+            isBlacklistedField.setVisible(true);
+            isCorrelatedBlacklistedField.setVisible(true);
+            createdInGatewayField.setVisible(true);
+            updatedInGatewayField.setVisible(true);
+            environmentField.setVisible(true);
+        }
         
         // Toggle button visibility
         saveButton.setVisible(edit);

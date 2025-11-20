@@ -17,6 +17,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
 import jakarta.annotation.security.RolesAllowed;
 import lt.creditco.cupa.base.users.CupaUser;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.AuditLogService;
 import lt.creditco.cupa.service.CupaUserService;
@@ -50,7 +51,7 @@ public class AuditLogListView extends VerticalLayout {
     private final TextField endpointFilter = new TextField("Endpoint");
     private final MultiSelectComboBox<Integer> statusCodeFilter = new MultiSelectComboBox<>("Status Code");
     private final MultiSelectComboBox<MerchantDTO> merchantFilter;
-    private final ComboBox<String> environmentFilter = new ComboBox<>("Environment");
+    private final ComboBox<MerchantMode> environmentFilter = new ComboBox<>("Environment");
     private final Button applyFiltersButton = new Button("Apply Filters");
     private final Button clearFiltersButton = new Button("Clear");
 
@@ -175,7 +176,7 @@ public class AuditLogListView extends VerticalLayout {
         merchantFilter.setItems(merchants);
         
         // Load environment values
-        environmentFilter.setItems("TEST", "LIVE");
+        environmentFilter.setItems(MerchantMode.values());
     }
 
     private void applyFilters() {
@@ -191,7 +192,7 @@ public class AuditLogListView extends VerticalLayout {
         }
         
         String method = methodFilter.getValue();
-        String environment = environmentFilter.getValue();
+        MerchantMode environment = environmentFilter.getValue();
         
         Set<Integer> selectedStatusCodes = statusCodeFilter.getSelectedItems();
         List<Integer> statusCodes = selectedStatusCodes.isEmpty() ? null : 
@@ -207,7 +208,7 @@ public class AuditLogListView extends VerticalLayout {
         // Service handles ALL access control
         List<AuditLogDTO> filteredLogs = auditLogService
             .findByFiltersWithAccessControl(
-                endpoint, method, orderId, environment, statusCodes, merchantIds, pageable, loggedInUser
+                endpoint, method, orderId, environment != null ? environment.name() : null, statusCodes, merchantIds, pageable, loggedInUser
             )
             .getContent();
         

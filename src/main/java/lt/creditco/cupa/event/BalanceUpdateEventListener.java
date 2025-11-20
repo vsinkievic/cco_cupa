@@ -70,7 +70,7 @@ public class BalanceUpdateEventListener {
             // Create a context for the merchant
             CupaApiContext.MerchantContext merchantContext = CupaApiContext.MerchantContext.builder()
                 .merchantId(merchant.getId())
-                .environment(merchant.getMode().name())
+                .environment(merchant.getMode())
                 .cupaApiKey(
                     merchant.getMode() == lt.creditco.cupa.domain.enumeration.MerchantMode.LIVE
                         ? merchant.getCupaProdApiKey()

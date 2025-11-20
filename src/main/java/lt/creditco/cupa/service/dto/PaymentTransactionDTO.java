@@ -9,6 +9,7 @@ import java.util.Objects;
 import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.domain.MerchantOwnedEntity;
 import lt.creditco.cupa.domain.enumeration.Currency;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 
@@ -72,6 +73,8 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
     private String merchantClientId;
 
     private String merchantId;
+
+    private MerchantMode environment;
 
     private String clientName;
 
@@ -280,6 +283,14 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
         this.merchantId = merchantId;
     }
 
+    public MerchantMode getEnvironment() {
+        return environment;
+    }
+
+    public void setEnvironment(MerchantMode environment) {
+        this.environment = environment;
+    }
+
     public String getClientName() {
         return clientName;
     }
@@ -365,6 +376,7 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
             ", orderId='" + getOrderId() + "'" +
             ", clientId='" + getClientId() + "'" +
             ", merchantId='" + getMerchantId() + "'" +
+            ", environment='" + getEnvironment() + "'" +
             ", clientName='" + getClientName() + "'" +
             ", merchantName='" + getMerchantName() + "'" +
             ", gatewayTransactionId='" + getGatewayTransactionId() + "'" +

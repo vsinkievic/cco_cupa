@@ -14,6 +14,7 @@ import lt.creditco.cupa.domain.Client;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.PaymentTransaction;
 import lt.creditco.cupa.domain.enumeration.Currency;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import lt.creditco.cupa.remote.CardType;
@@ -121,7 +122,7 @@ class PaymentTransactionServiceTest {
             .merchantContext(
                 CupaApiContext.MerchantContext.builder()
                     .merchantId("MERCH-00001")
-                    .environment("TEST")
+                    .environment(MerchantMode.TEST)
                     .cupaApiKey("test-api-key")
                     .mode(lt.creditco.cupa.domain.enumeration.MerchantMode.TEST)
                     .status(lt.creditco.cupa.domain.enumeration.MerchantStatus.ACTIVE)

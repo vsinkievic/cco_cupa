@@ -179,7 +179,7 @@ public class CupaApiBusinessLogicService {
         }
         return CupaApiContext.MerchantContext.builder()
             .merchantId(merchant.getId())
-            .environment(merchant.getMode().name())
+            .environment(merchant.getMode())
             .cupaApiKey(requestApiKey)
             .mode(merchant.getMode())
             .status(merchant.getStatus())
@@ -201,9 +201,9 @@ public class CupaApiBusinessLogicService {
 
         // For now, we'll check if the API key matches any known test keys
         if ("test_key_123".equals(apiKey)) {
-            return CupaApiContext.MerchantContext.builder().merchantId("MERCH001").environment("TEST").cupaApiKey(apiKey).build();
+            return CupaApiContext.MerchantContext.builder().merchantId("MERCH001").environment(MerchantMode.TEST).cupaApiKey(apiKey).build();
         } else if ("test_key_456".equals(apiKey)) {
-            return CupaApiContext.MerchantContext.builder().merchantId("MERCH002").environment("TEST").cupaApiKey(apiKey).build();
+            return CupaApiContext.MerchantContext.builder().merchantId("MERCH002").environment(MerchantMode.TEST).cupaApiKey(apiKey).build();
         }
 
         log.debug("No merchant found for API key: {}, returning null values", apiKey);

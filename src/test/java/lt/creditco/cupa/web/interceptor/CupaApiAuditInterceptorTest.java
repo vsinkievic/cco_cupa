@@ -7,6 +7,7 @@ import java.security.Principal;
 import java.time.Instant;
 import java.util.Optional;
 
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.service.AuditLogService;
 import lt.creditco.cupa.service.CupaApiBusinessLogicService;
 import lt.creditco.cupa.service.dto.AuditLogDTO;
@@ -61,7 +62,7 @@ class CupaApiAuditInterceptorTest {
         // Setup merchant context
         CupaApiContext.MerchantContext merchantContext = CupaApiContext.MerchantContext.builder()
             .merchantId("test-merchant")
-            .environment("TEST")
+            .environment(MerchantMode.TEST)
             .cupaApiKey("test-api-key")
             .mode(lt.creditco.cupa.domain.enumeration.MerchantMode.TEST)
             .status(lt.creditco.cupa.domain.enumeration.MerchantStatus.ACTIVE)

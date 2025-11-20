@@ -5,6 +5,7 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
 
 /**
  * A DTO for the {@link lt.creditco.cupa.domain.Client} entity.
@@ -52,6 +53,8 @@ public class ClientDTO implements Serializable {
 
     @NotNull
     private String merchantId;
+
+    private MerchantMode environment;
 
     private String merchantName;
 
@@ -213,6 +216,14 @@ public class ClientDTO implements Serializable {
         this.merchantId = merchantId;
     }
 
+    public MerchantMode getEnvironment() {
+        return environment;
+    }
+
+    public void setEnvironment(MerchantMode environment) {
+        this.environment = environment;
+    }
+
     public String getMerchantName() {
         return this.merchantName;
     }
@@ -304,6 +315,7 @@ public class ClientDTO implements Serializable {
         return "ClientDTO{" +
             "id=" + getId() +
             ", merchanId='" + getMerchantId() + "'" +
+            ", environment='" + getEnvironment() + "'" +
             ", name='" + getName() + "'" +
             ", emailAddress='" + getEmailAddress() + "'" +
             ", mobileNumber='" + getMobileNumber() + "'" +

@@ -300,9 +300,20 @@ public class PaymentTransactionCreateView extends VerticalLayout implements Befo
             return;
         }
         
+        MerchantDTO selectedMerchant = merchantField.getValue();
+        if (selectedMerchant == null || selectedMerchant.getMode() == null) {
+            clientField.setItems(Collections.emptyList());
+            clientField.setEnabled(false);
+            return;
+        }
+        
         // Load all clients for merchant (up to 10K) into memory
         var pageable = PageRequest.of(0, 10000);
-        List<ClientDTO> clients = clientService.findByMerchantId(merchantId, pageable).getContent();
+        List<ClientDTO> clients = clientService.findByMerchantId(merchantId, pageable)
+            .getContent()
+            .stream()
+            .filter(c -> selectedMerchant.getMode().equals(c.getEnvironment()))
+            .toList();
         
         // Enhanced label generator - shows ID | Name | Email | Phone
         clientField.setItemLabelGenerator(client -> {

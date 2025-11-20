@@ -60,8 +60,8 @@ public class CupaApiContext {
             return cupaUser;
         }
 
-        public String getEnvironment() {
-            return merchantContext != null && merchantContext.getMode() != null ? merchantContext.getMode().name() : null;
+        public MerchantMode getEnvironment() {
+            return merchantContext != null ? merchantContext.getMode() : null;
         }
 
         public String getMerchantId() {
@@ -125,7 +125,7 @@ public class CupaApiContext {
     public static class MerchantContext {
 
         private String merchantId;
-        private String environment;
+        private MerchantMode environment;
         private String cupaApiKey;
         private MerchantMode mode;
         private MerchantStatus status;

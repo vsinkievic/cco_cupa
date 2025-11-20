@@ -15,6 +15,7 @@ import lt.creditco.cupa.domain.Client;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.PaymentTransaction;
 import lt.creditco.cupa.domain.enumeration.Currency;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.PaymentBrand;
 import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import lt.creditco.cupa.domain.util.Merger;
@@ -144,6 +145,18 @@ public class PaymentTransactionService {
             paymentTransactionDTO.setClientId(client.getId());
         }
 
+        // Validate client environment matches transaction environment
+        Client client = clientRepository.findById(paymentTransactionDTO.getClientId()).orElse(null);
+        if (client != null && client.getEnvironment() != null && 
+            paymentTransactionDTO.getEnvironment() != null && 
+            !client.getEnvironment().equals(paymentTransactionDTO.getEnvironment())) {
+            throw new BadRequestAlertException(
+                "Client environment does not match transaction environment", 
+                "PaymentTransaction", 
+                "environmentMismatch"
+            );
+        }
+
         // Validate merchant exists
         if (paymentTransactionDTO.getMerchantId() == null) {
             throw new BadRequestAlertException("Merchant ID is required", "PaymentTransaction", "merchantIdRequired");
@@ -189,6 +202,11 @@ public class PaymentTransactionService {
 
         // Validate before saving
         validatePaymentTransaction(paymentTransactionDTO);
+
+        // Set environment from context
+        if (context.getMerchantContext() != null) {
+            paymentTransactionDTO.setEnvironment(context.getMerchantContext().getMode());
+        }
 
         // Set backoffice URL only for production profile
         if (isProdProfile()) {
@@ -528,6 +546,7 @@ public class PaymentTransactionService {
     }
 
     public Payment createPayment(PaymentRequest request, CupaApiContext.CupaApiContextData context) {
+        Objects.requireNonNull(context, "Context is required");
         LOG.info(
             "createPayment({}), executed by {}, merchant: {}, environment: {}",
             request.getOrderId(),
@@ -537,6 +556,7 @@ public class PaymentTransactionService {
                 ? context.getMerchantContext().getMode().name()
                 : null
         );
+        Objects.requireNonNull(context.getMerchantContext(), "Merchant context is required");
 
         LOG.debug("createPayment()....: request={}", request);
         LOG.debug("createPayment()....: context={}", context);
@@ -568,7 +588,8 @@ public class PaymentTransactionService {
             );
         }
         if (request.getClient() != null) {
-            createOrUpdateClient(paymentTransactionDTO.getMerchantId(), paymentTransactionDTO.getClientId(), request.getClient());
+            createOrUpdateClient(paymentTransactionDTO.getMerchantId(), paymentTransactionDTO.getClientId(), request.getClient(), 
+                context.getMerchantContext().getMode());
         }
 
         paymentTransactionDTO = save(paymentTransactionDTO, context);
@@ -836,8 +857,9 @@ public class PaymentTransactionService {
      * @param merchantId the merchant ID
      * @param clientId the client ID
      * @param paymentClient the client data from payment request
+     * @param environment the merchant mode environment (TEST or LIVE)
      */
-    private void createOrUpdateClient(String merchantId, String clientId, lt.creditco.cupa.api.PaymentClient paymentClient) {
+    private void createOrUpdateClient(String merchantId, String clientId, lt.creditco.cupa.api.PaymentClient paymentClient, MerchantMode environment) {
         if (paymentClient == null) {
             return;
         }
@@ -876,6 +898,7 @@ public class PaymentTransactionService {
             newClient.setId(UlidCreator.getUlid().toString());
             newClient.setMerchantClientId(clientId);
             newClient.setMerchantId(merchantId);
+            newClient.setEnvironment(environment);
             newClient.setName(paymentClient.getName());
             newClient.setEmailAddress(paymentClient.getEmailAddress());
             newClient.setMobileNumber(paymentClient.getMobileNumber());

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.*;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
+import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
@@ -84,6 +85,10 @@ public class Client extends AbstractAuditingEntity<String> {
 
     @Column(name = "merchant_id")
     private String merchantId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "environment")
+    private MerchantMode environment;
 
     @Column(name = "created_in_gateway")
     private Instant createdInGateway;
@@ -361,6 +366,19 @@ public class Client extends AbstractAuditingEntity<String> {
         return this;
     }
 
+    public MerchantMode getEnvironment() {
+        return this.environment;
+    }
+
+    public void setEnvironment(MerchantMode environment) {
+        this.environment = environment;
+    }
+
+    public Client environment(MerchantMode environment) {
+        this.setEnvironment(environment);
+        return this;
+    }
+
     public Long getVersion() {
         return this.version;
     }
@@ -420,6 +438,8 @@ public class Client extends AbstractAuditingEntity<String> {
         return "Client{" +
             "id=" + getId() +
             ", merchantClientId='" + getMerchantClientId() + "'" +
+            ", merchantId='" + getMerchantId() + "'" +
+            ", environment='" + getEnvironment() + "'" +
             ", name='" + getName() + "'" +
             ", emailAddress='" + getEmailAddress() + "'" +
             ", mobileNumber='" + getMobileNumber() + "'" +
