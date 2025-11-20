@@ -34,10 +34,14 @@ public class AuditLogDetailView extends VerticalLayout implements HasUrlParamete
     
     // Form fields
     private final TextField requestTimestampField = new TextField("Timestamp");
-    private final TextField apiEndpointField = new TextField("Endpoint");
-    private final TextField httpMethodField = new TextField("HTTP Method");
-    private final TextField merchantIdField = new TextField("Merchant ID");
     private final IntegerField httpStatusCodeField = new IntegerField("Status Code");
+    private final TextField httpMethodField = new TextField("HTTP Method");
+    private final TextField apiEndpointField = new TextField("Endpoint");
+    private final TextField merchantIdField = new TextField("Merchant ID");
+    private final TextField environmentField = new TextField("Environment");
+    private final TextField orderIdField = new TextField("Order ID");
+    private final TextField requesterIpAddressField = new TextField("Requester IP Address");
+    private final TextField responseDescriptionField = new TextField("Response Description");
     
     // JSON display components (3-40 rows for audit logs)
     private final JsonDisplayComponent requestDataComponent = new JsonDisplayComponent().setRowRange(3, 40);
@@ -83,15 +87,28 @@ public class AuditLogDetailView extends VerticalLayout implements HasUrlParamete
             new FormLayout.ResponsiveStep("500px", 2)
         );
         
+        // Set all fields to full width
         requestTimestampField.setWidthFull();
-        apiEndpointField.setWidthFull();
-        httpMethodField.setWidthFull();
-        merchantIdField.setWidthFull();
         httpStatusCodeField.setWidthFull();
+        httpMethodField.setWidthFull();
+        apiEndpointField.setWidthFull();
+        merchantIdField.setWidthFull();
+        environmentField.setWidthFull();
+        orderIdField.setWidthFull();
+        requesterIpAddressField.setWidthFull();
+        responseDescriptionField.setWidthFull();
         
-        formLayout.add(requestTimestampField, apiEndpointField);
-        formLayout.add(httpMethodField, merchantIdField);
-        formLayout.add(httpStatusCodeField, 1);
+        // Layout as specified:
+        // Row 1: timestamp | StatusCode
+        formLayout.add(requestTimestampField, httpStatusCodeField);
+        // Row 2: Http Method | Endpoint
+        formLayout.add(httpMethodField, apiEndpointField);
+        // Row 3: Merchant ID | Environment
+        formLayout.add(merchantIdField, environmentField);
+        // Row 4: Order ID | requester_ip_address
+        formLayout.add(orderIdField, requesterIpAddressField);
+        // Row 5: response_description (full width)
+        formLayout.add(responseDescriptionField, 2);
         
         return formLayout;
     }
@@ -115,10 +132,14 @@ public class AuditLogDetailView extends VerticalLayout implements HasUrlParamete
                 dto -> dto.getRequestTimestamp() != null ? dto.getRequestTimestamp().toString() : "",
                 (dto, value) -> {}
             );
-        binder.forField(apiEndpointField).bind(AuditLogDTO::getApiEndpoint, (dto, value) -> {});
-        binder.forField(httpMethodField).bind(AuditLogDTO::getHttpMethod, (dto, value) -> {});
-        binder.forField(merchantIdField).bind(AuditLogDTO::getMerchantId, (dto, value) -> {});
         binder.forField(httpStatusCodeField).bind(AuditLogDTO::getHttpStatusCode, (dto, value) -> {});
+        binder.forField(httpMethodField).bind(AuditLogDTO::getHttpMethod, (dto, value) -> {});
+        binder.forField(apiEndpointField).bind(AuditLogDTO::getApiEndpoint, (dto, value) -> {});
+        binder.forField(merchantIdField).bind(AuditLogDTO::getMerchantId, (dto, value) -> {});
+        binder.forField(environmentField).bind(AuditLogDTO::getEnvironment, (dto, value) -> {});
+        binder.forField(orderIdField).bind(AuditLogDTO::getOrderId, (dto, value) -> {});
+        binder.forField(requesterIpAddressField).bind(AuditLogDTO::getRequesterIpAddress, (dto, value) -> {});
+        binder.forField(responseDescriptionField).bind(AuditLogDTO::getResponseDescription, (dto, value) -> {});
     }
     
     private void setReadOnlyMode() {

@@ -2,6 +2,7 @@ package lt.creditco.cupa.service;
 
 import com.bpmid.vapp.domain.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -183,26 +184,8 @@ public class AuditLogService {
      */
     @Transactional(readOnly = true)
     public Page<AuditLogDTO> findAllWithAccessControl(Pageable pageable, User user) {
-        if (user == null) {
-            LOG.warn("Anonymous user access attempt - returning empty results");
-            return Page.empty(pageable);
-        }
-
         LOG.debug("Request to get all AuditLogs with access control for user: {}", user.getLogin());
-
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            return findAll(pageable);
-        }
-
-        if (user instanceof CupaUser cupaUser) {
-            Set<String> merchantIds = cupaUser.getMerchantIdsSet();
-            if (merchantIds.isEmpty()) {
-                return Page.empty(pageable);
-            }
-            return auditLogRepository.findAllByMerchantIds(merchantIds, pageable).map(auditLogMapper::toDto);
-        } else return Page.empty(pageable);
-
-
+        return findByFiltersWithAccessControl(null, null, null, null, null, null, pageable, user);
     }
 
     /**
@@ -220,11 +203,11 @@ public class AuditLogService {
 
         LOG.debug("Request to get all AuditLogs with eager relationships and access control for user: {}", user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            return findAllWithEagerRelationships(pageable);
-        }
-
         if (user instanceof CupaUser cupaUser) {
+            if (cupaUser.hasAccessToAllMerchants()) {
+                return findAllWithEagerRelationships(pageable);
+            }
+            
             Set<String> merchantIds = cupaUser.getMerchantIdsSet();
             if (merchantIds.isEmpty()) {
                 return Page.empty(pageable);
@@ -249,16 +232,164 @@ public class AuditLogService {
 
         LOG.debug("Request to get AuditLog : {} with access control for user: {}", id, user.getLogin());
 
-        if (user.hasAuthority("ROLE_ADMIN")) {
-            return findOne(id);
-        }
-
         if (user instanceof CupaUser cupaUser) {
+            if (cupaUser.hasAccessToAllMerchants()) {
+                return findOne(id);
+            }
+            
             Set<String> merchantIds = cupaUser.getMerchantIdsSet();
             if (merchantIds.isEmpty()) {
                 return Optional.empty();
             }
             return auditLogRepository.findByIdAndMerchantIds(id, merchantIds).map(auditLogMapper::toDto);
         } else return Optional.empty();
+    }
+
+    /**
+     * Get distinct HTTP methods from audit logs.
+     * 
+     * @return list of distinct HTTP methods
+     */
+    public List<String> findDistinctHttpMethods() {
+        LOG.debug("Request to get distinct HTTP methods");
+        return auditLogRepository.findDistinctHttpMethods();
+    }
+
+    /**
+     * Get distinct HTTP status codes from audit logs.
+     * 
+     * @return list of distinct HTTP status codes
+     */
+    public List<Integer> findDistinctHttpStatusCodes() {
+        LOG.debug("Request to get distinct HTTP status codes");
+        return auditLogRepository.findDistinctHttpStatusCodes();
+    }
+
+    /**
+     * Find audit logs by filters with access control.
+     * Access control logic:
+     * - Admin/CreditCo: can see all merchants (pass filterMerchantIds directly)
+     * - Regular users: can only see their assigned merchants
+     *   - If filterMerchantIds is null: use user's merchant list
+     *   - If filterMerchantIds provided: validate all are in user's merchant list
+     * 
+     * @param endpoint Filter by endpoint fragment
+     * @param method Filter by HTTP method
+     * @param orderId Filter by order ID fragment
+     * @param environment Filter by environment (TEST or LIVE)
+     * @param statusCodes Filter by HTTP status codes (can be multiple)
+     * @param filterMerchantIds User-selected merchant IDs from UI filter
+     * @param pageable Pagination and sorting
+     * @param user Current user for access control
+     * @return Page of filtered audit logs
+     */
+    @Transactional(readOnly = true)
+    public Page<AuditLogDTO> findByFiltersWithAccessControl(
+        String endpoint,
+        String method,
+        String orderId,
+        String environment,
+        List<Integer> statusCodes,
+        List<String> filterMerchantIds,
+        Pageable pageable,
+        User user
+    ) {
+        LOG.debug("=== findByFiltersWithAccessControl START ===");
+        LOG.debug("Input parameters:");
+        LOG.debug("  - user: {}", user != null ? user.getLogin() : "null");
+        LOG.debug("  - endpoint: {}", endpoint);
+        LOG.debug("  - method: {}", method);
+        LOG.debug("  - orderId: {}", orderId);
+        LOG.debug("  - environment: {}", environment);
+        LOG.debug("  - statusCodes: {}", statusCodes);
+        LOG.debug("  - filterMerchantIds: {}", filterMerchantIds);
+        LOG.debug("  - pageable: page={}, size={}, sort={}", 
+            pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        
+        if (user == null) {
+            LOG.warn("Anonymous user access attempt - returning empty results");
+            return Page.empty(pageable);
+        }
+
+        if (!(user instanceof CupaUser cupaUser)) {
+            LOG.warn("User is not CupaUser instance - returning empty results");
+            return Page.empty(pageable);
+        }
+        
+        LOG.debug("User hasAccessToAllMerchants: {}", cupaUser.hasAccessToAllMerchants());
+        
+        List<String> finalMerchantIds;
+        
+        if (cupaUser.hasAccessToAllMerchants()) {
+            // Admin/CreditCo: use filter as-is (null = all merchants)
+            finalMerchantIds = filterMerchantIds;
+            LOG.debug("Admin/CreditCo user - using filterMerchantIds as-is: {}", finalMerchantIds);
+        } else {
+            // Non-admin users: restrict to assigned merchants
+            Set<String> merchantIdsSet = cupaUser.getMerchantIdsSet();
+            List<String> userMerchantIds = merchantIdsSet.stream().toList();
+            LOG.debug("Regular user - assigned merchantIds: {}", userMerchantIds);
+            
+            if (userMerchantIds.isEmpty()) {
+                LOG.debug("User {} has no assigned merchants", user.getLogin());
+                return Page.empty(pageable);
+            }
+            
+            if (filterMerchantIds == null || filterMerchantIds.isEmpty()) {
+                // No filter selected: use all user's merchants
+                finalMerchantIds = userMerchantIds;
+                LOG.debug("No filter selected - using all user's merchants: {}", finalMerchantIds);
+            } else {
+                // Filter selected: check all are within user's allowed merchants
+                boolean allAllowed = userMerchantIds.containsAll(filterMerchantIds);
+                LOG.debug("Filter selected - validation allAllowed: {}", allAllowed);
+                if (!allAllowed) {
+                    LOG.warn("User {} attempted to filter by unauthorized merchants", user.getLogin());
+                    return Page.empty(pageable);
+                }
+                finalMerchantIds = filterMerchantIds;
+                LOG.debug("Using filtered merchantIds: {}", finalMerchantIds);
+            }
+        }
+        
+        // Convert empty list to null to avoid issues with empty IN clauses
+        List<String> merchantIdsForQuery = (finalMerchantIds != null && finalMerchantIds.isEmpty()) 
+            ? null 
+            : finalMerchantIds;
+        
+        // Construct the LIKE patterns in service layer to avoid Hibernate type inference issues
+        String endpointPattern = (endpoint != null && !endpoint.isEmpty())
+            ? "%" + endpoint + "%"
+            : null;
+        
+        String orderIdPattern = (orderId != null && !orderId.isEmpty())
+            ? "%" + orderId + "%"
+            : null;
+        
+        // Convert empty statusCodes list to null
+        List<Integer> statusCodesForQuery = (statusCodes != null && statusCodes.isEmpty())
+            ? null
+            : statusCodes;
+        
+        LOG.debug("=== Calling repository.findByFilters ===");
+        LOG.debug("Repository parameters:");
+        LOG.debug("  - merchantIdsForQuery: {}", merchantIdsForQuery);
+        LOG.debug("  - endpointPattern: {}", endpointPattern);
+        LOG.debug("  - method: {}", method);
+        LOG.debug("  - orderIdPattern: {}", orderIdPattern);
+        LOG.debug("  - environment: {}", environment);
+        LOG.debug("  - statusCodesForQuery: {}", statusCodesForQuery);
+        LOG.debug("  - pageable: page={}, size={}, sort={}", 
+            pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        
+        Page<AuditLogDTO> result = auditLogRepository.findByFilters(
+            merchantIdsForQuery, endpointPattern, method, orderIdPattern, environment, statusCodesForQuery, pageable
+        ).map(auditLogMapper::toDto);
+        
+        LOG.debug("Repository returned: totalElements={}, numberOfElements={}, totalPages={}", 
+            result.getTotalElements(), result.getNumberOfElements(), result.getTotalPages());
+        LOG.debug("=== findByFiltersWithAccessControl END ===");
+        
+        return result;
     }
 }

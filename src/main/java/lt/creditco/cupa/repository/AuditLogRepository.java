@@ -44,4 +44,41 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
     @Query("select auditLog from AuditLog auditLog where auditLog.id = :id and auditLog.merchantId in :merchantIds")
     Optional<AuditLog> findByIdAndMerchantIds(@Param("id") Long id, @Param("merchantIds") Set<String> merchantIds);
+
+    // Projection methods for distinct values
+    @Query("SELECT DISTINCT a.httpMethod FROM AuditLog a ORDER BY a.httpMethod")
+    List<String> findDistinctHttpMethods();
+
+    @Query("SELECT DISTINCT a.httpStatusCode FROM AuditLog a ORDER BY a.httpStatusCode")
+    List<Integer> findDistinctHttpStatusCodes();
+
+    /**
+     * Find audit logs by filters.
+     * Service layer handles access control - repository just filters data.
+     * 
+     * @param merchantIds Merchant IDs to filter by (null = all merchants)
+     * @param endpointPattern Filter by endpoint fragment (LIKE pattern)
+     * @param method Filter by exact HTTP method
+     * @param orderIdPattern Filter by order ID fragment (LIKE pattern)
+     * @param environment Filter by environment (TEST or LIVE)
+     * @param statusCodes Filter by HTTP status codes (can be multiple)
+     * @param pageable Pagination and sorting
+     * @return Page of filtered audit logs
+     */
+    @Query("SELECT a FROM AuditLog a WHERE " +
+       "(:merchantIds IS NULL OR a.merchantId IN :merchantIds) AND " +
+       "(:endpointPattern IS NULL OR a.apiEndpoint LIKE :endpointPattern) AND " +
+       "(:method IS NULL OR a.httpMethod = :method) AND " +
+       "(:orderIdPattern IS NULL OR a.orderId LIKE :orderIdPattern) AND " +
+       "(:environment IS NULL OR a.environment = :environment) AND " +
+       "(:statusCodes IS NULL OR a.httpStatusCode IN :statusCodes)")
+    Page<AuditLog> findByFilters(
+        @Param("merchantIds") List<String> merchantIds,
+        @Param("endpointPattern") String endpointPattern,
+        @Param("method") String method,
+        @Param("orderIdPattern") String orderIdPattern,
+        @Param("environment") String environment,
+        @Param("statusCodes") List<Integer> statusCodes,
+        Pageable pageable
+    );
 }
