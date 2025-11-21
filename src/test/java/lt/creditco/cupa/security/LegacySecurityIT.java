@@ -1,11 +1,10 @@
-package lt.creditco.cupa.web.filter;
+package lt.creditco.cupa.security;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import lt.creditco.cupa.security.AuthoritiesConstants;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfigureMockMvc
 @SpringBootTest
 @Slf4j
-class SpaWebFilterIT {
+class LegacySecurityIT {
 
     @Autowired
     private MockMvc mockMvc;
