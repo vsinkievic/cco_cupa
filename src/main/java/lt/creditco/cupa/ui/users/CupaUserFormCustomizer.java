@@ -72,8 +72,8 @@ public class CupaUserFormCustomizer implements UserFormCustomizer {
         // Set width
         merchantComboBox.setWidthFull();
         
-        // Add to form (will continue after standard fields in the layout)
-        form.add(merchantComboBox);
+        // Add to form spanning 2 columns for full width
+        form.add(merchantComboBox, 2);
     }
     
     @Override
