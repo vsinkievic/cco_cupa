@@ -1,5 +1,6 @@
 package lt.creditco.cupa.ui.merchant;
 
+import com.bpmid.vapp.base.ui.FormMode;
 import com.bpmid.vapp.base.ui.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -88,7 +89,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
     private final HorizontalLayout headerLayout = new HorizontalLayout();
     
     protected MerchantDTO currentMerchant;
-    protected boolean isNewMode = false;
+    private FormMode currentMode = FormMode.VIEW;
     
     public MerchantDetailView(MerchantService merchantService, CupaUserService cupaUserService) {
         this.merchantService = merchantService;
@@ -113,7 +114,6 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
     }
 
     public void newMerchant() {
-        this.isNewMode = true;
         MerchantDTO newMerchant = new MerchantDTO();
         newMerchant.setMode(MerchantMode.TEST);
         newMerchant.setStatus(MerchantStatus.ACTIVE);
@@ -121,13 +121,13 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         newMerchant.setCurrency(Currency.USD);
         this.currentMerchant = newMerchant;
         binder.setBean(newMerchant);
-        setEditMode(true);
+        setFormMode(FormMode.NEW);
     }
     
     private void updateHeader() {
         headerLayout.removeAll();
         
-        if (isNewMode) {
+        if (currentMode.isNew()) {
             titleLabel.setText("New Merchant");
         } else if (currentMerchant != null) {
             titleLabel.setText("Merchant: " + (currentMerchant.getName() != null ? currentMerchant.getName() : currentMerchant.getId()));
@@ -285,7 +285,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         cancelButton.addClickListener(e -> cancel());
         
         editButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        editButton.addClickListener(e -> setEditMode(true));
+        editButton.addClickListener(e -> setFormMode(FormMode.EDIT));
         
         deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
         deleteButton.addClickListener(e -> confirmDelete());
@@ -298,7 +298,6 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         // Handle "new" mode (when merchantId is null, the /new route was used)
         if (merchantId == null) {
             log.debug("Creating new merchant");
-            this.isNewMode = true;
             MerchantDTO newMerchant = new MerchantDTO();
             newMerchant.setMode(MerchantMode.TEST);
             newMerchant.setStatus(MerchantStatus.ACTIVE);
@@ -306,7 +305,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
             newMerchant.setCurrency(Currency.USD);
             this.currentMerchant = newMerchant;
             binder.setBean(newMerchant);
-            setEditMode(true);
+            setFormMode(FormMode.NEW);
             updateHeader();
             return;
         }
@@ -316,9 +315,8 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         MerchantDTO merchant = merchantService.findOneWithAccessControl(merchantId, loggedInUser).orElse(null);
         if (merchant != null) {
             this.currentMerchant = merchant;
-            this.isNewMode = false;
             binder.setBean(merchant);
-            setEditMode(false); // Always start in view mode
+            setFormMode(FormMode.VIEW); // Always start in view mode
             updateHeader();
         } else {
             Notification.show("Merchant not found or access denied", 3000, Notification.Position.MIDDLE)
@@ -327,11 +325,12 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         }
     }
     
-    protected void setEditMode(boolean edit) {
-        binder.setReadOnly(!edit);
+    protected void setFormMode(FormMode mode) {
+        this.currentMode = mode;
+        binder.setReadOnly(!mode.isEditable());
         
         // ID field: editable only in new mode, readonly in edit/view modes
-        idField.setReadOnly(!isNewMode);
+        idField.setReadOnly(!mode.isNew());
         
         // Balance field: always readonly (system managed)
         balanceField.setReadOnly(true);
@@ -340,15 +339,18 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         currencyField.setReadOnly(false);
         
         // Show/hide generate buttons
-        generateTestKeyButton.setVisible(edit);
-        generateProdKeyButton.setVisible(edit);
+        generateTestKeyButton.setVisible(mode.isEditable());
+        generateProdKeyButton.setVisible(mode.isEditable());
         
-        // Toggle button visibility
-        saveButton.setVisible(edit);
-        cancelButton.setVisible(edit);
-        editButton.setVisible(!edit);
-        deleteButton.setVisible(!edit && !isNewMode);
-        backButton.setVisible(!edit && !isNewMode);
+        // Toggle button visibility using FormMode helper methods
+        saveButton.setVisible(mode.isSaveButtonVisible());
+        cancelButton.setVisible(mode.isCancelButtonVisible());
+        editButton.setVisible(mode.isEditButtonVisible());
+        deleteButton.setVisible(mode.isDeleteButtonVisible());
+        backButton.setVisible(mode.isBackToListButtonVisible());
+        
+        // Initialize save button enabled state based on binder validation
+        saveButton.setEnabled(binder.isValid());
     }
     
     private void save() {
@@ -356,7 +358,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
             MerchantDTO merchant = binder.getBean();
             
             try {
-                if (isNewMode) {
+                if (currentMode.isNew()) {
                     merchantService.save(merchant);
                     Notification.show("Merchant created successfully")
                         .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -367,7 +369,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
                     Notification.show("Merchant updated successfully")
                         .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     // Refresh to view mode
-                    setEditMode(false);
+                    setFormMode(FormMode.VIEW);
                 }
             } catch (Exception e) {
                 log.error("Error saving merchant", e);
@@ -381,7 +383,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
     }
     
     private void cancel() {
-        if (isNewMode) {
+        if (currentMode.isNew()) {
             navigateToList();
         } else {
             // Reload the current entity to discard changes
@@ -392,7 +394,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
                     this.currentMerchant = merchant;
                 }
             }
-            setEditMode(false);
+            setFormMode(FormMode.VIEW);
         }
     }
     

@@ -1,5 +1,6 @@
 package lt.creditco.cupa.ui.client;
 
+import com.bpmid.vapp.base.ui.FormMode;
 import com.bpmid.vapp.base.ui.MainLayout;
 import com.github.f4b6a3.ulid.UlidCreator;
 import com.vaadin.flow.component.button.Button;
@@ -92,7 +93,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
     private final HorizontalLayout headerLayout = new HorizontalLayout();
     
     protected ClientDTO currentClient;
-    protected boolean isNewMode = false;
+    private FormMode currentMode = FormMode.VIEW;
     
     public ClientDetailView(ClientService clientService, MerchantService merchantService, CupaUserService cupaUserService) {
         this.clientService = clientService;
@@ -122,7 +123,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
     private void updateHeader() {
         headerLayout.removeAll();
         
-        if (isNewMode) {
+        if (currentMode.isNew()) {
             titleLabel.setText("New Client");
         } else if (currentClient != null) {
             titleLabel.setText("Client: " + (currentClient.getName() != null ? currentClient.getName() : currentClient.getId()));
@@ -244,13 +245,13 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
         // Add value change listener to set default environment from merchant mode (only in NEW mode)
         merchantField.addValueChangeListener(e -> {
             MerchantDTO selectedMerchant = e.getValue();
-            if (isNewMode && selectedMerchant != null && selectedMerchant.getMode() != null) {
+            if (currentMode.isNew() && selectedMerchant != null && selectedMerchant.getMode() != null) {
                 environmentField.setValue(selectedMerchant.getMode());
             }
         });
         
         // Auto-select merchant if only one is available in NEW mode
-        if (isNewMode && merchants.size() == 1) {
+        if (currentMode.isNew() && merchants.size() == 1) {
             MerchantDTO singleMerchant = merchants.get(0);
             merchantField.setValue(singleMerchant);
             log.debug("Auto-selected single available merchant: {}", singleMerchant.getName());
@@ -352,7 +353,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
         cancelButton.addClickListener(e -> cancel());
         
         editButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        editButton.addClickListener(e -> setEditMode(true));
+        editButton.addClickListener(e -> setFormMode(FormMode.EDIT));
         
         deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
         deleteButton.addClickListener(e -> confirmDelete());
@@ -365,7 +366,6 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
         // Handle "new" mode (when clientId is null, the /new route was used)
         if (clientId == null) {
             log.debug("Creating new client");
-            this.isNewMode = true;
             ClientDTO newClient = new ClientDTO();
             // Gateway-managed fields: set to null (will be populated by gateway)
             newClient.setValid(null);
@@ -374,7 +374,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
             newClient.setGatewayClientId(null);
             this.currentClient = newClient;
             binder.setBean(newClient);
-            setEditMode(true);
+            setFormMode(FormMode.NEW);
             updateHeader();
             return;
         }
@@ -384,9 +384,8 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
         ClientDTO client = clientService.findOneWithAccessControl(clientId, loggedInUser).orElse(null);
         if (client != null) {
             this.currentClient = client;
-            this.isNewMode = false;
             binder.setBean(client);
-            setEditMode(false); // Always start in view mode
+            setFormMode(FormMode.VIEW); // Always start in view mode
             updateHeader();
         } else {
             Notification.show("Client not found or access denied", 3000, Notification.Position.MIDDLE)
@@ -395,8 +394,9 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
         }
     }
     
-    protected void setEditMode(boolean edit) {
-        binder.setReadOnly(!edit);
+    protected void setFormMode(FormMode mode) {
+        this.currentMode = mode;
+        binder.setReadOnly(!mode.isEditable());
         
         // System Information fields - always readonly
         idField.setReadOnly(true);
@@ -408,16 +408,16 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
         updatedInGatewayField.setReadOnly(true);
         
         // Merchant: editable only in NEW mode, readonly in EDIT mode
-        merchantField.setReadOnly(!isNewMode);
+        merchantField.setReadOnly(!mode.isNew());
         
         // Merchant Client ID: editable only in NEW mode, readonly in EDIT mode
-        merchantClientIdField.setReadOnly(!isNewMode);
+        merchantClientIdField.setReadOnly(!mode.isNew());
         
         // Environment: editable in edit mode (not a gateway-managed field)
-        environmentField.setReadOnly(!edit);
+        environmentField.setReadOnly(!mode.isEditable());
         
         // In NEW mode: hide all system information fields except Environment
-        if (isNewMode) {
+        if (mode.isNew()) {
             idField.setVisible(false);
             gatewayClientIdField.setVisible(false);
             validField.setVisible(false);
@@ -438,12 +438,15 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
             environmentField.setVisible(true);
         }
         
-        // Toggle button visibility
-        saveButton.setVisible(edit);
-        cancelButton.setVisible(edit);
-        editButton.setVisible(!edit);
-        deleteButton.setVisible(!edit && !isNewMode);
-        backButton.setVisible(!edit && !isNewMode);
+        // Toggle button visibility using FormMode helper methods
+        saveButton.setVisible(mode.isSaveButtonVisible());
+        cancelButton.setVisible(mode.isCancelButtonVisible());
+        editButton.setVisible(mode.isEditButtonVisible());
+        deleteButton.setVisible(mode.isDeleteButtonVisible());
+        backButton.setVisible(mode.isBackToListButtonVisible());
+        
+        // Initialize save button enabled state based on binder validation
+        saveButton.setEnabled(binder.isValid());
     }
     
     private void save() {
@@ -451,7 +454,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
             ClientDTO client = binder.getBean();
             
             try {
-                if (isNewMode) {
+                if (currentMode.isNew()) {
                     // Generate ULID for new client
                     if (client.getId() == null || client.getId().isEmpty()) {
                         client.setId(UlidCreator.getUlid().toString());
@@ -466,7 +469,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
                     Notification.show("Client updated successfully")
                         .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     // Refresh to view mode
-                    setEditMode(false);
+                    setFormMode(FormMode.VIEW);
                 }
             } catch (Exception e) {
                 log.error("Error saving client", e);
@@ -480,7 +483,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
     }
     
     private void cancel() {
-        if (isNewMode) {
+        if (currentMode.isNew()) {
             navigateToList();
         } else {
             // Reload the current entity to discard changes
@@ -491,7 +494,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
                     this.currentClient = client;
                 }
             }
-            setEditMode(false);
+            setFormMode(FormMode.VIEW);
         }
     }
     

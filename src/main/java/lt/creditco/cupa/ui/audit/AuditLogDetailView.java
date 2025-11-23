@@ -5,6 +5,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -48,7 +49,7 @@ public class AuditLogDetailView extends VerticalLayout implements HasUrlParamete
     private final JsonDisplayComponent responseDataComponent = new JsonDisplayComponent().setRowRange(3, 40);
     
     // Buttons
-    private final Button backButton = new Button("Back");
+    private final Button backButton = new Button("Back to List", VaadinIcon.ARROW_BACKWARD.create());
     
     public AuditLogDetailView(AuditLogService auditLogService) {
         this.auditLogService = auditLogService;

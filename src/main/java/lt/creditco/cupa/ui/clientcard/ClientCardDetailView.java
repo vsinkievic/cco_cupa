@@ -1,5 +1,6 @@
 package lt.creditco.cupa.ui.clientcard;
 
+import com.bpmid.vapp.base.ui.FormMode;
 import com.bpmid.vapp.base.ui.MainLayout;
 import com.github.f4b6a3.ulid.UlidCreator;
 import com.vaadin.flow.component.button.Button;
@@ -70,7 +71,7 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
     private final HorizontalLayout headerLayout = new HorizontalLayout();
     
     protected ClientCardDTO currentCard;
-    protected boolean isNewMode = false;
+    private FormMode currentMode = FormMode.VIEW;
     
     public ClientCardDetailView(ClientCardService clientCardService, ClientService clientService, CupaUserService cupaUserService) {
         this.clientCardService = clientCardService;
@@ -99,7 +100,7 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
     private void updateHeader() {
         headerLayout.removeAll();
         
-        if (isNewMode) {
+        if (currentMode.isNew()) {
             titleLabel.setText("New Client Card");
         } else if (currentCard != null) {
             titleLabel.setText("Client Card: " + (currentCard.getMaskedPan() != null ? currentCard.getMaskedPan() : currentCard.getId()));
@@ -187,7 +188,7 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
         });
         
         // Auto-select if only one client available in NEW mode
-        if (isNewMode && clients.size() == 1) {
+        if (currentMode.isNew() && clients.size() == 1) {
             clientField.setValue(clients.get(0));
         }
     }
@@ -219,7 +220,7 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
         cancelButton.addClickListener(e -> cancel());
         
         editButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        editButton.addClickListener(e -> setEditMode(true));
+        editButton.addClickListener(e -> setFormMode(FormMode.EDIT));
         
         deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
         deleteButton.addClickListener(e -> confirmDelete());
@@ -232,14 +233,13 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
         // Handle "new" mode (when cardId is null, the /new route was used)
         if (cardId == null) {
             log.debug("Creating new client card");
-            this.isNewMode = true;
             ClientCardDTO newCard = new ClientCardDTO();
             // Set gateway-managed fields to null (will be set by gateway)
             newCard.setIsDefault(null);
             newCard.setIsValid(null);
             this.currentCard = newCard;
             binder.setBean(newCard);
-            setEditMode(true);
+            setFormMode(FormMode.NEW);
             updateHeader();
             return;
         }
@@ -249,9 +249,8 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
         ClientCardDTO card = clientCardService.findOneWithAccessControl(cardId, loggedInUser).orElse(null);
         if (card != null) {
             this.currentCard = card;
-            this.isNewMode = false;
             binder.setBean(card);
-            setEditMode(false); // Always start in view mode
+            setFormMode(FormMode.VIEW); // Always start in view mode
             updateHeader();
         } else {
             Notification.show("Client card not found or access denied", 3000, Notification.Position.MIDDLE)
@@ -260,7 +259,9 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
         }
     }
     
-    protected void setEditMode(boolean edit) {
+    protected void setFormMode(FormMode mode) {
+        this.currentMode = mode;
+        
         // ID field is always read-only
         idField.setReadOnly(true);
         
@@ -268,7 +269,7 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
         isDefaultField.setReadOnly(true);
         isValidField.setReadOnly(true);
         
-        if (isNewMode) {
+        if (mode.isNew()) {
             // NEW mode: all fields editable except gateway fields
             clientField.setReadOnly(false);
             maskedPanField.setReadOnly(false);
@@ -280,16 +281,19 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
             maskedPanField.setReadOnly(true); // Card identity cannot change
             
             // These fields can be edited in EDIT mode
-            expiryDateField.setReadOnly(!edit);
-            cardholderNameField.setReadOnly(!edit);
+            expiryDateField.setReadOnly(!mode.isEditable());
+            cardholderNameField.setReadOnly(!mode.isEditable());
         }
         
-        // Toggle button visibility
-        saveButton.setVisible(edit);
-        cancelButton.setVisible(edit);
-        editButton.setVisible(!edit);
-        deleteButton.setVisible(!edit && !isNewMode);
-        backButton.setVisible(!edit && !isNewMode);
+        // Toggle button visibility using FormMode helper methods
+        saveButton.setVisible(mode.isSaveButtonVisible());
+        cancelButton.setVisible(mode.isCancelButtonVisible());
+        editButton.setVisible(mode.isEditButtonVisible());
+        deleteButton.setVisible(mode.isDeleteButtonVisible());
+        backButton.setVisible(mode.isBackToListButtonVisible());
+        
+        // Initialize save button enabled state based on binder validation
+        saveButton.setEnabled(binder.isValid());
     }
     
     private void save() {
@@ -297,7 +301,7 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
             ClientCardDTO card = binder.getBean();
             
             try {
-                if (isNewMode) {
+                if (currentMode.isNew()) {
                     // Generate ULID for new card if ID is not set
                     if (card.getId() == null || card.getId().isEmpty()) {
                         card.setId(UlidCreator.getUlid().toString());
@@ -312,7 +316,7 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
                     Notification.show("Client card updated successfully")
                         .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     // Refresh to view mode
-                    setEditMode(false);
+                    setFormMode(FormMode.VIEW);
                 }
             } catch (Exception e) {
                 log.error("Error saving client card", e);
@@ -326,7 +330,7 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
     }
     
     private void cancel() {
-        if (isNewMode) {
+        if (currentMode.isNew()) {
             navigateToList();
         } else {
             // Reload the current entity to discard changes
@@ -337,7 +341,7 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
                     this.currentCard = card;
                 }
             }
-            setEditMode(false);
+            setFormMode(FormMode.VIEW);
         }
     }
     
