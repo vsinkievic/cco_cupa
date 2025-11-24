@@ -1,6 +1,7 @@
 package lt.creditco.cupa.ui.audit;
 
 import com.bpmid.vapp.base.ui.MainLayout;
+import com.bpmid.vapp.base.ui.breadcrumb.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -32,6 +33,7 @@ public class AuditLogDetailView extends VerticalLayout implements HasUrlParamete
 
     private final AuditLogService auditLogService;
     protected final Binder<AuditLogDTO> binder = new Binder<>(AuditLogDTO.class);
+    private final BreadcrumbBar breadcrumbBar = new BreadcrumbBar();
     
     // Form fields
     private final TextField requestTimestampField = new TextField("Timestamp");
@@ -58,7 +60,7 @@ public class AuditLogDetailView extends VerticalLayout implements HasUrlParamete
         setPadding(true);
         setSpacing(true);
         
-        add(createHeader());
+        add(breadcrumbBar, createHeader());
         add(createFormLayout());
         add(createJsonSections());
         
@@ -163,7 +165,23 @@ public class AuditLogDetailView extends VerticalLayout implements HasUrlParamete
             // Set JSON content
             requestDataComponent.setJsonContent(auditLog.getRequestData());
             responseDataComponent.setJsonContent(auditLog.getResponseData());
+            
+            // Update breadcrumb
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Audit Logs", AuditLogListView.class)
+                    .currentLink(auditLog.getId().toString(), AuditLogDetailView.class, logId)
+                    .build()
+            );
         } else {
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Audit Logs", AuditLogListView.class)
+                    .current("Not Found")
+                    .build()
+            );
             Notification.show("Audit log not found", 3000, Notification.Position.MIDDLE)
                 .addThemeVariants(NotificationVariant.LUMO_ERROR);
             navigateBack();

@@ -2,6 +2,7 @@ package lt.creditco.cupa.ui.merchant;
 
 import com.bpmid.vapp.base.ui.FormMode;
 import com.bpmid.vapp.base.ui.MainLayout;
+import com.bpmid.vapp.base.ui.breadcrumb.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -51,6 +52,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
     protected final CupaUser loggedInUser;
     
     protected final Binder<MerchantDTO> binder = new BeanValidationBinder<>(MerchantDTO.class);
+    private final BreadcrumbBar breadcrumbBar = new BreadcrumbBar();
     
     // Basic fields
     private final TextField idField = new TextField("Merchant ID");
@@ -102,7 +104,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         setPadding(true);
         setSpacing(true);
         
-        add(headerLayout);
+        add(breadcrumbBar, headerLayout);
         add(createBasicInfoSection());
         add(createEnvironmentCredentialsSection());
         
@@ -307,6 +309,15 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
             binder.setBean(newMerchant);
             setFormMode(FormMode.NEW);
             updateHeader();
+            
+            // Update breadcrumb for NEW mode
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Merchants", MerchantListView.class)
+                    .currentLink("New", MerchantNewRouteHandler.class)
+                    .build()
+            );
             return;
         }
         
@@ -318,7 +329,23 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
             binder.setBean(merchant);
             setFormMode(FormMode.VIEW); // Always start in view mode
             updateHeader();
+            
+            // Update breadcrumb for existing merchant
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Merchants", MerchantListView.class)
+                    .currentLink(merchant.getId(), MerchantDetailView.class, merchantId)
+                    .build()
+            );
         } else {
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Merchants", MerchantListView.class)
+                    .current("Not Found")
+                    .build()
+            );
             Notification.show("Merchant not found or access denied", 3000, Notification.Position.MIDDLE)
                 .addThemeVariants(NotificationVariant.LUMO_ERROR);
             navigateToList();

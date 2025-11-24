@@ -1,6 +1,7 @@
 package lt.creditco.cupa.ui.paymenttransaction;
 
 import com.bpmid.vapp.base.ui.MainLayout;
+import com.bpmid.vapp.base.ui.breadcrumb.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -105,7 +106,15 @@ public class PaymentTransactionCreateView extends VerticalLayout implements Befo
         setPadding(true);
         setSpacing(true);
         
-        add(new H2("Create Payment Transaction"));
+        BreadcrumbBar breadcrumbBar = new BreadcrumbBar(
+            Breadcrumbs.builder()
+                .home()
+                .link("Payment Transactions", PaymentTransactionListView.class)
+                .currentLink("New", PaymentTransactionCreateView.class)
+                .build()
+        );
+        
+        add(breadcrumbBar, new H2("Create Payment Transaction"));
         add(createFormLayout());
         add(createButtonLayout());
         

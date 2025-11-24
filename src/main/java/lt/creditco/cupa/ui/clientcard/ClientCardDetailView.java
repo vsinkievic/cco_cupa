@@ -2,6 +2,7 @@ package lt.creditco.cupa.ui.clientcard;
 
 import com.bpmid.vapp.base.ui.FormMode;
 import com.bpmid.vapp.base.ui.MainLayout;
+import com.bpmid.vapp.base.ui.breadcrumb.*;
 import com.github.f4b6a3.ulid.UlidCreator;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -50,6 +51,7 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
     protected final CupaUser loggedInUser;
     
     protected final Binder<ClientCardDTO> binder = new BeanValidationBinder<>(ClientCardDTO.class);
+    private final BreadcrumbBar breadcrumbBar = new BreadcrumbBar();
     
     // Form fields
     private final TextField idField = new TextField("Card ID");
@@ -85,7 +87,7 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
         setPadding(true);
         setSpacing(true);
         
-        add(headerLayout);
+        add(breadcrumbBar, headerLayout);
         add(createCardDetailsSection());
         add(createSystemInformationSection());
         
@@ -241,6 +243,15 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
             binder.setBean(newCard);
             setFormMode(FormMode.NEW);
             updateHeader();
+            
+            // Update breadcrumb for NEW mode
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Client Cards", ClientCardListView.class)
+                    .currentLink("New", ClientCardNewRouteHandler.class)
+                    .build()
+            );
             return;
         }
         
@@ -252,7 +263,24 @@ public class ClientCardDetailView extends VerticalLayout implements HasUrlParame
             binder.setBean(card);
             setFormMode(FormMode.VIEW); // Always start in view mode
             updateHeader();
+            
+            // Update breadcrumb for existing card
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Client Cards", ClientCardListView.class)
+                    .currentLink(card.getMaskedPan() != null ? card.getMaskedPan() : card.getId(),
+                                 ClientCardDetailView.class, cardId)
+                    .build()
+            );
         } else {
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Client Cards", ClientCardListView.class)
+                    .current("Not Found")
+                    .build()
+            );
             Notification.show("Client card not found or access denied", 3000, Notification.Position.MIDDLE)
                 .addThemeVariants(NotificationVariant.LUMO_ERROR);
             navigateToList();

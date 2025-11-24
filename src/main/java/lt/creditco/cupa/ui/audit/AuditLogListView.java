@@ -1,6 +1,7 @@
 package lt.creditco.cupa.ui.audit;
 
 import com.bpmid.vapp.base.ui.MainLayout;
+import com.bpmid.vapp.base.ui.breadcrumb.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -72,7 +73,14 @@ public class AuditLogListView extends VerticalLayout {
         setSizeFull();
         setPadding(true);
         
-        add(createFilterToolbar());
+        BreadcrumbBar breadcrumbBar = new BreadcrumbBar(
+            Breadcrumbs.builder()
+                .home()
+                .currentLink("Audit Logs", AuditLogListView.class)
+                .build()
+        );
+        
+        add(breadcrumbBar, createFilterToolbar());
         add(createGrid());
         loadFilterData();
         refreshGrid();

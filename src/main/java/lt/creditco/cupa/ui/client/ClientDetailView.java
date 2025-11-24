@@ -2,6 +2,7 @@ package lt.creditco.cupa.ui.client;
 
 import com.bpmid.vapp.base.ui.FormMode;
 import com.bpmid.vapp.base.ui.MainLayout;
+import com.bpmid.vapp.base.ui.breadcrumb.*;
 import com.github.f4b6a3.ulid.UlidCreator;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -54,6 +55,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
     protected final CupaUser loggedInUser;
     
     protected final Binder<ClientDTO> binder = new BeanValidationBinder<>(ClientDTO.class);
+    private final BreadcrumbBar breadcrumbBar = new BreadcrumbBar();
     
     // Section 1: Client Details (most used fields)
     private final ComboBox<MerchantDTO> merchantField = new ComboBox<>("Merchant");
@@ -107,7 +109,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
         setPadding(true);
         setSpacing(true);
         
-        add(headerLayout);
+        add(breadcrumbBar, headerLayout);
         add(createClientDetailsSection());
         add(createAddressSection());
         add(createSystemInformationSection());
@@ -376,6 +378,15 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
             binder.setBean(newClient);
             setFormMode(FormMode.NEW);
             updateHeader();
+            
+            // Update breadcrumb for NEW mode
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Clients", ClientListView.class)
+                    .currentLink("New", ClientNewRouteHandler.class)
+                    .build()
+            );
             return;
         }
         
@@ -387,7 +398,24 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
             binder.setBean(client);
             setFormMode(FormMode.VIEW); // Always start in view mode
             updateHeader();
+            
+            // Update breadcrumb for existing client
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Clients", ClientListView.class)
+                    .currentLink(client.getMerchantClientId() != null ? client.getMerchantClientId() : client.getId(),
+                                 ClientDetailView.class, clientId)
+                    .build()
+            );
         } else {
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Clients", ClientListView.class)
+                    .current("Not Found")
+                    .build()
+            );
             Notification.show("Client not found or access denied", 3000, Notification.Position.MIDDLE)
                 .addThemeVariants(NotificationVariant.LUMO_ERROR);
             navigateToList();

@@ -1,6 +1,7 @@
 package lt.creditco.cupa.ui.client;
 
 import com.bpmid.vapp.base.ui.MainLayout;
+import com.bpmid.vapp.base.ui.breadcrumb.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -64,7 +65,14 @@ public class ClientListView extends VerticalLayout {
         setSizeFull();
         setPadding(true);
         
-        add(createToolbar(), createGrid());
+        BreadcrumbBar breadcrumbBar = new BreadcrumbBar(
+            Breadcrumbs.builder()
+                .home()
+                .currentLink("Clients", ClientListView.class)
+                .build()
+        );
+        
+        add(breadcrumbBar, createToolbar(), createGrid());
         
         loadMerchants();
         refreshGrid();

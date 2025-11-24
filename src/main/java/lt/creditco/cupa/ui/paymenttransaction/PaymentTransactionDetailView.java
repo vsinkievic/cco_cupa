@@ -1,6 +1,7 @@
 package lt.creditco.cupa.ui.paymenttransaction;
 
 import com.bpmid.vapp.base.ui.MainLayout;
+import com.bpmid.vapp.base.ui.breadcrumb.*;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -58,6 +59,7 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
     protected final CupaUserService cupaUserService;
     protected final CupaUser loggedInUser;
     protected final Binder<PaymentTransactionDTO> binder = new Binder<>(PaymentTransactionDTO.class);
+    private final BreadcrumbBar breadcrumbBar = new BreadcrumbBar();
     
     // Section 1: Transaction Details
     private final TextField orderIdField = new TextField("Order ID");
@@ -129,7 +131,7 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
         setPadding(true);
         setSpacing(true);
         
-        add(createHeader());
+        add(breadcrumbBar, createHeader());
         add(createTransactionOverviewSection());
         add(createClientMerchantSection());
         add(createAdditionalInformationSection());
@@ -426,7 +428,24 @@ public class PaymentTransactionDetailView extends VerticalLayout implements HasU
             updateHeader();
             updateQueryGatewayButtonState(transaction);
             startAutoRefreshIfPending(transaction);
+            
+            // Update breadcrumb
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Payment Transactions", PaymentTransactionListView.class)
+                    .currentLink(transaction.getOrderId() != null ? transaction.getOrderId() : transaction.getId(),
+                                 PaymentTransactionDetailView.class, transaction.getId())
+                    .build()
+            );
         } else {
+            breadcrumbBar.setItems(
+                Breadcrumbs.builder()
+                    .home()
+                    .link("Payment Transactions", PaymentTransactionListView.class)
+                    .current("Not Found")
+                    .build()
+            );
             Notification.show("Transaction not found or access denied", 3000, Notification.Position.MIDDLE)
                 .addThemeVariants(NotificationVariant.LUMO_ERROR);
             navigateToList();

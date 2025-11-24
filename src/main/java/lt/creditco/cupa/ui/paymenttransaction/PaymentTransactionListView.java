@@ -1,6 +1,7 @@
 package lt.creditco.cupa.ui.paymenttransaction;
 
 import com.bpmid.vapp.base.ui.MainLayout;
+import com.bpmid.vapp.base.ui.breadcrumb.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -73,7 +74,14 @@ public class PaymentTransactionListView extends VerticalLayout {
         setSizeFull();
         setPadding(true);
         
-        add(createToolbar(), createGrid());
+        BreadcrumbBar breadcrumbBar = new BreadcrumbBar(
+            Breadcrumbs.builder()
+                .home()
+                .currentLink("Payment Transactions", PaymentTransactionListView.class)
+                .build()
+        );
+        
+        add(breadcrumbBar, createToolbar(), createGrid());
         
         loadMerchants();
         refreshGrid();
