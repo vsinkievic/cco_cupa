@@ -2,6 +2,7 @@ package lt.creditco.cupa.ui.paymenttransaction;
 
 import com.bpmid.vapp.base.ui.MainLayout;
 import com.bpmid.vapp.base.ui.breadcrumb.*;
+import com.bpmid.vapp.web.rest.errors.BadRequestAlertException;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -464,7 +465,14 @@ public class PaymentTransactionCreateView extends VerticalLayout implements Befo
             
             // Navigate to DETAIL VIEW (not list)
             getUI().ifPresent(ui -> ui.navigate("payment-transactions/" + saved.getId()));
-            
+        } catch (BadRequestAlertException e) {
+            log.error("Error creating payment transaction", e.getMessage());
+            String errorMessage = e.getBody() == null ? e.getMessage() : e.getBody().getTitle();
+            if (errorMessage == null) {
+                errorMessage = e.getMessage();
+            }
+            Notification.show(errorMessage)
+                .addThemeVariants(NotificationVariant.LUMO_ERROR);
         } catch (Exception e) {
             log.error("Error creating payment transaction", e);
             

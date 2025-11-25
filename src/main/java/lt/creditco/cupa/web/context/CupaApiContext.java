@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.base.users.CupaUser;
+import lt.creditco.cupa.domain.DailyAmountLimit;
 import lt.creditco.cupa.domain.MerchantOwnedEntity;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
@@ -134,5 +135,19 @@ public class CupaApiContext {
         private String gatewayMerchantKey;
         private String gatewayApiKey;
         private String securityRemarks;
+        private String clientIdPrefix;
+        private String orderIdPrefix;
+        private DailyAmountLimit dailyAmountLimit;
+
+        public boolean satisfiesClientIdPrefix(String clientId) {
+            if (clientIdPrefix == null) return true;
+            if (clientId == null) return false;
+            return clientId.startsWith(clientIdPrefix);
+        }
+        public boolean satisfiesOrderIdPrefix(String orderId) {
+            if (orderIdPrefix == null) return true;
+            if (orderId == null) return false;
+            return orderId.startsWith(orderIdPrefix);
+        }
     }
 }

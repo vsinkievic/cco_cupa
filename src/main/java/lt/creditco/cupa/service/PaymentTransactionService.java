@@ -126,7 +126,7 @@ public class PaymentTransactionService {
      * @param paymentTransactionDTO the entity to validate.
      * @throws BadRequestAlertException if validation fails.
      */
-    private void validatePaymentTransaction(PaymentTransactionDTO paymentTransactionDTO) {
+    private void validatePaymentTransaction(PaymentTransactionDTO paymentTransactionDTO, CupaApiContext.CupaApiContextData context) {
         // Validate client exists
 
         if (paymentTransactionDTO.getClientId() == null) {
@@ -188,6 +188,10 @@ public class PaymentTransactionService {
         // Validate order ID is not null
         if (paymentTransactionDTO.getOrderId() == null || paymentTransactionDTO.getOrderId().trim().isEmpty()) {
             throw new BadRequestAlertException("Order ID is required", "PaymentTransaction", "orderIdRequired");
+        } else {
+            if (context.getMerchantContext().getOrderIdPrefix() != null && !paymentTransactionDTO.getOrderId().startsWith(context.getMerchantContext().getOrderIdPrefix())) {
+                throw new BadRequestAlertException(String.format("Order ID does not match configured prefix (%s)", context.getMerchantContext().getOrderIdPrefix()), "PaymentTransaction", "orderIdPrefixMismatch");
+            }
         }
     }
 
@@ -201,7 +205,7 @@ public class PaymentTransactionService {
         LOG.debug("Request to save PaymentTransaction : {}, context: {}", paymentTransactionDTO, context);
 
         // Validate before saving
-        validatePaymentTransaction(paymentTransactionDTO);
+        validatePaymentTransaction(paymentTransactionDTO, context);
 
         // Set environment from context
         if (context.getMerchantContext() != null) {
@@ -236,24 +240,7 @@ public class PaymentTransactionService {
         paymentTransaction.setStatus(TransactionStatus.RECEIVED);
         paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
 
-        placePayment(paymentTransaction, context);
-        return enrichWithRelatedData(paymentTransactionMapper.toDto(paymentTransaction));
-    }
-
-    /**
-     * Update a paymentTransaction.
-     *
-     * @param paymentTransactionDTO the entity to save.
-     * @return the persisted entity.
-     */
-    public PaymentTransactionDTO update(PaymentTransactionDTO paymentTransactionDTO) {
-        LOG.debug("Request to update PaymentTransaction : {}", paymentTransactionDTO);
-
-        // Validate before updating
-        validatePaymentTransaction(paymentTransactionDTO);
-
-        PaymentTransaction paymentTransaction = paymentTransactionMapper.toEntity(paymentTransactionDTO);
-        paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
+        paymentTransaction = placePayment(paymentTransaction, context);
         return enrichWithRelatedData(paymentTransactionMapper.toDto(paymentTransaction));
     }
 
@@ -306,7 +293,7 @@ public class PaymentTransactionService {
         return enrichWithRelatedData(paymentTransactionMapper.toDto(paymentTransaction));
     }
 
-    private void placePayment(PaymentTransaction paymentTransaction, CupaApiContext.CupaApiContextData context) {
+    private PaymentTransaction placePayment(PaymentTransaction paymentTransaction, CupaApiContext.CupaApiContextData context) {
         GatewayConfig config = getGatewayConfig(context, paymentTransaction);
         bodyInterceptor.clear();
 
@@ -343,7 +330,7 @@ public class PaymentTransactionService {
             }
         }
         paymentTransaction.setStatusDescription(statusDescription);
-        paymentTransactionRepository.save(paymentTransaction);
+        return paymentTransactionRepository.saveAndFlush(paymentTransaction);
     }
 
     private lt.creditco.cupa.remote.PaymentRequest upPaymentRequestFrom(PaymentTransaction paymentTransaction) {
@@ -550,7 +537,7 @@ public class PaymentTransactionService {
         LOG.info(
             "createPayment({}), executed by {}, merchant: {}, environment: {}",
             request.getOrderId(),
-            context.getUser().getLogin(),
+            context.getUser() == null ? "null" : context.getUser().getLogin(),
             context.getMerchantId(),
             context.getMerchantContext() != null && context.getMerchantContext().getMode() != null
                 ? context.getMerchantContext().getMode().name()
@@ -588,8 +575,7 @@ public class PaymentTransactionService {
             );
         }
         if (request.getClient() != null) {
-            createOrUpdateClient(paymentTransactionDTO.getMerchantId(), paymentTransactionDTO.getClientId(), request.getClient(), 
-                context.getMerchantContext().getMode());
+            createOrUpdateClient(paymentTransactionDTO.getMerchantId(), paymentTransactionDTO.getClientId(), request.getClient(), context);
         }
 
         paymentTransactionDTO = save(paymentTransactionDTO, context);
@@ -859,7 +845,7 @@ public class PaymentTransactionService {
      * @param paymentClient the client data from payment request
      * @param environment the merchant mode environment (TEST or LIVE)
      */
-    private void createOrUpdateClient(String merchantId, String clientId, lt.creditco.cupa.api.PaymentClient paymentClient, MerchantMode environment) {
+    private void createOrUpdateClient(String merchantId, String clientId, lt.creditco.cupa.api.PaymentClient paymentClient, CupaApiContext.CupaApiContextData context) {
         if (paymentClient == null) {
             return;
         }
@@ -894,11 +880,15 @@ public class PaymentTransactionService {
             }
         } else {
             // Create new client
+            if (!context.getMerchantContext().satisfiesClientIdPrefix(clientId)) {
+                throw new BadRequestAlertException(String.format("Client ID does not match configured prefix (%s)", context.getMerchantContext().getClientIdPrefix()), "PaymentTransaction", "clientIdPrefixMismatch");
+            }
+
             Client newClient = new Client();
             newClient.setId(UlidCreator.getUlid().toString());
             newClient.setMerchantClientId(clientId);
             newClient.setMerchantId(merchantId);
-            newClient.setEnvironment(environment);
+            newClient.setEnvironment(context.getMerchantContext().getMode());
             newClient.setName(paymentClient.getName());
             newClient.setEmailAddress(paymentClient.getEmailAddress());
             newClient.setMobileNumber(paymentClient.getMobileNumber());

@@ -9,6 +9,8 @@ import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
+
+import lt.creditco.cupa.api.PaymentClient;
 import lt.creditco.cupa.api.PaymentRequest;
 import lt.creditco.cupa.domain.Client;
 import lt.creditco.cupa.domain.Merchant;
@@ -113,6 +115,7 @@ class PaymentTransactionServiceTest {
         validPaymentRequest = new PaymentRequest();
         validPaymentRequest.setOrderId("test-order-123");
         validPaymentRequest.setClientId("CLN-00001");
+        validPaymentRequest.setClient(new PaymentClient("Test Client", "test@example.com", "123456789"));
         validPaymentRequest.setAmount(new BigDecimal("100.00"));
         validPaymentRequest.setCurrency(PaymentCurrency.USD);
         validPaymentRequest.setCardType(CardType.UnionPay);
@@ -159,6 +162,7 @@ class PaymentTransactionServiceTest {
         when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
         when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
         when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
         when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
         when(bodyInterceptor.getLastTrace()).thenReturn(null);
@@ -180,6 +184,138 @@ class PaymentTransactionServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo("test-id");
     }
+
+    @Test
+    void shouldSaveValidPaymentTransactionWhenOrderIdMatchesContextPrefix() {
+        // Given
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+        when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
+        when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
+        when(bodyInterceptor.getLastTrace()).thenReturn(null);
+
+        // Mock client lookup for placePayment
+        Client testClient = new Client();
+        testClient.setId("CLN-00001");
+        testClient.setMerchantClientId("merchant-client-id");
+        testClient.setName("Test Client");
+        testClient.setEmailAddress("test@example.com");
+        testClient.setMobileNumber("123456789");
+        testClient.setClientPhone("987654321");
+        when(clientRepository.findById("CLN-00001")).thenReturn(Optional.of(testClient));
+
+        validContext.getMerchantContext().setOrderIdPrefix(validPaymentTransactionDTO.getOrderId().substring(0, 3));
+
+        // When
+        PaymentTransactionDTO result = paymentTransactionService.save(validPaymentTransactionDTO, validContext);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo("test-id");
+    }
+
+    @Test
+    void shouldSaveValidPaymentTransactionWhenClientIdMatchesContextPrefix() {
+        // Given
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+        when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
+        when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
+        when(bodyInterceptor.getLastTrace()).thenReturn(null);
+
+        // Mock client lookup for placePayment
+        Client testClient = new Client();
+        testClient.setId("CLN-00001");
+        testClient.setMerchantClientId("merchant-client-id");
+        testClient.setName("Test Client");
+        testClient.setEmailAddress("test@example.com");
+        testClient.setMobileNumber("123456789");
+        testClient.setClientPhone("987654321");
+        when(clientRepository.findById("CLN-00001")).thenReturn(Optional.of(testClient));
+
+        validContext.getMerchantContext().setClientIdPrefix(validPaymentTransactionDTO.getClientId().substring(0, 3));
+
+        // When
+        PaymentTransactionDTO result = paymentTransactionService.save(validPaymentTransactionDTO, validContext);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo("test-id");
+    }
+
+    @Test
+    void shouldSaveValidPaymentTransactionEvenWhenClientIdDoesNotMatchContextPrefixButClientExists() {
+        // Given
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+        when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
+        when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
+        when(bodyInterceptor.getLastTrace()).thenReturn(null);
+
+        // Mock client lookup for placePayment
+        Client testClient = new Client();
+        testClient.setId("CLN-00001");
+        testClient.setMerchantClientId("merchant-client-id");
+        testClient.setName("Test Client");
+        testClient.setEmailAddress("test@example.com");
+        testClient.setMobileNumber("123456789");
+        testClient.setClientPhone("987654321");
+        when(clientRepository.findById("CLN-00001")).thenReturn(Optional.of(testClient));
+
+        validContext.getMerchantContext().setClientIdPrefix("xxx-");
+
+        // When
+        PaymentTransactionDTO result = paymentTransactionService.save(validPaymentTransactionDTO, validContext);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo("test-id");
+    }
+
+    @Test
+    void shouldThrowErrorWhenOrderIdDoesNotMatchContextPrefix() {
+        // Given
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+
+        // Mock client lookup for placePayment
+        Client testClient = new Client();
+        testClient.setId("CLN-00001");
+        testClient.setMerchantClientId("merchant-client-id");
+        testClient.setName("Test Client");
+        testClient.setEmailAddress("test@example.com");
+        testClient.setMobileNumber("123456789");
+        testClient.setClientPhone("987654321");
+        when(clientRepository.findById("CLN-00001")).thenReturn(Optional.of(testClient));
+
+        validContext.getMerchantContext().setOrderIdPrefix("xxx-");
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO, validContext))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Order ID does not match configured prefix (xxx-)");
+    }
+
+    @Test
+    void shouldThrowErrorWhenClientIdDoesNotMatchContextPrefix() {
+        // Given
+        validContext.getMerchantContext().setClientIdPrefix("xxx-");
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.createPayment(validPaymentRequest, validContext))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Client ID does not match configured prefix (xxx-)");
+    }
+
 
     @Test
     void shouldThrowExceptionWhenClientNotFound() {

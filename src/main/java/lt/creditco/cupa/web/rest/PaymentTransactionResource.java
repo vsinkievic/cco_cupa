@@ -145,10 +145,11 @@ public class PaymentTransactionResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        paymentTransactionDTO = paymentTransactionService.update(paymentTransactionDTO);
-        return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, paymentTransactionDTO.getId().toString()))
-            .body(paymentTransactionDTO);
+        throw new BadRequestAlertException("Not implemented", ENTITY_NAME, "notImplemented");
+  //      paymentTransactionDTO = paymentTransactionService.update(paymentTransactionDTO);
+  //      return ResponseEntity.ok()
+  //          .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, paymentTransactionDTO.getId().toString()))
+  //          .body(paymentTransactionDTO);
     }
 
     /**

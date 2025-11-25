@@ -14,7 +14,7 @@ public class PaymentRequest implements MerchantOwnedEntity {
     @Schema(
         required = true,
         title = "Payment ID",
-        description = "UUID or any string up to 50 chars length. Assigned by your system.",
+        description = "UUID or any string up to 50 chars length. Assigned by your system. Assigned prefix may be required.",
         example = "9ed5abf8-f37c-495d-a9cd-527f871125c1"
     )
     private String orderId;
@@ -22,7 +22,7 @@ public class PaymentRequest implements MerchantOwnedEntity {
     @Schema(
         required = true,
         title = "Client ID",
-        description = "UUID or any string up to 50 chars length. Assigned by your system.",
+        description = "UUID or any string up to 50 chars length. Assigned by your system. Assigned prefix may be required.",
         example = "CLN-00001"
     )
     private String clientId;

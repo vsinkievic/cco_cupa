@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.api.PaymentRequest;
 import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.base.users.CupaUserRepository;
+import lt.creditco.cupa.domain.DailyAmountLimit;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
@@ -157,6 +158,9 @@ public class CupaApiBusinessLogicService {
         String gatewayMerchantId = null;
         String gatewayMerchantKey = null;
         String gatewayApiKey = null;
+        String clientIdPrefix = null;
+        String orderIdPrefix = null;
+        DailyAmountLimit dailyAmountLimit = null;
 
         if (merchant.getMode() == MerchantMode.LIVE) {
             if (requestApiKey != null && !requestApiKey.equals(merchant.getCupaProdApiKey())) {
@@ -167,6 +171,9 @@ public class CupaApiBusinessLogicService {
             gatewayMerchantId = merchant.getRemoteProdMerchantId();
             gatewayMerchantKey = merchant.getRemoteProdMerchantKey();
             gatewayApiKey = merchant.getRemoteProdApiKey();
+            clientIdPrefix = merchant.getLiveClientIdPrefix();
+            orderIdPrefix = merchant.getLiveOrderIdPrefix();
+            dailyAmountLimit = merchant.getLiveDailyAmountLimit();
         } else {
             if (requestApiKey != null && !requestApiKey.equals(merchant.getCupaTestApiKey())) {
                 log.warn("Merchant {} has invalid API key (test: {}) for TEST mode, returning null values", merchant.getId(), merchant.getCupaTestApiKey());
@@ -176,6 +183,9 @@ public class CupaApiBusinessLogicService {
             gatewayMerchantId = merchant.getRemoteTestMerchantId();
             gatewayMerchantKey = merchant.getRemoteTestMerchantKey();
             gatewayApiKey = merchant.getRemoteTestApiKey();
+            clientIdPrefix = merchant.getTestClientIdPrefix();
+            orderIdPrefix = merchant.getTestOrderIdPrefix();
+            dailyAmountLimit = merchant.getTestDailyAmountLimit();
         }
         return CupaApiContext.MerchantContext.builder()
             .merchantId(merchant.getId())
@@ -187,6 +197,9 @@ public class CupaApiBusinessLogicService {
             .gatewayMerchantId(gatewayMerchantId)
             .gatewayMerchantKey(gatewayMerchantKey)
             .gatewayApiKey(gatewayApiKey)
+            .clientIdPrefix(clientIdPrefix)
+            .orderIdPrefix(orderIdPrefix)
+            .dailyAmountLimit(dailyAmountLimit)
             .build();
     }
 
@@ -194,21 +207,6 @@ public class CupaApiBusinessLogicService {
         return request.getHeader(lt.creditco.cupa.config.Constants.API_KEY_HEADER);
     }
 
-    private CupaApiContext.MerchantContext findMerchantByApiKey(String apiKey) {
-        // This is a simplified implementation
-        // In a real scenario, you would query the database to find the merchant by API key
-        log.debug("Looking up merchant by API key: {}", apiKey);
-
-        // For now, we'll check if the API key matches any known test keys
-        if ("test_key_123".equals(apiKey)) {
-            return CupaApiContext.MerchantContext.builder().merchantId("MERCH001").environment(MerchantMode.TEST).cupaApiKey(apiKey).build();
-        } else if ("test_key_456".equals(apiKey)) {
-            return CupaApiContext.MerchantContext.builder().merchantId("MERCH002").environment(MerchantMode.TEST).cupaApiKey(apiKey).build();
-        }
-
-        log.debug("No merchant found for API key: {}, returning null values", apiKey);
-        return getDefaultMerchantContext("No merchant found for API key");
-    }
 
     private CupaApiContext.MerchantContext getDefaultMerchantContext(String securityRemarks) {
         return CupaApiContext.MerchantContext.builder()
