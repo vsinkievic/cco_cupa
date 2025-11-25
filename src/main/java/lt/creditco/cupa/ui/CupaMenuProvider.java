@@ -62,8 +62,6 @@ public class CupaMenuProvider implements MenuProvider {
      * Checks if the user has admin role.
      */
     private boolean isAdmin(User user) {
-        return user.getAuthorities().stream()
-            .map(Authority::getName)
-            .anyMatch(AuthoritiesConstants.ADMIN::equals);
+        return user != null && user.hasAuthority(AuthoritiesConstants.ADMIN);
     }
 }

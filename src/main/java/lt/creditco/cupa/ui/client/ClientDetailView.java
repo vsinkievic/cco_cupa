@@ -9,7 +9,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
-import com.vaadin.flow.component.datetimepicker.DateTimePicker;
+import com.bpmid.vapp.base.ui.components.VappDateTimePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
@@ -81,8 +81,8 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
     private final Checkbox validField = new Checkbox("Valid");
     private final Checkbox isBlacklistedField = new Checkbox("Is Blacklisted");
     private final Checkbox isCorrelatedBlacklistedField = new Checkbox("Correlated Blacklisted");
-    private final DateTimePicker createdInGatewayField = new DateTimePicker("Created in Gateway");
-    private final DateTimePicker updatedInGatewayField = new DateTimePicker("Updated in Gateway");
+    private final VappDateTimePicker createdInGatewayField;
+    private final VappDateTimePicker updatedInGatewayField;
     
     // Buttons
     private final Button saveButton = new Button("Save", VaadinIcon.CHECK.create());
@@ -104,6 +104,10 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
         this.loggedInUser = cupaUserService.getUserWithAuthorities()
                 .map(CupaUser.class::cast)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Initialize VappDateTimePicker instances with UserService
+        this.createdInGatewayField = new VappDateTimePicker(cupaUserService, "Created in Gateway");
+        this.updatedInGatewayField = new VappDateTimePicker(cupaUserService, "Updated in Gateway");
         
         setSizeFull();
         setPadding(true);
