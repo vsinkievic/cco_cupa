@@ -392,7 +392,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
                     // Navigate to list after successful creation (per design rule)
                     navigateToList();
                 } else {
-                    merchantService.update(merchant);
+                    this.currentMerchant = merchantService.save(merchant);
                     Notification.show("Merchant updated successfully")
                         .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     // Refresh to view mode

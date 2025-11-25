@@ -44,18 +44,7 @@ public class MerchantService {
         return merchantMapper.toDto(merchant);
     }
 
-    /**
-     * Update a merchant.
-     *
-     * @param merchantDTO the entity to save.
-     * @return the persisted entity.
-     */
-    public MerchantDTO update(MerchantDTO merchantDTO) {
-        log.debug("Request to update Merchant : {}", merchantDTO);
-        Merchant merchant = merchantMapper.toEntity(merchantDTO);
-        merchant = merchantRepository.save(merchant);
-        return merchantMapper.toDto(merchant);
-    }
+
 
     /**
      * Partially update a merchant.

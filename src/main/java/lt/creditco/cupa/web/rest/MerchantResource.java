@@ -134,7 +134,7 @@ public class MerchantResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        merchantDTO = merchantService.update(merchantDTO);
+        merchantDTO = merchantService.save(merchantDTO);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, merchantDTO.getId().toString()))
             .body(merchantDTO);
