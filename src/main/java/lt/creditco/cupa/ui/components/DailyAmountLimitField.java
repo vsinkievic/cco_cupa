@@ -1,7 +1,8 @@
 package lt.creditco.cupa.ui.components;
 
+import com.bpmid.vapp.base.ui.components.VappDatePicker;
+import com.bpmid.vapp.service.UserService;
 import com.vaadin.flow.component.customfield.CustomField;
-import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import lt.creditco.cupa.domain.DailyAmountLimit;
@@ -17,16 +18,18 @@ import java.time.LocalDate;
  */
 public class DailyAmountLimitField extends CustomField<DailyAmountLimit> {
 
-    private final DatePicker startDateField = new DatePicker("Start Date");
+    private final VappDatePicker startDateField;
     private final BigDecimalField startAmountField = new BigDecimalField("Start Amount");
-    private final DatePicker afterDateField = new DatePicker("After Date");
+    private final VappDatePicker afterDateField;
     private final BigDecimalField afterAmountField = new BigDecimalField("After Amount");
 
-    public DailyAmountLimitField() {
-        this("");
+    public DailyAmountLimitField(UserService userService) {
+        this(userService, "");
     }
 
-    public DailyAmountLimitField(String label) {
+    public DailyAmountLimitField(UserService userService, String label) {
+        this.startDateField = new VappDatePicker(userService, "Start Date");
+        this.afterDateField = new VappDatePicker(userService, "After Date");
         setLabel(label);
         
         // Configure amount fields

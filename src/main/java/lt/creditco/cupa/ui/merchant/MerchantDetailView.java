@@ -81,12 +81,12 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
     // TEST environment prefixes and limits
     private final TextField testClientIdPrefixField = new TextField("Client ID Prefix");
     private final TextField testOrderIdPrefixField = new TextField("Order ID Prefix");
-    private final DailyAmountLimitField testDailyAmountLimitField = new DailyAmountLimitField("Daily Transaction Limit");
+    private final DailyAmountLimitField testDailyAmountLimitField;
     
     // LIVE environment prefixes and limits
     private final TextField liveClientIdPrefixField = new TextField("Client ID Prefix");
     private final TextField liveOrderIdPrefixField = new TextField("Order ID Prefix");
-    private final DailyAmountLimitField liveDailyAmountLimitField = new DailyAmountLimitField("Daily Transaction Limit");
+    private final DailyAmountLimitField liveDailyAmountLimitField;
     
     // Buttons
     private final Button saveButton = new Button("Save", VaadinIcon.CHECK.create());
@@ -111,6 +111,10 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         this.loggedInUser = cupaUserService.getUserWithAuthorities()
                 .map(CupaUser.class::cast)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Initialize DailyAmountLimitField instances with UserService
+        this.testDailyAmountLimitField = new DailyAmountLimitField(cupaUserService, "Daily Transaction Limit");
+        this.liveDailyAmountLimitField = new DailyAmountLimitField(cupaUserService, "Daily Transaction Limit");
         
         setSizeFull();
         setPadding(true);
