@@ -80,6 +80,36 @@ public class Merchant extends AbstractAuditingEntity<String> implements Merchant
     @Column(name = "remote_prod_api_key")
     private String remoteProdApiKey;
 
+    @Column(name = "test_client_id_prefix", length = 10)
+    private String testClientIdPrefix;
+
+    @Column(name = "test_order_id_prefix", length = 10)
+    private String testOrderIdPrefix;
+
+    @Column(name = "live_client_id_prefix", length = 10)
+    private String liveClientIdPrefix;
+
+    @Column(name = "live_order_id_prefix", length = 10)
+    private String liveOrderIdPrefix;
+
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "startDate", column = @Column(name = "test_limit_start_date")),
+        @AttributeOverride(name = "startAmount", column = @Column(name = "test_limit_start_amount", precision = 21, scale = 2)),
+        @AttributeOverride(name = "afterDate", column = @Column(name = "test_limit_after_date")),
+        @AttributeOverride(name = "afterAmount", column = @Column(name = "test_limit_after_amount", precision = 21, scale = 2))
+    })
+    private DailyAmountLimit testDailyAmountLimit;
+
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "startDate", column = @Column(name = "live_limit_start_date")),
+        @AttributeOverride(name = "startAmount", column = @Column(name = "live_limit_start_amount", precision = 21, scale = 2)),
+        @AttributeOverride(name = "afterDate", column = @Column(name = "live_limit_after_date")),
+        @AttributeOverride(name = "afterAmount", column = @Column(name = "live_limit_after_amount", precision = 21, scale = 2))
+    })
+    private DailyAmountLimit liveDailyAmountLimit;
+
     @Version
     private Long version;
 
@@ -301,6 +331,84 @@ public class Merchant extends AbstractAuditingEntity<String> implements Merchant
         this.version = version;
     }
 
+    public String getTestClientIdPrefix() {
+        return this.testClientIdPrefix;
+    }
+
+    public Merchant testClientIdPrefix(String testClientIdPrefix) {
+        this.setTestClientIdPrefix(testClientIdPrefix);
+        return this;
+    }
+
+    public void setTestClientIdPrefix(String testClientIdPrefix) {
+        this.testClientIdPrefix = testClientIdPrefix;
+    }
+
+    public String getTestOrderIdPrefix() {
+        return this.testOrderIdPrefix;
+    }
+
+    public Merchant testOrderIdPrefix(String testOrderIdPrefix) {
+        this.setTestOrderIdPrefix(testOrderIdPrefix);
+        return this;
+    }
+
+    public void setTestOrderIdPrefix(String testOrderIdPrefix) {
+        this.testOrderIdPrefix = testOrderIdPrefix;
+    }
+
+    public String getLiveClientIdPrefix() {
+        return this.liveClientIdPrefix;
+    }
+
+    public Merchant liveClientIdPrefix(String liveClientIdPrefix) {
+        this.setLiveClientIdPrefix(liveClientIdPrefix);
+        return this;
+    }
+
+    public void setLiveClientIdPrefix(String liveClientIdPrefix) {
+        this.liveClientIdPrefix = liveClientIdPrefix;
+    }
+
+    public String getLiveOrderIdPrefix() {
+        return this.liveOrderIdPrefix;
+    }
+
+    public Merchant liveOrderIdPrefix(String liveOrderIdPrefix) {
+        this.setLiveOrderIdPrefix(liveOrderIdPrefix);
+        return this;
+    }
+
+    public void setLiveOrderIdPrefix(String liveOrderIdPrefix) {
+        this.liveOrderIdPrefix = liveOrderIdPrefix;
+    }
+
+    public DailyAmountLimit getTestDailyAmountLimit() {
+        return this.testDailyAmountLimit;
+    }
+
+    public Merchant testDailyAmountLimit(DailyAmountLimit testDailyAmountLimit) {
+        this.setTestDailyAmountLimit(testDailyAmountLimit);
+        return this;
+    }
+
+    public void setTestDailyAmountLimit(DailyAmountLimit testDailyAmountLimit) {
+        this.testDailyAmountLimit = testDailyAmountLimit;
+    }
+
+    public DailyAmountLimit getLiveDailyAmountLimit() {
+        return this.liveDailyAmountLimit;
+    }
+
+    public Merchant liveDailyAmountLimit(DailyAmountLimit liveDailyAmountLimit) {
+        this.setLiveDailyAmountLimit(liveDailyAmountLimit);
+        return this;
+    }
+
+    public void setLiveDailyAmountLimit(DailyAmountLimit liveDailyAmountLimit) {
+        this.liveDailyAmountLimit = liveDailyAmountLimit;
+    }
+
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
 
     @Override
@@ -330,6 +438,7 @@ public class Merchant extends AbstractAuditingEntity<String> implements Merchant
     public String toString() {
         return "Merchant{" +
             "id=" + getId() +
+            ", version=" + getVersion() +
             ", name='" + getName() + "'" +
             ", mode='" + getMode() + "'" +
             ", status='" + getStatus() + "'" +

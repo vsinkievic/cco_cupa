@@ -1,14 +1,17 @@
 package lt.creditco.cupa.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import lt.creditco.cupa.base.users.CupaUser;
+import lt.creditco.cupa.domain.DailyAmountLimit;
 import lt.creditco.cupa.domain.Merchant;
 import com.bpmid.vapp.domain.User;
 import lt.creditco.cupa.repository.MerchantRepository;
 import lt.creditco.cupa.service.dto.MerchantDTO;
 import lt.creditco.cupa.service.mapper.MerchantMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,8 +42,9 @@ public class MerchantService {
      */
     public MerchantDTO save(MerchantDTO merchantDTO) {
         log.debug("Request to save Merchant : {}", merchantDTO);
+        validateMerchant(merchantDTO);
         Merchant merchant = merchantMapper.toEntity(merchantDTO);
-        merchant = merchantRepository.save(merchant);
+        merchant = merchantRepository.saveAndFlush(merchant);
         return merchantMapper.toDto(merchant);
     }
 
@@ -185,5 +189,95 @@ public class MerchantService {
         dto.setCupaProdApiKey(merchant.getCupaProdApiKey());
         // All other fields remain null/default values
         return dto;
+    }
+
+    /**
+     * Validates merchant data including prefix uniqueness and daily amount limit constraints.
+     *
+     * @param merchantDTO the merchant to validate
+     * @throws IllegalArgumentException if validation fails
+     */
+    private void validateMerchant(MerchantDTO merchantDTO) {
+        // Validate prefix uniqueness across merchants
+        validatePrefixUniqueness(merchantDTO);
+
+        // Validate daily amount limits
+        validateDailyAmountLimit(merchantDTO.getTestDailyAmountLimit(), "TEST");
+        validateDailyAmountLimit(merchantDTO.getLiveDailyAmountLimit(), "LIVE");
+    }
+
+    /**
+     * Validates that prefixes are unique across different merchants.
+     * A merchant can use the same prefix for multiple fields (e.g., same prefix for all 4 fields),
+     * but no two different merchants can share the same prefix.
+     */
+    private void validatePrefixUniqueness(MerchantDTO merchantDTO) {
+        // Collect all non-blank prefixes from the current merchant
+        List<String> currentMerchantPrefixes = new java.util.ArrayList<>();
+        if (StringUtils.isNotBlank(merchantDTO.getTestClientIdPrefix())) {
+            currentMerchantPrefixes.add(merchantDTO.getTestClientIdPrefix());
+        }
+        if (StringUtils.isNotBlank(merchantDTO.getTestOrderIdPrefix())) {
+            currentMerchantPrefixes.add(merchantDTO.getTestOrderIdPrefix());
+        }
+        if (StringUtils.isNotBlank(merchantDTO.getLiveClientIdPrefix())) {
+            currentMerchantPrefixes.add(merchantDTO.getLiveClientIdPrefix());
+        }
+        if (StringUtils.isNotBlank(merchantDTO.getLiveOrderIdPrefix())) {
+            currentMerchantPrefixes.add(merchantDTO.getLiveOrderIdPrefix());
+        }
+
+        // If no prefixes set, nothing to validate
+        if (currentMerchantPrefixes.isEmpty()) {
+            return;
+        }
+
+        // Check against all other merchants
+        List<Merchant> allMerchants = merchantRepository.findAll();
+        
+        for (Merchant existingMerchant : allMerchants) {
+            // Skip the current merchant being updated
+            if (merchantDTO.getId() != null && merchantDTO.getId().equals(existingMerchant.getId())) {
+                continue;
+            }
+
+            // Collect all non-blank prefixes from the existing merchant
+            List<String> existingMerchantPrefixes = new java.util.ArrayList<>();
+            if (StringUtils.isNotBlank(existingMerchant.getTestClientIdPrefix())) {
+                existingMerchantPrefixes.add(existingMerchant.getTestClientIdPrefix());
+            }
+            if (StringUtils.isNotBlank(existingMerchant.getTestOrderIdPrefix())) {
+                existingMerchantPrefixes.add(existingMerchant.getTestOrderIdPrefix());
+            }
+            if (StringUtils.isNotBlank(existingMerchant.getLiveClientIdPrefix())) {
+                existingMerchantPrefixes.add(existingMerchant.getLiveClientIdPrefix());
+            }
+            if (StringUtils.isNotBlank(existingMerchant.getLiveOrderIdPrefix())) {
+                existingMerchantPrefixes.add(existingMerchant.getLiveOrderIdPrefix());
+            }
+
+            // Check if any prefix from current merchant exists in the existing merchant
+            for (String currentPrefix : currentMerchantPrefixes) {
+                if (existingMerchantPrefixes.contains(currentPrefix)) {
+                    throw new IllegalArgumentException(
+                        "Prefix '" + currentPrefix + "' is already used by merchant: " + existingMerchant.getId() + 
+                        ". Each prefix must be unique across all merchants.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates a DailyAmountLimit configuration.
+     *
+     * @param limit the limit to validate
+     * @param environment "TEST" or "LIVE" for error messages
+     * @throws IllegalArgumentException if validation fails
+     */
+    private void validateDailyAmountLimit(DailyAmountLimit limit, String environment) {
+        if (limit == null) {
+            return; // No limit configured is valid
+        }
+        limit.validate(environment);
     }
 }

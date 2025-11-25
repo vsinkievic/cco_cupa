@@ -118,4 +118,48 @@
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>
+
+    <!--
+        Add ID prefixes and daily amount limits to Merchant entity.
+    -->
+    <changeSet id="20251124-01" author="vsinkievic">
+        <addColumn tableName="merchant">
+            <column name="test_client_id_prefix" type="varchar(10)">
+                <constraints nullable="true" />
+            </column>
+            <column name="test_order_id_prefix" type="varchar(10)">
+                <constraints nullable="true" />
+            </column>
+            <column name="live_client_id_prefix" type="varchar(10)">
+                <constraints nullable="true" />
+            </column>
+            <column name="live_order_id_prefix" type="varchar(10)">
+                <constraints nullable="true" />
+            </column>
+            <column name="test_limit_start_date" type="date">
+                <constraints nullable="true" />
+            </column>
+            <column name="test_limit_start_amount" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="test_limit_after_date" type="date">
+                <constraints nullable="true" />
+            </column>
+            <column name="test_limit_after_amount" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="live_limit_start_date" type="date">
+                <constraints nullable="true" />
+            </column>
+            <column name="live_limit_start_amount" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="live_limit_after_date" type="date">
+                <constraints nullable="true" />
+            </column>
+            <column name="live_limit_after_amount" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

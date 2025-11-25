@@ -30,6 +30,8 @@ import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.CupaUserService;
 import lt.creditco.cupa.service.MerchantService;
 import lt.creditco.cupa.service.dto.MerchantDTO;
+import lt.creditco.cupa.ui.components.DailyAmountLimitField;
+
 import org.springframework.context.annotation.Scope;
 
 import java.util.UUID;
@@ -69,12 +71,22 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
     private final TextField remoteTestMerchantKeyField = new TextField("Remote Test Merchant Key");
     private final TextField remoteTestApiKeyField = new TextField("Remote Test API Key");
     
-    // PROD environment fields
-    private final TextField cupaProdApiKeyField = new TextField("CUPA Production API Key");
-    private final TextField remoteProdUrlField = new TextField("Remote Production URL");
-    private final TextField remoteProdMerchantIdField = new TextField("Remote Production Merchant ID");
-    private final TextField remoteProdMerchantKeyField = new TextField("Remote Production Merchant Key");
-    private final TextField remoteProdApiKeyField = new TextField("Remote Production API Key");
+    // PROD environment fields (renamed to LIVE)
+    private final TextField cupaProdApiKeyField = new TextField("CUPA LIVE API Key");
+    private final TextField remoteProdUrlField = new TextField("Remote LIVE URL");
+    private final TextField remoteProdMerchantIdField = new TextField("Remote LIVE Merchant ID");
+    private final TextField remoteProdMerchantKeyField = new TextField("Remote LIVE Merchant Key");
+    private final TextField remoteProdApiKeyField = new TextField("Remote LIVE API Key");
+    
+    // TEST environment prefixes and limits
+    private final TextField testClientIdPrefixField = new TextField("Client ID Prefix");
+    private final TextField testOrderIdPrefixField = new TextField("Order ID Prefix");
+    private final DailyAmountLimitField testDailyAmountLimitField = new DailyAmountLimitField("Daily Transaction Limit");
+    
+    // LIVE environment prefixes and limits
+    private final TextField liveClientIdPrefixField = new TextField("Client ID Prefix");
+    private final TextField liveOrderIdPrefixField = new TextField("Order ID Prefix");
+    private final DailyAmountLimitField liveDailyAmountLimitField = new DailyAmountLimitField("Daily Transaction Limit");
     
     // Buttons
     private final Button saveButton = new Button("Save", VaadinIcon.CHECK.create());
@@ -196,8 +208,11 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         testSection.setPadding(false);
         testSection.setSpacing(false);
         
-        // Create PRODUCTION environment section
-        H3 prodSectionTitle = new H3("PRODUCTION Environment Credentials");
+        // Add TEST limits section
+        testSection.add(createLimitsSection("TEST", testClientIdPrefixField, testOrderIdPrefixField, testDailyAmountLimitField));
+        
+        // Create LIVE environment section
+        H3 prodSectionTitle = new H3("LIVE Environment Credentials");
         
         FormLayout prodFormLayout = new FormLayout();
         prodFormLayout.setResponsiveSteps(
@@ -220,6 +235,9 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         prodSection.setPadding(false);
         prodSection.setSpacing(false);
         
+        // Add LIVE limits section
+        prodSection.add(createLimitsSection("LIVE", liveClientIdPrefixField, liveOrderIdPrefixField, liveDailyAmountLimitField));
+        
         // Create horizontal layout to hold both sections side by side
         HorizontalLayout horizontalLayout = new HorizontalLayout(testSection, prodSection);
         horizontalLayout.setWidthFull();
@@ -228,6 +246,30 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         horizontalLayout.expand(testSection, prodSection);
         
         return horizontalLayout;
+    }
+    
+    private VerticalLayout createLimitsSection(String environmentLabel, TextField clientPrefix, 
+                                               TextField orderPrefix, DailyAmountLimitField limitField) {
+        H3 sectionTitle = new H3("Limits and Requirements (" + environmentLabel + ")");
+        
+        FormLayout formLayout = new FormLayout();
+        formLayout.setResponsiveSteps(
+            new FormLayout.ResponsiveStep("0", 1),
+            new FormLayout.ResponsiveStep("500px", 2)
+        );
+        
+        clientPrefix.setHelperText("Max 10 characters. Must be unique across all merchants.");
+        orderPrefix.setHelperText("Max 10 characters. Must be unique across all merchants.");
+        
+        formLayout.add(clientPrefix, orderPrefix);
+        
+        VerticalLayout section = new VerticalLayout(sectionTitle, formLayout, limitField);
+        section.setPadding(false);
+        section.setSpacing(true);
+        // Add top margin for visual separation from fields above (same spacing as between sections)
+        section.getStyle().set("margin-top", "var(--lumo-space-l)");
+        
+        return section;
     }
     
     private void configureFields() {
@@ -248,6 +290,20 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         remoteProdMerchantIdField.setWidthFull();
         remoteProdMerchantKeyField.setWidthFull();
         remoteProdApiKeyField.setWidthFull();
+        
+        // Configure prefix fields
+        testClientIdPrefixField.setWidthFull();
+        testClientIdPrefixField.setMaxLength(10);
+        testOrderIdPrefixField.setWidthFull();
+        testOrderIdPrefixField.setMaxLength(10);
+        liveClientIdPrefixField.setWidthFull();
+        liveClientIdPrefixField.setMaxLength(10);
+        liveOrderIdPrefixField.setWidthFull();
+        liveOrderIdPrefixField.setMaxLength(10);
+        
+        // Configure limit fields
+        testDailyAmountLimitField.setWidthFull();
+        liveDailyAmountLimitField.setWidthFull();
     }
     
     private void configureBinder() {
@@ -276,6 +332,16 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         binder.forField(remoteProdMerchantIdField).bind(MerchantDTO::getRemoteProdMerchantId, MerchantDTO::setRemoteProdMerchantId);
         binder.forField(remoteProdMerchantKeyField).bind(MerchantDTO::getRemoteProdMerchantKey, MerchantDTO::setRemoteProdMerchantKey);
         binder.forField(remoteProdApiKeyField).bind(MerchantDTO::getRemoteProdApiKey, MerchantDTO::setRemoteProdApiKey);
+        
+        // Prefix fields
+        binder.forField(testClientIdPrefixField).bind(MerchantDTO::getTestClientIdPrefix, MerchantDTO::setTestClientIdPrefix);
+        binder.forField(testOrderIdPrefixField).bind(MerchantDTO::getTestOrderIdPrefix, MerchantDTO::setTestOrderIdPrefix);
+        binder.forField(liveClientIdPrefixField).bind(MerchantDTO::getLiveClientIdPrefix, MerchantDTO::setLiveClientIdPrefix);
+        binder.forField(liveOrderIdPrefixField).bind(MerchantDTO::getLiveOrderIdPrefix, MerchantDTO::setLiveOrderIdPrefix);
+        
+        // Daily amount limit fields
+        binder.forField(testDailyAmountLimitField).bind(MerchantDTO::getTestDailyAmountLimit, MerchantDTO::setTestDailyAmountLimit);
+        binder.forField(liveDailyAmountLimitField).bind(MerchantDTO::getLiveDailyAmountLimit, MerchantDTO::setLiveDailyAmountLimit);
         
         binder.addStatusChangeListener(e -> saveButton.setEnabled(binder.isValid()));
     }
@@ -363,7 +429,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         balanceField.setReadOnly(true);
         
         // Currency field: editable in both create and edit modes
-        currencyField.setReadOnly(false);
+        currencyField.setReadOnly(mode.isView());
         
         // Show/hide generate buttons
         generateTestKeyButton.setVisible(mode.isEditable());
@@ -393,11 +459,16 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
                     navigateToList();
                 } else {
                     this.currentMerchant = merchantService.save(merchant);
+                    binder.setBean(this.currentMerchant);
                     Notification.show("Merchant updated successfully")
                         .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     // Refresh to view mode
                     setFormMode(FormMode.VIEW);
                 }
+            } catch (IllegalArgumentException e) {
+                log.warn("Validation error saving merchant: {}", e.getMessage());
+                Notification.show("Validation error: " + e.getMessage(), 5000, Notification.Position.MIDDLE)
+                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
             } catch (Exception e) {
                 log.error("Error saving merchant", e);
                 Notification.show("Error saving merchant: " + e.getMessage())

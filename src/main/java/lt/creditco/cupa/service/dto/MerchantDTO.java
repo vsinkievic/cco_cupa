@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
+import lt.creditco.cupa.domain.DailyAmountLimit;
 import lt.creditco.cupa.domain.enumeration.Currency;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
 import lt.creditco.cupa.domain.enumeration.MerchantStatus;
@@ -53,6 +54,18 @@ public class MerchantDTO implements Serializable {
     private String remoteProdMerchantKey;
 
     private String remoteProdApiKey;
+
+    private String testClientIdPrefix;
+
+    private String testOrderIdPrefix;
+
+    private String liveClientIdPrefix;
+
+    private String liveOrderIdPrefix;
+
+    private DailyAmountLimit testDailyAmountLimit;
+
+    private DailyAmountLimit liveDailyAmountLimit;
 
     private Long version;
 
@@ -232,6 +245,54 @@ public class MerchantDTO implements Serializable {
         this.version = version;
     }
 
+    public String getTestClientIdPrefix() {
+        return testClientIdPrefix;
+    }
+
+    public void setTestClientIdPrefix(String testClientIdPrefix) {
+        this.testClientIdPrefix = testClientIdPrefix;
+    }
+
+    public String getTestOrderIdPrefix() {
+        return testOrderIdPrefix;
+    }
+
+    public void setTestOrderIdPrefix(String testOrderIdPrefix) {
+        this.testOrderIdPrefix = testOrderIdPrefix;
+    }
+
+    public String getLiveClientIdPrefix() {
+        return liveClientIdPrefix;
+    }
+
+    public void setLiveClientIdPrefix(String liveClientIdPrefix) {
+        this.liveClientIdPrefix = liveClientIdPrefix;
+    }
+
+    public String getLiveOrderIdPrefix() {
+        return liveOrderIdPrefix;
+    }
+
+    public void setLiveOrderIdPrefix(String liveOrderIdPrefix) {
+        this.liveOrderIdPrefix = liveOrderIdPrefix;
+    }
+
+    public DailyAmountLimit getTestDailyAmountLimit() {
+        return testDailyAmountLimit;
+    }
+
+    public void setTestDailyAmountLimit(DailyAmountLimit testDailyAmountLimit) {
+        this.testDailyAmountLimit = testDailyAmountLimit;
+    }
+
+    public DailyAmountLimit getLiveDailyAmountLimit() {
+        return liveDailyAmountLimit;
+    }
+
+    public void setLiveDailyAmountLimit(DailyAmountLimit liveDailyAmountLimit) {
+        this.liveDailyAmountLimit = liveDailyAmountLimit;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -258,6 +319,7 @@ public class MerchantDTO implements Serializable {
     public String toString() {
         return "MerchantDTO{" +
             "id=" + getId() +
+            ", version=" + getVersion() +
             ", name='" + getName() + "'" +
             ", mode='" + getMode() + "'" +
             ", status='" + getStatus() + "'" +
@@ -273,6 +335,12 @@ public class MerchantDTO implements Serializable {
             ", remoteProdMerchantId='" + getRemoteProdMerchantId() + "'" +
             ", remoteProdMerchantKey='" + getRemoteProdMerchantKey() + "'" +
             ", remoteProdApiKey='" + getRemoteProdApiKey() + "'" +
+            ", testClientIdPrefix='" + getTestClientIdPrefix() + "'" +
+            ", testOrderIdPrefix='" + getTestOrderIdPrefix() + "'" +
+            ", liveClientIdPrefix='" + getLiveClientIdPrefix() + "'" +
+            ", liveOrderIdPrefix='" + getLiveOrderIdPrefix() + "'" +
+            ", testDailyAmountLimit=" + getTestDailyAmountLimit() +
+            ", liveDailyAmountLimit=" + getLiveDailyAmountLimit() +
             "}";
     }
 }
