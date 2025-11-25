@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -170,8 +171,30 @@ public class DailyAmountLimit implements Serializable {
      * @param date the date for which to calculate the limit
      * @return the effective daily monetary limit for the given date, or null if no limit configured
      */
-    // public BigDecimal calculateLimitForDate(LocalDate date) {
-    //     // To be implemented in future iteration
-    // }
+    public BigDecimal getLimitForDate(LocalDate date) {
+
+        if (date == null) return BigDecimal.ZERO;
+        if (startDate == null && afterDate == null) return afterAmount == null ? BigDecimal.ZERO : afterAmount;
+
+        if (startDate != null && date.isBefore(startDate)) return BigDecimal.ZERO;
+        if (startDate == null && afterDate != null && date.isBefore(afterDate)) return BigDecimal.ZERO;
+
+        if (afterDate != null && !date.isBefore(afterDate)) return afterAmount;
+
+        int dayNumber = startDate.until(date).getDays();
+        int totalDays = startDate.until(afterDate).getDays();
+
+        BigDecimal proportionalAmount = startAmount.add(afterAmount.subtract(startAmount).multiply(BigDecimal.valueOf(dayNumber)).divide(BigDecimal.valueOf(totalDays), 20, RoundingMode.HALF_UP));
+
+        return proportionalAmount.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public boolean isLimitExceeded(BigDecimal transactionAmount, BigDecimal totalForDay, LocalDate date){
+        BigDecimal dayTurnover = transactionAmount == null ? BigDecimal.ZERO : transactionAmount;
+        dayTurnover = dayTurnover.add(totalForDay == null ? BigDecimal.ZERO : totalForDay);
+        BigDecimal limit = getLimitForDate(date);
+
+        return dayTurnover.compareTo(limit) > 0;
+    }
 }
 

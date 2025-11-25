@@ -161,7 +161,7 @@ public class PaymentTransactionCreateView extends VerticalLayout implements Befo
         merchantField.setWidthFull();
         merchantField.setRequired(true);
         merchantField.setRequiredIndicatorVisible(true);
-        merchantField.setItemLabelGenerator(MerchantDTO::getName);
+        merchantField.setItemLabelGenerator(merchant -> merchant.getId() + " | " + merchant.getName());
         
         // Order ID field
         orderIdField.setWidthFull();

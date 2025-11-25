@@ -1,5 +1,7 @@
 package lt.creditco.cupa.repository;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -9,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Spring Data JPA repository for the PaymentTransaction entity.
@@ -27,6 +30,7 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
         return this.findAllWithToOneRelationships(pageable);
     }
 
+    @Transactional(readOnly = true)
     @Query(
         value = "select paymentTransaction from PaymentTransaction paymentTransaction",
         countQuery = "select count(paymentTransaction) from PaymentTransaction paymentTransaction"
@@ -50,13 +54,21 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     )
     Optional<PaymentTransaction> findByIdAndMerchantIds(@Param("id") String id, @Param("merchantIds") Set<String> merchantIds);
 
+    @Transactional(readOnly = true)
     @Query(
         "select paymentTransaction from PaymentTransaction paymentTransaction where paymentTransaction.merchantId = :merchantId and paymentTransaction.orderId = :orderId"
     )
     Optional<PaymentTransaction> findByMerchantIdAndOrderId(@Param("merchantId") String merchantId, @Param("orderId") String orderId);
 
+    @Transactional(readOnly = true)
     @Query(
         "select count(paymentTransaction) > 0 from PaymentTransaction paymentTransaction where paymentTransaction.merchantId = :merchantId and paymentTransaction.orderId = :orderId"
     )
     boolean existsByMerchantIdAndOrderId(@Param("merchantId") String merchantId, @Param("orderId") String orderId);
+
+    @Transactional(readOnly = true)
+    @Query(
+        "select sum(paymentTransaction.amount) from PaymentTransaction paymentTransaction where paymentTransaction.merchantId = :merchantId and paymentTransaction.createdDate >= :startDate and paymentTransaction.createdDate <= :endDate"
+    )
+    BigDecimal getTotalAmountByMerchantIdAndEnvironmentAndDateRange(@Param("merchantId") String merchantId, @Param("environment") String environment, @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 }

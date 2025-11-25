@@ -2,6 +2,9 @@ package lt.creditco.cupa.service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
@@ -12,6 +15,7 @@ import lt.creditco.cupa.api.PaymentFlow;
 import lt.creditco.cupa.api.PaymentRequest;
 import lt.creditco.cupa.base.users.CupaUser;
 import lt.creditco.cupa.domain.Client;
+import lt.creditco.cupa.domain.DailyAmountLimit;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.PaymentTransaction;
 import lt.creditco.cupa.domain.enumeration.Currency;
@@ -192,6 +196,21 @@ public class PaymentTransactionService {
             if (context.getMerchantContext().getOrderIdPrefix() != null && !paymentTransactionDTO.getOrderId().startsWith(context.getMerchantContext().getOrderIdPrefix())) {
                 throw new BadRequestAlertException(String.format("Order ID does not match configured prefix (%s)", context.getMerchantContext().getOrderIdPrefix()), "PaymentTransaction", "orderIdPrefixMismatch");
             }
+        }
+
+        if (context.getMerchantContext().getDailyAmountLimit() != null){
+            LocalDate paymentDate = paymentTransactionDTO.getRequestTimestamp() == null ? LocalDate.now() : paymentTransactionDTO.getRequestTimestamp().atZone(ZoneOffset.UTC).toLocalDate();
+            Instant startOfDay = paymentDate.atStartOfDay().toInstant(ZoneOffset.UTC);
+            Instant endOfDay = paymentDate.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
+            DailyAmountLimit dailyAmountLimit = context.getMerchantContext().getDailyAmountLimit();
+            String merchantId = context.getMerchantId();
+            String environment = context.getMerchantContext().getMode().name();
+
+            if (dailyAmountLimit.isLimitExceeded(paymentTransactionDTO.getAmount(), null, paymentDate) || 
+                dailyAmountLimit.isLimitExceeded(paymentTransactionDTO.getAmount(), paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange(merchantId, environment, startOfDay, endOfDay), paymentDate)) {
+                throw new BadRequestAlertException("Daily amount limit exceeded", "PaymentTransaction", "dailyAmountLimitExceeded");
+            }
+
         }
     }
 

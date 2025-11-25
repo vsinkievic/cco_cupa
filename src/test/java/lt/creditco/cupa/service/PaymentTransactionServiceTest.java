@@ -8,11 +8,15 @@ import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import lt.creditco.cupa.api.PaymentClient;
 import lt.creditco.cupa.api.PaymentRequest;
 import lt.creditco.cupa.domain.Client;
+import lt.creditco.cupa.domain.DailyAmountLimit;
 import lt.creditco.cupa.domain.Merchant;
 import lt.creditco.cupa.domain.PaymentTransaction;
 import lt.creditco.cupa.domain.enumeration.Currency;
@@ -87,6 +91,8 @@ class PaymentTransactionServiceTest {
     private CupaApiContext.CupaApiContextData validContext;
     private Client client;
     private Merchant merchant;
+    final private Instant startDate = LocalDate.now().atStartOfDay().toInstant(ZoneOffset.UTC);
+    final private Instant endDate = LocalDate.now().atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
 
     @BeforeEach
     void setUp() {
@@ -185,6 +191,8 @@ class PaymentTransactionServiceTest {
         assertThat(result.getId()).isEqualTo("test-id");
     }
 
+    
+
     @Test
     void shouldSaveValidPaymentTransactionWhenOrderIdMatchesContextPrefix() {
         // Given
@@ -280,6 +288,45 @@ class PaymentTransactionServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo("test-id");
     }
+    
+    @Test
+    void shouldSaveValidPaymentTransactionWhenDailyAmountLimitWasNotExceeded() {
+        // Given
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+        when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
+        when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
+        when(bodyInterceptor.getLastTrace()).thenReturn(null);
+        when(paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange("MERCH-00001", "TEST", startDate, endDate))
+                                    .thenReturn(BigDecimal.valueOf(80.00));
+
+        // Mock client lookup for placePayment
+        Client testClient = new Client();
+        testClient.setId("CLN-00001");
+        testClient.setMerchantClientId("merchant-client-id");
+        testClient.setName("Test Client");
+        testClient.setEmailAddress("test@example.com");
+        testClient.setMobileNumber("123456789");
+        testClient.setClientPhone("987654321");
+        when(clientRepository.findById("CLN-00001")).thenReturn(Optional.of(testClient));
+
+        DailyAmountLimit dailyAmountLimit = new DailyAmountLimit();
+        dailyAmountLimit.setAfterDate(LocalDate.now().minusDays(10));
+        dailyAmountLimit.setAfterAmount(BigDecimal.valueOf(100));
+        validContext.getMerchantContext().setDailyAmountLimit(dailyAmountLimit);
+
+        validPaymentTransactionDTO.setAmount(BigDecimal.valueOf(10));
+
+        // When
+        PaymentTransactionDTO result = paymentTransactionService.save(validPaymentTransactionDTO, validContext);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo("test-id");
+    }
 
     @Test
     void shouldThrowErrorWhenOrderIdDoesNotMatchContextPrefix() {
@@ -303,6 +350,70 @@ class PaymentTransactionServiceTest {
         assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO, validContext))
             .isInstanceOf(BadRequestAlertException.class)
             .hasMessageContaining("Order ID does not match configured prefix (xxx-)");
+    }
+
+    @Test
+    void shouldThrowErrorWhenDailyAmountLimitWasExceeded() {
+        // Given
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+        when(paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange("MERCH-00001", "TEST", startDate, endDate))
+                            .thenReturn(BigDecimal.valueOf(1000.00));
+
+        // Mock client lookup for placePayment
+        Client testClient = new Client();
+        testClient.setId("CLN-00001");
+        testClient.setMerchantClientId("merchant-client-id");
+        testClient.setName("Test Client");
+        testClient.setEmailAddress("test@example.com");
+        testClient.setMobileNumber("123456789");
+        testClient.setClientPhone("987654321");
+        when(clientRepository.findById("CLN-00001")).thenReturn(Optional.of(testClient));
+
+        DailyAmountLimit dailyAmountLimit = new DailyAmountLimit();
+        dailyAmountLimit.setAfterDate(LocalDate.now().minusDays(10));
+        dailyAmountLimit.setAfterAmount(BigDecimal.valueOf(500));
+
+
+        validContext.getMerchantContext().setDailyAmountLimit(dailyAmountLimit);
+        validPaymentTransactionDTO.setAmount(BigDecimal.valueOf(100));
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO, validContext))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Daily amount limit exceeded");
+    }
+
+    @Test
+    void shouldThrowErrorWhenDailyAmountLimitIsExceeded() {
+        // Given
+        when(clientRepository.existsById("CLN-00001")).thenReturn(true);
+        when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
+        when(paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange("MERCH-00001", "TEST", startDate, endDate))
+                            .thenReturn(BigDecimal.valueOf(401.00));
+
+        // Mock client lookup for placePayment
+        Client testClient = new Client();
+        testClient.setId("CLN-00001");
+        testClient.setMerchantClientId("merchant-client-id");
+        testClient.setName("Test Client");
+        testClient.setEmailAddress("test@example.com");
+        testClient.setMobileNumber("123456789");
+        testClient.setClientPhone("987654321");
+        when(clientRepository.findById("CLN-00001")).thenReturn(Optional.of(testClient));
+
+        DailyAmountLimit dailyAmountLimit = new DailyAmountLimit();
+        dailyAmountLimit.setAfterDate(LocalDate.now().minusDays(10));
+        dailyAmountLimit.setAfterAmount(BigDecimal.valueOf(500));
+
+
+        validContext.getMerchantContext().setDailyAmountLimit(dailyAmountLimit);
+        validPaymentTransactionDTO.setAmount(BigDecimal.valueOf(100));
+
+        // When & Then
+        assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO, validContext))
+            .isInstanceOf(BadRequestAlertException.class)
+            .hasMessageContaining("Daily amount limit exceeded");
     }
 
     @Test

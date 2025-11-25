@@ -242,7 +242,7 @@ public class ClientDetailView extends VerticalLayout implements HasUrlParameter<
     private void loadMerchants() {
         var merchants = merchantService.findAllWithAccessControl(PageRequest.of(0, 100), loggedInUser).getContent();
         merchantField.setItems(merchants);
-        merchantField.setItemLabelGenerator(merchant -> merchant.getId() + " - " + merchant.getName());
+        merchantField.setItemLabelGenerator(merchant -> merchant.getId() + " | " + merchant.getName());
         
         // Add value change listener to set default environment from merchant mode (only in NEW mode)
         merchantField.addValueChangeListener(e -> {
