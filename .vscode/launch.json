@@ -46,7 +46,7 @@
       "projectName": "cupa",
       "args": "",
       "envFile": "${workspaceFolder}/.env",
-      "vmArgs": "-XX:+AllowEnhancedClassRedefinition -Dspring.profiles.active=dev-pg  -Dspring.jmx.enabled=false ",
+      "vmArgs": "-XX:+AllowEnhancedClassRedefinition -Dspring.profiles.active=dev-pg,api-docs  -Dspring.jmx.enabled=false ",
       "preLaunchTask": "cleanup-vapp-base-artifacts"
     }
   ]
