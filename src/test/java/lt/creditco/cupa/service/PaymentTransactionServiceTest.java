@@ -167,7 +167,7 @@ class PaymentTransactionServiceTest {
         when(clientRepository.existsById("CLN-00001")).thenReturn(true);
         when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
         when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
-        when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
         when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
@@ -199,7 +199,7 @@ class PaymentTransactionServiceTest {
         when(clientRepository.existsById("CLN-00001")).thenReturn(true);
         when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
         when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
-        when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
         when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
@@ -231,7 +231,7 @@ class PaymentTransactionServiceTest {
         when(clientRepository.existsById("CLN-00001")).thenReturn(true);
         when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
         when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
-        when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
         when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
@@ -263,7 +263,7 @@ class PaymentTransactionServiceTest {
         when(clientRepository.existsById("CLN-00001")).thenReturn(true);
         when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
         when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
-        when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
         when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
@@ -295,7 +295,7 @@ class PaymentTransactionServiceTest {
         when(clientRepository.existsById("CLN-00001")).thenReturn(true);
         when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
         when(paymentTransactionMapper.toEntity(validPaymentTransactionDTO)).thenReturn(validPaymentTransaction);
-        when(paymentTransactionRepository.save(validPaymentTransaction)).thenReturn(validPaymentTransaction);
+        when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionRepository.saveAndFlush(validPaymentTransaction)).thenReturn(validPaymentTransaction);
         when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
         when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
