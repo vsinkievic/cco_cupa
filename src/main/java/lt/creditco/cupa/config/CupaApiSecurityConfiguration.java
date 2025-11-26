@@ -2,6 +2,7 @@ package lt.creditco.cupa.config;
 
 import com.bpmid.vapp.config.ApiSecurityConfiguration;
 import com.bpmid.vapp.security.SecurityProblemSupport;
+
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.CupaApiBusinessLogicService;
 import lt.creditco.cupa.web.filter.ApiKeyAuthenticationFilter;
