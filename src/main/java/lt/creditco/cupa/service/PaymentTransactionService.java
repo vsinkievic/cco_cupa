@@ -257,7 +257,7 @@ public class PaymentTransactionService {
         }
 
         paymentTransaction.setStatus(TransactionStatus.RECEIVED);
-        paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
+        paymentTransaction = paymentTransactionRepository.saveAndFlush(paymentTransaction);
 
         paymentTransaction = placePayment(paymentTransaction, context);
         return enrichWithRelatedData(paymentTransactionMapper.toDto(paymentTransaction));
@@ -417,7 +417,7 @@ public class PaymentTransactionService {
 
                 return existingPaymentTransaction;
             })
-            .map(paymentTransactionRepository::save)
+            .map(paymentTransactionRepository::saveAndFlush)
             .map(paymentTransactionMapper::toDto)
             .map(this::enrichWithRelatedData);
     }
@@ -714,7 +714,7 @@ public class PaymentTransactionService {
             );
 
             // Save the updated transaction
-            paymentTransaction = paymentTransactionRepository.save(paymentTransaction);
+            paymentTransaction = paymentTransactionRepository.saveAndFlush(paymentTransaction);
         } else {
             LOG.debug(
                 "No changes detected for payment transaction - ID: {}, MerchantID: {}, OrderID: {}",

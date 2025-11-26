@@ -43,7 +43,7 @@ public class ClientService {
     public ClientDTO save(ClientDTO clientDTO) {
         LOG.debug("Request to save Client : {}", clientDTO);
         Client client = clientMapper.toEntity(clientDTO);
-        client = clientRepository.save(client);
+        client = clientRepository.saveAndFlush(client);
         return clientMapper.toDto(client);
     }
 
@@ -56,7 +56,7 @@ public class ClientService {
     public ClientDTO update(ClientDTO clientDTO) {
         LOG.debug("Request to update Client : {}", clientDTO);
         Client client = clientMapper.toEntity(clientDTO);
-        client = clientRepository.save(client);
+        client = clientRepository.saveAndFlush(client);
         return clientMapper.toDto(client);
     }
 
@@ -76,7 +76,7 @@ public class ClientService {
 
                 return existingClient;
             })
-            .map(clientRepository::save)
+            .map(clientRepository::saveAndFlush)
             .map(clientMapper::toDto);
     }
 

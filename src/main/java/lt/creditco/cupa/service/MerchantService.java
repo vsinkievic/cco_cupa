@@ -66,7 +66,7 @@ public class MerchantService {
 
                 return existingMerchant;
             })
-            .map(merchantRepository::save)
+            .map(merchantRepository::saveAndFlush)
             .map(merchantMapper::toDto);
     }
 
