@@ -1,24 +1,15 @@
 package lt.creditco.cupa.config;
 
 import com.bpmid.vapp.config.ApiSecurityConfiguration;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.net.MediaType;
-
+import com.bpmid.vapp.security.SecurityProblemSupport;
 import lt.creditco.cupa.security.AuthoritiesConstants;
 import lt.creditco.cupa.service.CupaApiBusinessLogicService;
 import lt.creditco.cupa.web.filter.ApiKeyAuthenticationFilter;
-
-import java.time.Instant;
-import java.util.Map;
-
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import tech.jhipster.config.JHipsterProperties;
 
 /**
  * CUPA API security configuration extending vapp-base's ApiSecurityConfiguration.
@@ -36,41 +27,16 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
 
     private final CupaApiBusinessLogicService cupaApiBusinessLogicService;
-    private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final SecurityProblemSupport problemSupport;
     
     public CupaApiSecurityConfiguration(
             CupaApiBusinessLogicService cupaApiBusinessLogicService,
-            @Lazy AuthenticationEntryPoint authenticationEntryPoint,
-            tech.jhipster.config.JHipsterProperties jHipsterProperties
+            SecurityProblemSupport problemSupport,
+            JHipsterProperties jHipsterProperties
     ) {
-        super(jHipsterProperties);
+        super(jHipsterProperties, problemSupport);
         this.cupaApiBusinessLogicService = cupaApiBusinessLogicService;
-        this.authenticationEntryPoint = authenticationEntryPoint;
-    }
-
-    /**
-     * This bean is responsible for handling authentication failures (e.g., no/bad API key)
-     * and returning a 401 Unauthorized response.
-     */
-    @Bean
-    public AuthenticationEntryPoint customAuthenticationEntryPoint(ObjectMapper objectMapper) {
-        return (request, response, authException) -> {
-            // Set the response status
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType(MediaType.JSON_UTF_8.toString());
-
-            // Create a custom error body
-            Map<String, Object> body = Map.of(
-                "status", HttpStatus.UNAUTHORIZED.value(),
-                "error", "Unauthorized",
-                "message", authException.getMessage(), // This gets the "Invalid X-API-Key" etc.
-                "path", request.getRequestURI(),
-                "timestamp", Instant.now().toString()
-            );
-
-            // Write the JSON body to the response
-            response.getWriter().write(objectMapper.writeValueAsString(body));
-        };
+        this.problemSupport = problemSupport;
     }
 
     /**
@@ -82,9 +48,15 @@ public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
      */
     @Override
     protected void configureApiAuthentication(HttpSecurity http) throws Exception {
+        // Configure standard exception handling
+        http.exceptionHandling(exceptions ->
+            exceptions
+                .authenticationEntryPoint(problemSupport)
+                .accessDeniedHandler(problemSupport)
+        );
+
         // Replace JWT with X-API-Key authentication filter
-        http.addFilterAfter(new ApiKeyAuthenticationFilter(cupaApiBusinessLogicService, authenticationEntryPoint), BasicAuthenticationFilter.class);
-        // No JWT/OAuth2 configuration needed
+        http.addFilterAfter(new ApiKeyAuthenticationFilter(cupaApiBusinessLogicService, problemSupport), BasicAuthenticationFilter.class);
     }
 
     /**
@@ -112,4 +84,3 @@ public class CupaApiSecurityConfiguration extends ApiSecurityConfiguration {
         );
     }
 }
-
