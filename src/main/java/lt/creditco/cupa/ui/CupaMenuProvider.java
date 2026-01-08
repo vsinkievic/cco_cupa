@@ -18,6 +18,9 @@ import java.util.List;
 /**
  * Menu provider for CUPA application entities.
  * Provides application-specific menu items for authenticated users.
+ * 
+ * Note: API Docs menu is handled by vapp-base's DefaultVappAdminMenuProvider,
+ * which automatically includes all roles from getAllowedApiDocsRoles().
  */
 @org.springframework.stereotype.Component
 public class CupaMenuProvider implements MenuProvider {

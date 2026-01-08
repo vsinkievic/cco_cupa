@@ -25,7 +25,7 @@
 
     <properties>
 	    <ulid-creator.version>5.2.3</ulid-creator.version>
-        <vapp-base.version>0.8.1</vapp-base.version>
+        <vapp-base.version>0.10.0</vapp-base.version>
         <vaadin.version>24.8.8</vaadin.version>
         <poi-ooxml.version>5.2.5</poi-ooxml.version>
         <java.version>21</java.version>
