@@ -23,6 +23,7 @@
     <property name="timeType" value="time(6)" dbms="postgresql"/>
 
     <include file="config/liquibase/vapp-base.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/pull-tasks.xml" relativeToChangelogFile="false"/>
 
     <!-- CUPA entity changelogs -->
     <include file="config/liquibase/changelog/20250804120903_added_entity_Merchant.xml" relativeToChangelogFile="false"/>

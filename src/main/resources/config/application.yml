@@ -239,3 +239,8 @@ application:
   name: "CUPA - Creditco UnionPay Acquiring"
   short-name: CUPA
   team-name: Creditco Team
+
+# Pull-Tasks Queue Module Configuration
+pulltasks:
+  owner: "cupa"
+  enabled: true

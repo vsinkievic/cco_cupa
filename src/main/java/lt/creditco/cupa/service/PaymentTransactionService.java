@@ -41,11 +41,15 @@ import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
 import lt.creditco.cupa.service.mapper.PaymentMapper;
 import lt.creditco.cupa.service.mapper.PaymentTransactionMapper;
 import lt.creditco.cupa.web.context.CupaApiContext;
+import lt.creditco.cupa.config.PullTaskFactory;
+import com.bpmid.pulltasks.application.PullTaskService;
+import com.bpmid.pulltasks.domain.PullTask;
 import com.bpmid.vapp.web.rest.errors.BadRequestAlertException;
 import com.github.f4b6a3.ulid.UlidCreator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
@@ -86,6 +90,10 @@ public class PaymentTransactionService {
 
     private final Environment environment;
 
+    // Optional pull-tasks dependencies (only available when pulltasks.enabled=true)
+    private PullTaskService pullTaskService;
+    private PullTaskFactory pullTaskFactory;
+
     public PaymentTransactionService(
         PaymentTransactionRepository paymentTransactionRepository,
         PaymentTransactionMapper paymentTransactionMapper,
@@ -108,6 +116,22 @@ public class PaymentTransactionService {
         this.eventPublisher = eventPublisher;
         this.jHipsterProperties = jHipsterProperties;
         this.environment = environment;
+    }
+
+    /**
+     * Optional setter for PullTaskService (injected when pulltasks.enabled=true).
+     */
+    @Autowired(required = false)
+    public void setPullTaskService(PullTaskService pullTaskService) {
+        this.pullTaskService = pullTaskService;
+    }
+
+    /**
+     * Optional setter for PullTaskFactory (injected when pulltasks.enabled=true).
+     */
+    @Autowired(required = false)
+    public void setPullTaskFactory(PullTaskFactory pullTaskFactory) {
+        this.pullTaskFactory = pullTaskFactory;
     }
 
     /**
@@ -349,7 +373,36 @@ public class PaymentTransactionService {
             }
         }
         paymentTransaction.setStatusDescription(statusDescription);
-        return paymentTransactionRepository.saveAndFlush(paymentTransaction);
+        paymentTransaction = paymentTransactionRepository.saveAndFlush(paymentTransaction);
+        
+        // Enqueue task to query payment status if transaction is pending
+        if (paymentTransaction.getStatus() == TransactionStatus.PENDING) {
+            enqueueQueryPaymentStatusTask(paymentTransaction);
+        }
+        
+        return paymentTransaction;
+    }
+
+    /**
+     * Enqueues a task to periodically query the payment gateway for status updates.
+     * Only available when pull-tasks module is enabled.
+     */
+    private void enqueueQueryPaymentStatusTask(PaymentTransaction paymentTransaction) {
+        if (pullTaskService == null || pullTaskFactory == null) {
+            LOG.debug("Pull-tasks not enabled, skipping task enqueueing for transaction: {}", 
+                paymentTransaction.getId());
+            return;
+        }
+        
+        try {
+            PullTask task = pullTaskFactory.createQueryPaymentStatusTask(paymentTransaction);
+            pullTaskService.enqueueTask(task);
+            LOG.info("Enqueued QueryPaymentStatusTask for transaction: {}, orderId: {}", 
+                paymentTransaction.getId(), paymentTransaction.getOrderId());
+        } catch (Exception e) {
+            LOG.error("Failed to enqueue QueryPaymentStatusTask for transaction: {}", 
+                paymentTransaction.getId(), e);
+        }
     }
 
     private lt.creditco.cupa.remote.PaymentRequest upPaymentRequestFrom(PaymentTransaction paymentTransaction) {
