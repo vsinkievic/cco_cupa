@@ -176,7 +176,7 @@ class UpGatewayClientIT {
     void testQueryTransaction() throws JsonProcessingException {
         log.info("-------------------------------- testQueryTransaction --------------------------------");
         // Given
-        String orderId = "ttt-007";
+        String orderId = "CR-0013";
         //        String orderId = "408818978";
         //        String orderId = "2025080501";
         //        String orderId = "408617236";

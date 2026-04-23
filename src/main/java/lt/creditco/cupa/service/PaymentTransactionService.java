@@ -848,6 +848,47 @@ public class PaymentTransactionService {
     }
 
     /**
+     * Get payment transactions in {@code [startInclusive, endExclusive)} on {@code requestTimestamp},
+     * with the same merchant access rules as {@link #findAllWithAccessControl(Pageable, User)}.
+     * End is exclusive: it is the instant at the start of the day after the user-facing "to" date in their zone.
+     */
+    @Transactional(readOnly = true)
+    public Page<PaymentTransactionDTO> findAllWithAccessControl(
+        Pageable pageable,
+        User user,
+        Instant startInclusive,
+        Instant endExclusive
+    ) {
+        LOG.debug(
+            "Request to get PaymentTransactions in range for user: {} (requestTimestamp >= {} and < {})",
+            user.getLogin(),
+            startInclusive,
+            endExclusive
+        );
+
+        if (!(user instanceof CupaUser)) {
+            return Page.empty(pageable);
+        }
+        CupaUser cupaUser = (CupaUser) user;
+
+        if (cupaUser.hasAccessToAllMerchants()) {
+            return paymentTransactionRepository
+                .findAllByRequestTimestampRange(startInclusive, endExclusive, pageable)
+                .map(paymentTransactionMapper::toDto)
+                .map(this::enrichWithRelatedData);
+        }
+        Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return paymentTransactionRepository
+            .findAllByMerchantIdsAndRequestTimestampRange(merchantIds, startInclusive, endExclusive, pageable)
+            .map(paymentTransactionMapper::toDto)
+            .map(this::enrichWithRelatedData);
+    }
+
+    /**
      * Get all the payment transactions with eager load of many-to-many relationships and access control.
      *
      * @param pageable the pagination information.

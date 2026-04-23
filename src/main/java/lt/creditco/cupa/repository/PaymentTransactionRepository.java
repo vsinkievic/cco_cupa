@@ -46,6 +46,29 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     @Query("select paymentTransaction from PaymentTransaction paymentTransaction where paymentTransaction.merchantId in :merchantIds")
     Page<PaymentTransaction> findAllByMerchantIds(@Param("merchantIds") Set<String> merchantIds, Pageable pageable);
 
+    @Transactional(readOnly = true)
+    @Query(
+        value = "select p from PaymentTransaction p where p.requestTimestamp >= :start and p.requestTimestamp < :endExclusive",
+        countQuery = "select count(p) from PaymentTransaction p where p.requestTimestamp >= :start and p.requestTimestamp < :endExclusive"
+    )
+    Page<PaymentTransaction> findAllByRequestTimestampRange(
+        @Param("start") Instant start,
+        @Param("endExclusive") Instant endExclusive,
+        Pageable pageable
+    );
+
+    @Transactional(readOnly = true)
+    @Query(
+        value = "select p from PaymentTransaction p where p.merchantId in :merchantIds and p.requestTimestamp >= :start and p.requestTimestamp < :endExclusive",
+        countQuery = "select count(p) from PaymentTransaction p where p.merchantId in :merchantIds and p.requestTimestamp >= :start and p.requestTimestamp < :endExclusive"
+    )
+    Page<PaymentTransaction> findAllByMerchantIdsAndRequestTimestampRange(
+        @Param("merchantIds") Set<String> merchantIds,
+        @Param("start") Instant start,
+        @Param("endExclusive") Instant endExclusive,
+        Pageable pageable
+    );
+
     @Query("select paymentTransaction from PaymentTransaction paymentTransaction where paymentTransaction.merchantId in :merchantIds")
     List<PaymentTransaction> findAllByMerchantIds(@Param("merchantIds") Set<String> merchantIds);
 
