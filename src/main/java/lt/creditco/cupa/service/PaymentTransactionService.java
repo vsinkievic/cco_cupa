@@ -53,7 +53,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -543,7 +545,7 @@ public class PaymentTransactionService {
     /**
      * Enrich PaymentTransactionDTO with related entity data.
      * This method loads the Client and Merchant entities to populate
-     * merchantClientId, clientName, and merchantName fields.
+     * merchantClientId, clientName, clientEmail, and merchantName fields.
      *
      * @param dto the DTO to enrich
      * @return the enriched DTO
@@ -560,6 +562,7 @@ public class PaymentTransactionService {
                 .ifPresent(client -> {
                     dto.setMerchantClientId(client.getMerchantClientId());
                     dto.setClientName(client.getName());
+                    dto.setClientEmail(client.getEmailAddress());
                 });
         }
 
@@ -886,6 +889,49 @@ public class PaymentTransactionService {
             .findAllByMerchantIdsAndRequestTimestampRange(merchantIds, startInclusive, endExclusive, pageable)
             .map(paymentTransactionMapper::toDto)
             .map(this::enrichWithRelatedData);
+    }
+
+    /**
+     * List payment transactions in {@code [startInclusive, endExclusive)} on {@code requestTimestamp},
+     * capped to {@code limit} rows, without executing a separate COUNT query (unlike {@link Page}).
+     */
+    @Transactional(readOnly = true)
+    public List<PaymentTransactionDTO> findListWithAccessControl(
+        User user,
+        Instant startInclusive,
+        Instant endExclusive,
+        int limit
+    ) {
+        int safeLimit = Math.max(1, limit);
+        Pageable pageable = PageRequest.of(
+            0,
+            safeLimit,
+            Sort.by(Sort.Order.desc("requestTimestamp"), Sort.Order.desc("id"))
+        );
+        if (!(user instanceof CupaUser cupaUser)) {
+            return List.of();
+        }
+        if (cupaUser.hasAccessToAllMerchants()) {
+            List<PaymentTransaction> list = paymentTransactionRepository.findListByRequestTimestampRange(
+                startInclusive,
+                endExclusive,
+                pageable
+            );
+            return enrichWithRelatedData(
+                list.stream().map(paymentTransactionMapper::toDto).toList()
+            );
+        }
+        Set<String> merchantIds = cupaUser.getMerchantIdsSet();
+        if (merchantIds.isEmpty()) {
+            return List.of();
+        }
+        List<PaymentTransaction> list = paymentTransactionRepository.findListByMerchantIdsAndRequestTimestampRange(
+            merchantIds,
+            startInclusive,
+            endExclusive,
+            pageable
+        );
+        return enrichWithRelatedData(list.stream().map(paymentTransactionMapper::toDto).toList());
     }
 
     /**

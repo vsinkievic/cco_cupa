@@ -69,6 +69,31 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
         Pageable pageable
     );
 
+    /**
+     * Same time range as {@link #findAllByRequestTimestampRange} but returns a limited list without a COUNT query.
+     */
+    @Transactional(readOnly = true)
+    @Query("select p from PaymentTransaction p where p.requestTimestamp >= :start and p.requestTimestamp < :endExclusive")
+    List<PaymentTransaction> findListByRequestTimestampRange(
+        @Param("start") Instant start,
+        @Param("endExclusive") Instant endExclusive,
+        Pageable pageable
+    );
+
+    /**
+     * Same time range as {@link #findAllByMerchantIdsAndRequestTimestampRange} but returns a limited list without a COUNT query.
+     */
+    @Transactional(readOnly = true)
+    @Query(
+        "select p from PaymentTransaction p where p.merchantId in :merchantIds and p.requestTimestamp >= :start and p.requestTimestamp < :endExclusive"
+    )
+    List<PaymentTransaction> findListByMerchantIdsAndRequestTimestampRange(
+        @Param("merchantIds") Set<String> merchantIds,
+        @Param("start") Instant start,
+        @Param("endExclusive") Instant endExclusive,
+        Pageable pageable
+    );
+
     @Query("select paymentTransaction from PaymentTransaction paymentTransaction where paymentTransaction.merchantId in :merchantIds")
     List<PaymentTransaction> findAllByMerchantIds(@Param("merchantIds") Set<String> merchantIds);
 

@@ -78,6 +78,8 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
 
     private String clientName;
 
+    private String clientEmail;
+
     private String merchantName;
 
     private Long version;
@@ -299,6 +301,14 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
         this.clientName = clientName;
     }
 
+    public String getClientEmail() {
+        return clientEmail;
+    }
+
+    public void setClientEmail(String clientEmail) {
+        this.clientEmail = clientEmail;
+    }
+
     public String getMerchantName() {
         return merchantName;
     }
@@ -378,6 +388,7 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
             ", merchantId='" + getMerchantId() + "'" +
             ", environment='" + getEnvironment() + "'" +
             ", clientName='" + getClientName() + "'" +
+            ", clientEmail='" + getClientEmail() + "'" +
             ", merchantName='" + getMerchantName() + "'" +
             ", gatewayTransactionId='" + getGatewayTransactionId() + "'" +
             ", status='" + getStatus() + "'" +
