@@ -117,9 +117,14 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
 
     @Transactional(readOnly = true)
     @Query(
-        "select sum(paymentTransaction.amount) from PaymentTransaction paymentTransaction where paymentTransaction.merchantId = :merchantId and paymentTransaction.createdDate >= :startDate and paymentTransaction.createdDate <= :endDate"
+        "select sum(p.amount) from PaymentTransaction p where p.merchantId = :merchantId and p.environment = :environment and p.createdDate >= :startDate and p.createdDate <= :endDate"
     )
-    BigDecimal getTotalAmountByMerchantIdAndEnvironmentAndDateRange(@Param("merchantId") String merchantId, @Param("environment") String environment, @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
+    BigDecimal getTotalAmountByMerchantIdAndEnvironmentAndDateRange(
+        @Param("merchantId") String merchantId,
+        @Param("environment") MerchantMode environment,
+        @Param("startDate") Instant startDate,
+        @Param("endDate") Instant endDate
+    );
 
     @Transactional(readOnly = true)
     @Query(

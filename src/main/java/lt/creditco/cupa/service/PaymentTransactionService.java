@@ -242,10 +242,14 @@ public class PaymentTransactionService {
             Instant endOfDay = paymentDate.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
             DailyAmountLimit dailyAmountLimit = context.getMerchantContext().getDailyAmountLimit();
             String merchantId = context.getMerchantId();
-            String environment = context.getMerchantContext().getMode().name();
+            MerchantMode environment = context.getMerchantContext().getMode();
 
             if (dailyAmountLimit.isLimitExceeded(paymentTransactionDTO.getAmount(), null, paymentDate) || 
-                dailyAmountLimit.isLimitExceeded(paymentTransactionDTO.getAmount(), paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange(merchantId, environment, startOfDay, endOfDay), paymentDate)) {
+                dailyAmountLimit.isLimitExceeded(
+                    paymentTransactionDTO.getAmount(),
+                    paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange(merchantId, environment, startOfDay, endOfDay),
+                    paymentDate
+                )) {
                 throw new BadRequestAlertException("Daily amount limit exceeded", "PaymentTransaction", "dailyAmountLimitExceeded");
             }
         }
