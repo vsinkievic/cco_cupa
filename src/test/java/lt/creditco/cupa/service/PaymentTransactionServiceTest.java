@@ -11,6 +11,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import lt.creditco.cupa.api.PaymentClient;
@@ -149,14 +152,15 @@ class PaymentTransactionServiceTest {
 
         lenient()
             .when(
-                paymentTransactionRepository.countByEnvironmentAndGatewayMerchantIdAndClientEmailAndAfterRequestTimestamp(
+                paymentTransactionRepository.findTransactionsForPerClientDailyLimit(
                     any(MerchantMode.class),
                     anyString(),
                     anyString(),
-                    any(Instant.class)
+                    any(Instant.class),
+                    eq(PaymentTransactionService.MAX_CLIENT_TRANSACTION_COUNT_QUERY_STATUSES)
                 )
             )
-            .thenReturn(0);
+            .thenReturn(Collections.emptyList());
 
         // Setup test data for enrichment tests
         client = new Client();
@@ -778,5 +782,154 @@ class PaymentTransactionServiceTest {
 
         // Then
         assertNull(result);
+    }
+
+    @Test
+    void countTransactions_countsPendingAndSuccess() {
+        PaymentTransaction pending = new PaymentTransaction();
+        pending.setStatus(TransactionStatus.PENDING);
+        PaymentTransaction success = new PaymentTransaction();
+        success.setStatus(TransactionStatus.SUCCESS);
+        when(
+            paymentTransactionRepository.findTransactionsForPerClientDailyLimit(
+                eq(MerchantMode.TEST),
+                eq("test-gateway-merchant-id"),
+                eq("test@example.com"),
+                eq(Instant.EPOCH),
+                eq(PaymentTransactionService.MAX_CLIENT_TRANSACTION_COUNT_QUERY_STATUSES)
+            )
+        ).thenReturn(List.of(pending, success));
+
+        int n = paymentTransactionService.countTransactions(
+            MerchantMode.TEST,
+            "test-gateway-merchant-id",
+            "test@example.com",
+            Instant.EPOCH
+        );
+        assertThat(n).isEqualTo(2);
+    }
+
+    @Test
+    void countTransactions_includesFailedWhenDescriptionMatchesRiskFragment() {
+        PaymentTransaction tx = new PaymentTransaction();
+        tx.setStatus(TransactionStatus.FAILED);
+        tx.setStatusDescription("Prefix BLOCKED, DUE TO RISK SCORE. CLIENT OVER DAILY LIMIT suffix");
+        when(
+            paymentTransactionRepository.findTransactionsForPerClientDailyLimit(
+                eq(MerchantMode.TEST),
+                eq("test-gateway-merchant-id"),
+                eq("test@example.com"),
+                eq(Instant.EPOCH),
+                eq(PaymentTransactionService.MAX_CLIENT_TRANSACTION_COUNT_QUERY_STATUSES)
+            )
+        ).thenReturn(List.of(tx));
+
+        int n = paymentTransactionService.countTransactions(
+            MerchantMode.TEST,
+            "test-gateway-merchant-id",
+            "test@example.com",
+            Instant.EPOCH
+        );
+        assertThat(n).isEqualTo(1);
+    }
+
+    @Test
+    void countTransactions_excludesFailedWhenNoFragmentMatch() {
+        PaymentTransaction tx = new PaymentTransaction();
+        tx.setStatus(TransactionStatus.FAILED);
+        tx.setStatusDescription("Card declined");
+        when(
+            paymentTransactionRepository.findTransactionsForPerClientDailyLimit(
+                eq(MerchantMode.TEST),
+                eq("test-gateway-merchant-id"),
+                eq("test@example.com"),
+                eq(Instant.EPOCH),
+                eq(PaymentTransactionService.MAX_CLIENT_TRANSACTION_COUNT_QUERY_STATUSES)
+            )
+        ).thenReturn(List.of(tx));
+
+        int n = paymentTransactionService.countTransactions(
+            MerchantMode.TEST,
+            "test-gateway-merchant-id",
+            "test@example.com",
+            Instant.EPOCH
+        );
+        assertThat(n).isEqualTo(0);
+    }
+
+    @Test
+    void countTransactions_excludesFailedWhenBlankDescription() {
+        PaymentTransaction tx = new PaymentTransaction();
+        tx.setStatus(TransactionStatus.FAILED);
+        tx.setStatusDescription("  ");
+        when(
+            paymentTransactionRepository.findTransactionsForPerClientDailyLimit(
+                eq(MerchantMode.TEST),
+                eq("test-gateway-merchant-id"),
+                eq("test@example.com"),
+                eq(Instant.EPOCH),
+                eq(PaymentTransactionService.MAX_CLIENT_TRANSACTION_COUNT_QUERY_STATUSES)
+            )
+        ).thenReturn(List.of(tx));
+
+        int n = paymentTransactionService.countTransactions(
+            MerchantMode.TEST,
+            "test-gateway-merchant-id",
+            "test@example.com",
+            Instant.EPOCH
+        );
+        assertThat(n).isEqualTo(0);
+    }
+
+    @Test
+    void countTransactions_excludesReceived() {
+        PaymentTransaction tx = new PaymentTransaction();
+        tx.setStatus(TransactionStatus.RECEIVED);
+        when(
+            paymentTransactionRepository.findTransactionsForPerClientDailyLimit(
+                eq(MerchantMode.TEST),
+                eq("test-gateway-merchant-id"),
+                eq("test@example.com"),
+                eq(Instant.EPOCH),
+                eq(PaymentTransactionService.MAX_CLIENT_TRANSACTION_COUNT_QUERY_STATUSES)
+            )
+        ).thenReturn(List.of(tx));
+
+        int n = paymentTransactionService.countTransactions(
+            MerchantMode.TEST,
+            "test-gateway-merchant-id",
+            "test@example.com",
+            Instant.EPOCH
+        );
+        assertThat(n).isEqualTo(0);
+    }
+
+    @Test
+    void countTransactions_skipsNullTransactionAndNullStatus() {
+        PaymentTransaction pending = new PaymentTransaction();
+        pending.setStatus(TransactionStatus.PENDING);
+        PaymentTransaction nullStatus = new PaymentTransaction();
+        nullStatus.setStatus(null);
+        List<PaymentTransaction> rows = new ArrayList<>();
+        rows.add(null);
+        rows.add(nullStatus);
+        rows.add(pending);
+        when(
+            paymentTransactionRepository.findTransactionsForPerClientDailyLimit(
+                eq(MerchantMode.TEST),
+                eq("test-gateway-merchant-id"),
+                eq("test@example.com"),
+                eq(Instant.EPOCH),
+                eq(PaymentTransactionService.MAX_CLIENT_TRANSACTION_COUNT_QUERY_STATUSES)
+            )
+        ).thenReturn(rows);
+
+        int n = paymentTransactionService.countTransactions(
+            MerchantMode.TEST,
+            "test-gateway-merchant-id",
+            "test@example.com",
+            Instant.EPOCH
+        );
+        assertThat(n).isEqualTo(1);
     }
 }

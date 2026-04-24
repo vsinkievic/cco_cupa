@@ -131,12 +131,13 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
 
     @Transactional(readOnly = true)
     @Query(
-        "select count(p) from PaymentTransaction p where p.environment = :environment and p.gatewayMerchantId = :gatewayMerchantId and p.clientEmail = :clientEmail and p.requestTimestamp >= :after"
+        "select p from PaymentTransaction p where p.environment = :environment and p.gatewayMerchantId = :gatewayMerchantId and p.clientEmail = :clientEmail and p.requestTimestamp >= :after and p.status in :statuses"
     )
-    int countByEnvironmentAndGatewayMerchantIdAndClientEmailAndAfterRequestTimestamp(
+    List<PaymentTransaction> findTransactionsForPerClientDailyLimit(
         @Param("environment") MerchantMode environment,
         @Param("gatewayMerchantId") String gatewayMerchantId,
         @Param("clientEmail") String clientEmail,
-        @Param("after") Instant after
+        @Param("after") Instant after,
+        @Param("statuses") Collection<TransactionStatus> statuses
     );
 }

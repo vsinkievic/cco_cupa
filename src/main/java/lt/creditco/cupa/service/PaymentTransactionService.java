@@ -80,6 +80,24 @@ public class PaymentTransactionService {
      */
     public static final List<TransactionStatus> TURNOVER_AMOUNT_STATUSES = List.of(TransactionStatus.PENDING, TransactionStatus.SUCCESS);
 
+    /**
+     * Statuses loaded from the DB for the per-client rolling window; {@link #countTransactions} decides which rows actually count
+     * (e.g. which {@link TransactionStatus#FAILED} descriptions qualify).
+     */
+    public static final List<TransactionStatus> MAX_CLIENT_TRANSACTION_COUNT_QUERY_STATUSES = List.of(
+        TransactionStatus.PENDING,
+        TransactionStatus.SUCCESS,
+        TransactionStatus.FAILED
+    );
+
+    /**
+     * Substrings matched case-insensitively against {@link PaymentTransaction#getStatusDescription()} for {@link TransactionStatus#FAILED} rows.
+     * Add fragments here for simple inclusion rules; extend the {@link TransactionStatus#FAILED} branch in {@link #countTransactions} for combined rules.
+     */
+    public static final List<String> MAX_CLIENT_TRANSACTION_COUNT_FAILED_DESCRIPTION_FRAGMENTS = List.of(
+        "Blocked, due to risk score. Client over daily limit"
+    );
+
     private final PaymentTransactionRepository paymentTransactionRepository;
 
     private final PaymentTransactionMapper paymentTransactionMapper;
@@ -157,6 +175,52 @@ public class PaymentTransactionService {
         }
         return false;
     }
+
+    /**
+     * Counts payment transactions that apply toward the per-client daily limit for the rolling window starting at {@code afterRequestTimestamp}.
+     * Same rules as (status switch + FAILED description fragments in Java).
+     */
+    public int countTransactions(
+        MerchantMode environment,
+        String gatewayMerchantId,
+        String clientEmail,
+        Instant afterRequestTimestamp
+    ) {
+        List<PaymentTransaction> transactions = paymentTransactionRepository.findTransactionsForPerClientDailyLimit(
+            environment,
+            gatewayMerchantId,
+            clientEmail,
+            afterRequestTimestamp,
+            MAX_CLIENT_TRANSACTION_COUNT_QUERY_STATUSES
+        );
+        int count = 0;
+        for (PaymentTransaction tx : transactions) {
+            if (tx == null || tx.getStatus() == null) {
+                continue;
+            }
+            switch (tx.getStatus()) {
+                case PENDING:
+                case SUCCESS:
+                    count++;
+                    break;
+                case FAILED:
+                    String desc = tx.getStatusDescription();
+                    if (!StringUtils.isBlank(desc)) {
+                        for (String fragment : MAX_CLIENT_TRANSACTION_COUNT_FAILED_DESCRIPTION_FRAGMENTS) {
+                            if (StringUtils.containsIgnoreCase(desc, fragment)) {
+                                count++;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        return count;
+    }
+
 
     /**
      * Validate payment transaction data before saving.
@@ -277,12 +341,7 @@ public class PaymentTransactionService {
         paymentTransactionDTO.setClientEmail(clientEmail);
         paymentTransactionDTO.setGatewayMerchantId(remoteMerchantId);
 
-        int transactionCount = paymentTransactionRepository.countByEnvironmentAndGatewayMerchantIdAndClientEmailAndAfterRequestTimestamp(
-            context.getMerchantContext().getMode(),
-            remoteMerchantId,
-            clientEmail,
-            dateRangeStart
-        );
+        int transactionCount = countTransactions(context.getMerchantContext().getMode(), remoteMerchantId, clientEmail, dateRangeStart);
         int maxClientTransactionCountPerDay = merchantContext.getMaxClientTransactionCountPerDay();
         if (transactionCount >= maxClientTransactionCountPerDay) {
             throw new BadRequestAlertException(
