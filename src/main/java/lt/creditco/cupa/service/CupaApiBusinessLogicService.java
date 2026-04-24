@@ -3,6 +3,7 @@ package lt.creditco.cupa.service;
 import com.bpmid.vapp.domain.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
@@ -161,6 +162,9 @@ public class CupaApiBusinessLogicService {
         String clientIdPrefix = null;
         String orderIdPrefix = null;
         DailyAmountLimit dailyAmountLimit = null;
+        BigDecimal minTransactionAmount = BigDecimal.ONE;
+        BigDecimal maxTransactionAmount = new BigDecimal(650);
+        int maxClientTransactionCountPerDay = 0;
 
         if (merchant.getMode() == MerchantMode.LIVE) {
             if (requestApiKey != null && !requestApiKey.equals(merchant.getCupaProdApiKey())) {
@@ -174,6 +178,9 @@ public class CupaApiBusinessLogicService {
             clientIdPrefix = merchant.getLiveClientIdPrefix();
             orderIdPrefix = merchant.getLiveOrderIdPrefix();
             dailyAmountLimit = merchant.getLiveDailyAmountLimit();
+            minTransactionAmount = merchant.getLiveMinTransactionAmount();
+            maxTransactionAmount = merchant.getLiveMaxTransactionAmount();
+            maxClientTransactionCountPerDay = merchant.getLiveMaxClientTransactionCountPerDay();
         } else {
             if (requestApiKey != null && !requestApiKey.equals(merchant.getCupaTestApiKey())) {
                 log.warn("Merchant {} has invalid API key (test: {}) for TEST mode, returning null values", merchant.getId(), merchant.getCupaTestApiKey());
@@ -186,6 +193,9 @@ public class CupaApiBusinessLogicService {
             clientIdPrefix = merchant.getTestClientIdPrefix();
             orderIdPrefix = merchant.getTestOrderIdPrefix();
             dailyAmountLimit = merchant.getTestDailyAmountLimit();
+            minTransactionAmount = merchant.getTestMinTransactionAmount();
+            maxTransactionAmount = merchant.getTestMaxTransactionAmount();
+            maxClientTransactionCountPerDay = merchant.getTestMaxClientTransactionCountPerDay();
         }
         return CupaApiContext.MerchantContext.builder()
             .merchantId(merchant.getId())
@@ -200,6 +210,9 @@ public class CupaApiBusinessLogicService {
             .clientIdPrefix(clientIdPrefix)
             .orderIdPrefix(orderIdPrefix)
             .dailyAmountLimit(dailyAmountLimit)
+            .minTransactionAmount(minTransactionAmount)
+            .maxTransactionAmount(maxTransactionAmount)
+            .maxClientTransactionCountPerDay(maxClientTransactionCountPerDay)
             .build();
     }
 

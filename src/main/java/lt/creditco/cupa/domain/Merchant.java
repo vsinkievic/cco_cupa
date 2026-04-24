@@ -110,6 +110,24 @@ public class Merchant extends AbstractAuditingEntity<String> implements Merchant
     })
     private DailyAmountLimit liveDailyAmountLimit;
 
+    @Column(name = "test_min_transaction_amount", precision = 21, scale = 2)
+    private BigDecimal testMinTransactionAmount = BigDecimal.ONE;
+
+    @Column(name = "test_max_transaction_amount", precision = 21, scale = 2)
+    private BigDecimal testMaxTransactionAmount = new BigDecimal(650);
+
+    @Column(name = "test_max_client_transaction_count_per_day")
+    private int testMaxClientTransactionCountPerDay = 100;
+
+    @Column(name = "live_min_transaction_amount", precision = 21, scale = 2)
+    private BigDecimal liveMinTransactionAmount = BigDecimal.ONE;
+
+    @Column(name = "live_max_transaction_amount", precision = 21, scale = 2)
+    private BigDecimal liveMaxTransactionAmount = new BigDecimal(650);
+
+    @Column(name = "live_max_client_transaction_count_per_day")
+    private int liveMaxClientTransactionCountPerDay = 0;
+
     @Version
     private Long version;
 
@@ -407,6 +425,54 @@ public class Merchant extends AbstractAuditingEntity<String> implements Merchant
 
     public void setLiveDailyAmountLimit(DailyAmountLimit liveDailyAmountLimit) {
         this.liveDailyAmountLimit = liveDailyAmountLimit;
+    }
+
+    public BigDecimal getTestMinTransactionAmount() {
+        return testMinTransactionAmount;
+    }
+
+    public void setTestMinTransactionAmount(BigDecimal testMinTransactionAmount) {
+        this.testMinTransactionAmount = testMinTransactionAmount;
+    }
+
+    public BigDecimal getTestMaxTransactionAmount() {
+        return testMaxTransactionAmount;
+    }
+
+    public void setTestMaxTransactionAmount(BigDecimal testMaxTransactionAmount) {
+        this.testMaxTransactionAmount = testMaxTransactionAmount;
+    }
+
+    public int getTestMaxClientTransactionCountPerDay() {
+        return testMaxClientTransactionCountPerDay;
+    }
+
+    public void setTestMaxClientTransactionCountPerDay(int testMaxClientTransactionCountPerDay) {
+        this.testMaxClientTransactionCountPerDay = testMaxClientTransactionCountPerDay;
+    }
+
+    public BigDecimal getLiveMinTransactionAmount() {
+        return liveMinTransactionAmount;
+    }
+
+    public void setLiveMinTransactionAmount(BigDecimal liveMinTransactionAmount) {
+        this.liveMinTransactionAmount = liveMinTransactionAmount;
+    }
+
+    public BigDecimal getLiveMaxTransactionAmount() {
+        return liveMaxTransactionAmount;
+    }
+
+    public void setLiveMaxTransactionAmount(BigDecimal liveMaxTransactionAmount) {
+        this.liveMaxTransactionAmount = liveMaxTransactionAmount;
+    }
+
+    public int getLiveMaxClientTransactionCountPerDay() {
+        return liveMaxClientTransactionCountPerDay;
+    }
+
+    public void setLiveMaxClientTransactionCountPerDay(int liveMaxClientTransactionCountPerDay) {
+        this.liveMaxClientTransactionCountPerDay = liveMaxClientTransactionCountPerDay;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

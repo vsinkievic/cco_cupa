@@ -67,6 +67,18 @@ public class MerchantDTO implements Serializable {
 
     private DailyAmountLimit liveDailyAmountLimit;
 
+    private BigDecimal testMinTransactionAmount;
+
+    private BigDecimal testMaxTransactionAmount;
+
+    private int testMaxClientTransactionCountPerDay;
+
+    private BigDecimal liveMinTransactionAmount;
+
+    private BigDecimal liveMaxTransactionAmount;
+
+    private int liveMaxClientTransactionCountPerDay;
+
     private Long version;
 
     private String createdBy;
@@ -291,6 +303,54 @@ public class MerchantDTO implements Serializable {
 
     public void setLiveDailyAmountLimit(DailyAmountLimit liveDailyAmountLimit) {
         this.liveDailyAmountLimit = liveDailyAmountLimit;
+    }
+
+    public BigDecimal getTestMinTransactionAmount() {
+        return testMinTransactionAmount;
+    }
+
+    public void setTestMinTransactionAmount(BigDecimal testMinTransactionAmount) {
+        this.testMinTransactionAmount = testMinTransactionAmount;
+    }
+
+    public BigDecimal getTestMaxTransactionAmount() {
+        return testMaxTransactionAmount;
+    }
+
+    public void setTestMaxTransactionAmount(BigDecimal testMaxTransactionAmount) {
+        this.testMaxTransactionAmount = testMaxTransactionAmount;
+    }
+
+    public int getTestMaxClientTransactionCountPerDay() {
+        return testMaxClientTransactionCountPerDay;
+    }
+
+    public void setTestMaxClientTransactionCountPerDay(int testMaxClientTransactionCountPerDay) {
+        this.testMaxClientTransactionCountPerDay = testMaxClientTransactionCountPerDay;
+    }
+
+    public BigDecimal getLiveMinTransactionAmount() {
+        return liveMinTransactionAmount;
+    }
+
+    public void setLiveMinTransactionAmount(BigDecimal liveMinTransactionAmount) {
+        this.liveMinTransactionAmount = liveMinTransactionAmount;
+    }
+
+    public BigDecimal getLiveMaxTransactionAmount() {
+        return liveMaxTransactionAmount;
+    }
+
+    public void setLiveMaxTransactionAmount(BigDecimal liveMaxTransactionAmount) {
+        this.liveMaxTransactionAmount = liveMaxTransactionAmount;
+    }
+
+    public int getLiveMaxClientTransactionCountPerDay() {
+        return liveMaxClientTransactionCountPerDay;
+    }
+
+    public void setLiveMaxClientTransactionCountPerDay(int liveMaxClientTransactionCountPerDay) {
+        this.liveMaxClientTransactionCountPerDay = liveMaxClientTransactionCountPerDay;
     }
 
     @Override

@@ -162,4 +162,26 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="20260423-01" author="vsinkievic">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="merchant" columnName="test_min_transaction_amount"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="merchant">
+            <column name="test_min_transaction_amount" type="decimal(21,2)" defaultValue="1"/>
+            <column name="test_max_transaction_amount" type="decimal(21,2)" defaultValue="650"/>
+            <column name="test_max_client_transaction_count_per_day" type="integer" defaultValue="100"/>
+            <column name="live_min_transaction_amount" type="decimal(21,2)" defaultValue="1"/>
+            <column name="live_max_transaction_amount" type="decimal(21,2)" defaultValue="650"/>
+            <column name="live_max_client_transaction_count_per_day" type="integer" defaultValue="0"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260423-02" author="vsinkievic">
+        <sql>
+            UPDATE merchant SET live_max_client_transaction_count_per_day = 1 WHERE live_max_client_transaction_count_per_day = 0;
+        </sql>
+    </changeSet>
 </databaseChangeLog>

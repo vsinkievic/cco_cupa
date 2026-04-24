@@ -110,6 +110,12 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
     @Column(name = "environment")
     private MerchantMode environment;
 
+    @Column(name = "client_email")
+    private String clientEmail;
+
+    @Column(name = "gateway_merchant_id")
+    private String gatewayMerchantId;
+
     @Version
     private Long version;
 
@@ -424,6 +430,32 @@ public class PaymentTransaction extends AbstractAuditingEntity<String> implement
 
     public PaymentTransaction environment(MerchantMode environment) {
         this.setEnvironment(environment);
+        return this;
+    }
+
+    public String getClientEmail() {
+        return this.clientEmail;
+    }
+
+    public void setClientEmail(String clientEmail) {
+        this.clientEmail = clientEmail;
+    }
+
+    public PaymentTransaction clientEmail(String clientEmail) {
+        this.setClientEmail(clientEmail);
+        return this;
+    }
+
+    public String getGatewayMerchantId() {
+        return this.gatewayMerchantId;
+    }
+
+    public void setGatewayMerchantId(String gatewayMerchantId) {
+        this.gatewayMerchantId = gatewayMerchantId;
+    }
+
+    public PaymentTransaction gatewayMerchantId(String gatewayMerchantId) {
+        this.setGatewayMerchantId(gatewayMerchantId);
         return this;
     }
 

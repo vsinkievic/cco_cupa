@@ -1,5 +1,6 @@
 package lt.creditco.cupa.web.context;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import lombok.Builder;
 import lombok.Data;
@@ -138,6 +139,9 @@ public class CupaApiContext {
         private String clientIdPrefix;
         private String orderIdPrefix;
         private DailyAmountLimit dailyAmountLimit;
+        private BigDecimal minTransactionAmount;
+        private BigDecimal maxTransactionAmount;
+        private int maxClientTransactionCountPerDay = 0;
 
         public boolean satisfiesClientIdPrefix(String clientId) {
             if (clientIdPrefix == null) return true;
@@ -149,5 +153,16 @@ public class CupaApiContext {
             if (orderId == null) return false;
             return orderId.startsWith(orderIdPrefix);
         }
+        public boolean satisfiesMinTransactionAmount(BigDecimal amount) {
+            if (minTransactionAmount == null) throw new IllegalArgumentException("Min transaction amount is not set");
+            if (amount == null) return false;
+            return amount.compareTo(minTransactionAmount) >= 0;
+        }
+        public boolean satisfiesMaxTransactionAmount(BigDecimal amount) {
+            if (maxTransactionAmount == null) throw new IllegalArgumentException("Max transaction amount is not set");
+            if (amount == null) return false;
+            return amount.compareTo(maxTransactionAmount) <= 0;
+        }
+
     }
 }

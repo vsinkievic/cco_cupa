@@ -16,6 +16,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.BigDecimalField;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
@@ -34,6 +35,7 @@ import lt.creditco.cupa.ui.components.DailyAmountLimitField;
 
 import org.springframework.context.annotation.Scope;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -87,6 +89,15 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
     private final TextField liveClientIdPrefixField = new TextField("Client ID Prefix");
     private final TextField liveOrderIdPrefixField = new TextField("Order ID Prefix");
     private final DailyAmountLimitField liveDailyAmountLimitField;
+
+    /** Shown only under LIVE "Limits and Requirements" — row 1: TEST/LIVE min & max transaction amounts. */
+    private final BigDecimalField testMinTransactionAmountField = new BigDecimalField("MIN transaction amount");
+    private final BigDecimalField testMaxTransactionAmountField = new BigDecimalField("MAX transaction amount");
+    private final BigDecimalField liveMinTransactionAmountField = new BigDecimalField("MIN transaction amount");
+    private final BigDecimalField liveMaxTransactionAmountField = new BigDecimalField("MAX transaction amount");
+    /** Row 2: max successful payments per client per day (rolling window in API). */
+    private final IntegerField testMaxClientTransactionCountPerDayField = new IntegerField("MAX client payments / day");
+    private final IntegerField liveMaxClientTransactionCountPerDayField = new IntegerField("MAX client payments / day");
     
     // Buttons
     private final Button saveButton = new Button("Save", VaadinIcon.CHECK.create());
@@ -113,8 +124,8 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
         // Initialize DailyAmountLimitField instances with UserService
-        this.testDailyAmountLimitField = new DailyAmountLimitField(cupaUserService, "Daily Transaction Limit");
-        this.liveDailyAmountLimitField = new DailyAmountLimitField(cupaUserService, "Daily Transaction Limit");
+        this.testDailyAmountLimitField = new DailyAmountLimitField(cupaUserService, "Daily Transaction Limit (turnover)");
+        this.liveDailyAmountLimitField = new DailyAmountLimitField(cupaUserService, "Daily Transaction Limit (turnover)");
         
         setSizeFull();
         setPadding(true);
@@ -137,6 +148,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         newMerchant.setStatus(MerchantStatus.ACTIVE);
         newMerchant.setBalance(java.math.BigDecimal.ZERO);
         newMerchant.setCurrency(Currency.USD);
+        applyDefaultTransactionLimits(newMerchant);
         this.currentMerchant = newMerchant;
         binder.setBean(newMerchant);
         setFormMode(FormMode.NEW);
@@ -213,7 +225,13 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         testSection.setSpacing(false);
         
         // Add TEST limits section
-        testSection.add(createLimitsSection("TEST", testClientIdPrefixField, testOrderIdPrefixField, testDailyAmountLimitField));
+        testSection.add(createLimitsSection("TEST", 
+                                            testClientIdPrefixField, 
+                                            testOrderIdPrefixField, 
+                                            testDailyAmountLimitField,
+                                            testMinTransactionAmountField,
+                                            testMaxTransactionAmountField,
+                                            testMaxClientTransactionCountPerDayField));
         
         // Create LIVE environment section
         H3 prodSectionTitle = new H3("LIVE Environment Credentials");
@@ -239,8 +257,14 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         prodSection.setPadding(false);
         prodSection.setSpacing(false);
         
-        // Add LIVE limits section
-        prodSection.add(createLimitsSection("LIVE", liveClientIdPrefixField, liveOrderIdPrefixField, liveDailyAmountLimitField));
+        // Add LIVE limits section (includes cross-environment transaction limit rows at bottom)
+        prodSection.add(createLimitsSection("LIVE", 
+                                        liveClientIdPrefixField, 
+                                        liveOrderIdPrefixField, 
+                                        liveDailyAmountLimitField, 
+                                        liveMinTransactionAmountField,
+                                        liveMaxTransactionAmountField,
+                                        liveMaxClientTransactionCountPerDayField));
         
         // Create horizontal layout to hold both sections side by side
         HorizontalLayout horizontalLayout = new HorizontalLayout(testSection, prodSection);
@@ -252,8 +276,15 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         return horizontalLayout;
     }
     
-    private VerticalLayout createLimitsSection(String environmentLabel, TextField clientPrefix, 
-                                               TextField orderPrefix, DailyAmountLimitField limitField) {
+    private VerticalLayout createLimitsSection(
+        String environmentLabel,
+        TextField clientPrefix,
+        TextField orderPrefix,
+        DailyAmountLimitField limitField,
+        BigDecimalField minTransactionAmountField,
+        BigDecimalField maxTransactionAmountField,
+        IntegerField maxClientTransactionCountPerDayField
+    ) {
         H3 sectionTitle = new H3("Limits and Requirements (" + environmentLabel + ")");
         
         FormLayout formLayout = new FormLayout();
@@ -272,6 +303,8 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         section.setSpacing(true);
         // Add top margin for visual separation from fields above (same spacing as between sections)
         section.getStyle().set("margin-top", "var(--lumo-space-l)");
+
+        formLayout.add(minTransactionAmountField, maxTransactionAmountField, maxClientTransactionCountPerDayField);
         
         return section;
     }
@@ -308,6 +341,15 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         // Configure limit fields
         testDailyAmountLimitField.setWidthFull();
         liveDailyAmountLimitField.setWidthFull();
+
+        testMinTransactionAmountField.setWidthFull();
+        testMaxTransactionAmountField.setWidthFull();
+        liveMinTransactionAmountField.setWidthFull();
+        liveMaxTransactionAmountField.setWidthFull();
+        testMaxClientTransactionCountPerDayField.setWidthFull();
+        testMaxClientTransactionCountPerDayField.setMin(0);
+        liveMaxClientTransactionCountPerDayField.setWidthFull();
+        liveMaxClientTransactionCountPerDayField.setMin(0);
     }
     
     private void configureBinder() {
@@ -346,6 +388,19 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
         // Daily amount limit fields
         binder.forField(testDailyAmountLimitField).bind(MerchantDTO::getTestDailyAmountLimit, MerchantDTO::setTestDailyAmountLimit);
         binder.forField(liveDailyAmountLimitField).bind(MerchantDTO::getLiveDailyAmountLimit, MerchantDTO::setLiveDailyAmountLimit);
+
+        binder.forField(testMinTransactionAmountField).bind(MerchantDTO::getTestMinTransactionAmount, MerchantDTO::setTestMinTransactionAmount);
+        binder.forField(testMaxTransactionAmountField).bind(MerchantDTO::getTestMaxTransactionAmount, MerchantDTO::setTestMaxTransactionAmount);
+        binder.forField(liveMinTransactionAmountField).bind(MerchantDTO::getLiveMinTransactionAmount, MerchantDTO::setLiveMinTransactionAmount);
+        binder.forField(liveMaxTransactionAmountField).bind(MerchantDTO::getLiveMaxTransactionAmount, MerchantDTO::setLiveMaxTransactionAmount);
+        binder.forField(testMaxClientTransactionCountPerDayField).bind(
+            MerchantDTO::getTestMaxClientTransactionCountPerDay,
+            MerchantDTO::setTestMaxClientTransactionCountPerDay
+        );
+        binder.forField(liveMaxClientTransactionCountPerDayField).bind(
+            MerchantDTO::getLiveMaxClientTransactionCountPerDay,
+            MerchantDTO::setLiveMaxClientTransactionCountPerDay
+        );
         
         binder.addStatusChangeListener(e -> saveButton.setEnabled(binder.isValid()));
     }
@@ -375,6 +430,7 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
             newMerchant.setStatus(MerchantStatus.ACTIVE);
             newMerchant.setBalance(java.math.BigDecimal.ZERO);
             newMerchant.setCurrency(Currency.USD);
+            applyDefaultTransactionLimits(newMerchant);
             this.currentMerchant = newMerchant;
             binder.setBean(newMerchant);
             setFormMode(FormMode.NEW);
@@ -537,6 +593,16 @@ public class MerchantDetailView extends VerticalLayout implements HasUrlParamete
     
     protected void navigateToList() {
         getUI().ifPresent(ui -> ui.navigate(MerchantListView.class));
+    }
+
+    /** Defaults aligned with Liquibase column defaults for new merchants. */
+    private static void applyDefaultTransactionLimits(MerchantDTO merchant) {
+        merchant.setTestMinTransactionAmount(BigDecimal.ONE);
+        merchant.setTestMaxTransactionAmount(new BigDecimal("650"));
+        merchant.setTestMaxClientTransactionCountPerDay(100);
+        merchant.setLiveMinTransactionAmount(BigDecimal.ONE);
+        merchant.setLiveMaxTransactionAmount(new BigDecimal("650"));
+        merchant.setLiveMaxClientTransactionCountPerDay(1);
     }
 }
 

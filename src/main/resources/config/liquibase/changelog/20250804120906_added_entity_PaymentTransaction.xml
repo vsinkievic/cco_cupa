@@ -117,6 +117,38 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="20260423-03" author="vsinkievic">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="payment_transaction" columnName="client_email"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_transaction">
+            <column name="client_email" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="gateway_merchant_id" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260423-04" author="vsinkievic">
+        <sql>
+            UPDATE payment_transaction trn
+            SET client_email = (SELECT c.email_address FROM client c WHERE c.id = trn.client_id)
+            WHERE trn.client_id IS NOT NULL;
+
+            UPDATE payment_transaction trn
+            SET gateway_merchant_id = (SELECT m.remote_test_merchant_id FROM merchant m WHERE m.id = trn.merchant_id)
+            WHERE trn.merchant_id IS NOT NULL AND trn.environment = 'TEST';
+
+            UPDATE payment_transaction trn
+            SET gateway_merchant_id = (SELECT m.remote_prod_merchant_id FROM merchant m WHERE m.id = trn.merchant_id)
+            WHERE trn.merchant_id IS NOT NULL AND trn.environment = 'LIVE';
+        </sql>
+    </changeSet>
+
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
 
     <!--

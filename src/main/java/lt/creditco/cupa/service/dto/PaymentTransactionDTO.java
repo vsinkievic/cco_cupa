@@ -80,6 +80,8 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
 
     private String clientEmail;
 
+    private String gatewayMerchantId;
+
     private String merchantName;
 
     private Long version;
@@ -307,6 +309,14 @@ public class PaymentTransactionDTO implements Serializable, MerchantOwnedEntity 
 
     public void setClientEmail(String clientEmail) {
         this.clientEmail = clientEmail;
+    }
+
+    public String getGatewayMerchantId() {
+        return gatewayMerchantId;
+    }
+
+    public void setGatewayMerchantId(String gatewayMerchantId) {
+        this.gatewayMerchantId = gatewayMerchantId;
     }
 
     public String getMerchantName() {

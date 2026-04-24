@@ -41,6 +41,8 @@ import lt.creditco.cupa.service.dto.PaymentTransactionDTO;
 import lt.creditco.cupa.service.mapper.PaymentMapper;
 import lt.creditco.cupa.service.mapper.PaymentTransactionMapper;
 import lt.creditco.cupa.web.context.CupaApiContext;
+import lt.creditco.cupa.web.context.CupaApiContext.MerchantContext;
+import org.apache.commons.lang3.StringUtils;
 import lt.creditco.cupa.config.PullTaskFactory;
 import com.bpmid.pulltasks.application.PullTaskService;
 import com.bpmid.pulltasks.domain.PullTask;
@@ -157,8 +159,10 @@ public class PaymentTransactionService {
      * @throws BadRequestAlertException if validation fails.
      */
     private void validatePaymentTransaction(PaymentTransactionDTO paymentTransactionDTO, CupaApiContext.CupaApiContextData context) {
-        // Validate client exists
+        MerchantContext merchantContext = context.getMerchantContext();
 
+
+        // Validate client exists
         if (paymentTransactionDTO.getClientId() == null) {
             throw new BadRequestAlertException("Client ID is required", "PaymentTransaction", "clientIdRequired");
         }
@@ -200,9 +204,17 @@ public class PaymentTransactionService {
             );
         }
 
-        // Validate amount is positive
-        if (paymentTransactionDTO.getAmount() != null && paymentTransactionDTO.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BadRequestAlertException("Amount must be greater than zero", "PaymentTransaction", "invalidAmount");
+        // Validate amount 
+        if (paymentTransactionDTO.getAmount() == null) {
+            throw new BadRequestAlertException("Amount was not provided!", "PaymentTransaction", "invalidAmount");
+        }
+
+        if (!merchantContext.satisfiesMinTransactionAmount(paymentTransactionDTO.getAmount())) {
+            throw new BadRequestAlertException(String.format("Amount must be greater than %s", merchantContext.getMinTransactionAmount()), "PaymentTransaction", "invalidAmount");
+        }
+
+        if (!merchantContext.satisfiesMaxTransactionAmount(paymentTransactionDTO.getAmount())) {
+            throw new BadRequestAlertException(String.format("Amount must be less than %s", merchantContext.getMaxTransactionAmount()), "PaymentTransaction", "invalidAmount");
         }
 
         // Validate currency is not null
@@ -224,7 +236,7 @@ public class PaymentTransactionService {
             }
         }
 
-        if (context.getMerchantContext().getDailyAmountLimit() != null){
+        if (merchantContext.getDailyAmountLimit() != null){
             LocalDate paymentDate = paymentTransactionDTO.getRequestTimestamp() == null ? LocalDate.now() : paymentTransactionDTO.getRequestTimestamp().atZone(ZoneOffset.UTC).toLocalDate();
             Instant startOfDay = paymentDate.atStartOfDay().toInstant(ZoneOffset.UTC);
             Instant endOfDay = paymentDate.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
@@ -236,8 +248,34 @@ public class PaymentTransactionService {
                 dailyAmountLimit.isLimitExceeded(paymentTransactionDTO.getAmount(), paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange(merchantId, environment, startOfDay, endOfDay), paymentDate)) {
                 throw new BadRequestAlertException("Daily amount limit exceeded", "PaymentTransaction", "dailyAmountLimitExceeded");
             }
-
         }
+        Instant dateRangeStart = paymentTransactionDTO.getRequestTimestamp().minus(24, ChronoUnit.HOURS);
+        String remoteMerchantId = context.getMerchantContext().getGatewayMerchantId();
+        String clientEmail = paymentTransactionDTO.getClientEmail() == null ? client.getEmailAddress() : paymentTransactionDTO.getClientEmail().trim();
+        if (clientEmail == null || clientEmail.isEmpty()) {
+            throw new BadRequestAlertException("Client email is required", "PaymentTransaction", "clientEmailRequired");
+        }
+        if (StringUtils.isBlank(remoteMerchantId)) {
+            throw new BadRequestAlertException("Gateway merchant ID is required", "PaymentTransaction", "gatewayMerchantIdRequired");
+        }
+        paymentTransactionDTO.setClientEmail(clientEmail);
+        paymentTransactionDTO.setGatewayMerchantId(remoteMerchantId);
+
+        int transactionCount = paymentTransactionRepository.countByEnvironmentAndGatewayMerchantIdAndClientEmailAndAfterRequestTimestamp(
+            context.getMerchantContext().getMode(),
+            remoteMerchantId,
+            clientEmail,
+            dateRangeStart
+        );
+        int maxClientTransactionCountPerDay = merchantContext.getMaxClientTransactionCountPerDay();
+        if (transactionCount >= maxClientTransactionCountPerDay) {
+            throw new BadRequestAlertException(
+                String.format("Max transaction count per day (%s) exceeded for the client", maxClientTransactionCountPerDay),
+                "PaymentTransaction",
+                "maxTrnCountPerDayExceeded"
+            );
+        }
+
     }
 
     /**
@@ -545,7 +583,9 @@ public class PaymentTransactionService {
     /**
      * Enrich PaymentTransactionDTO with related entity data.
      * This method loads the Client and Merchant entities to populate
-     * merchantClientId, clientName, clientEmail, and merchantName fields.
+     * merchantClientId, clientName, and merchantName fields.
+     * {@code clientEmail} is left as mapped from {@code payment_transaction.client_email} when set;
+     * otherwise it is filled from the client's current {@code email_address}.
      *
      * @param dto the DTO to enrich
      * @return the enriched DTO
@@ -562,7 +602,10 @@ public class PaymentTransactionService {
                 .ifPresent(client -> {
                     dto.setMerchantClientId(client.getMerchantClientId());
                     dto.setClientName(client.getName());
-                    dto.setClientEmail(client.getEmailAddress());
+                    // Prefer email persisted on the transaction (audit snapshot); fallback to current client record
+                    if (dto.getClientEmail() == null || dto.getClientEmail().isBlank()) {
+                        dto.setClientEmail(client.getEmailAddress());
+                    }
                 });
         }
 

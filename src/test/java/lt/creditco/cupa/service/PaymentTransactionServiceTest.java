@@ -106,6 +106,7 @@ class PaymentTransactionServiceTest {
         validPaymentTransactionDTO.setPaymentBrand(PaymentBrand.UnionPay);
         validPaymentTransactionDTO.setStatus(TransactionStatus.RECEIVED);
         validPaymentTransactionDTO.setRequestTimestamp(Instant.now());
+        validPaymentTransactionDTO.setEnvironment(MerchantMode.TEST);
 
         validPaymentTransaction = new PaymentTransaction();
         validPaymentTransaction.setId("test-id");
@@ -139,9 +140,23 @@ class PaymentTransactionServiceTest {
                     .gatewayMerchantId("test-gateway-merchant-id")
                     .gatewayMerchantKey("test-gateway-merchant-key")
                     .gatewayApiKey("test-gateway-api-key")
+                    .minTransactionAmount(new BigDecimal("1"))
+                    .maxTransactionAmount(new BigDecimal("100000"))
+                    .maxClientTransactionCountPerDay(100)
                     .build()
             )
             .build();
+
+        lenient()
+            .when(
+                paymentTransactionRepository.countByEnvironmentAndGatewayMerchantIdAndClientEmailAndAfterRequestTimestamp(
+                    any(MerchantMode.class),
+                    anyString(),
+                    anyString(),
+                    any(Instant.class)
+                )
+            )
+            .thenReturn(0);
 
         // Setup test data for enrichment tests
         client = new Client();
@@ -461,7 +476,7 @@ class PaymentTransactionServiceTest {
         // When & Then
         assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO, validContext))
             .isInstanceOf(BadRequestAlertException.class)
-            .hasMessageContaining("Amount must be greater than zero");
+            .hasMessageContaining("Amount must be greater than");
     }
 
     @Test
@@ -474,7 +489,7 @@ class PaymentTransactionServiceTest {
         // When & Then
         assertThatThrownBy(() -> paymentTransactionService.save(validPaymentTransactionDTO, validContext))
             .isInstanceOf(BadRequestAlertException.class)
-            .hasMessageContaining("Amount must be greater than zero");
+            .hasMessageContaining("Amount must be greater than");
     }
 
     @Test
