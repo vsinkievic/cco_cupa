@@ -74,6 +74,12 @@ public class PaymentTransactionService {
 
     private static final Logger LOG = LoggerFactory.getLogger(PaymentTransactionService.class);
 
+    /**
+     * Transaction statuses whose amounts are summed when checking the merchant daily amount limit against existing rows.
+     * (The payment being validated is added separately in {@link DailyAmountLimit#isLimitExceeded}.)
+     */
+    public static final List<TransactionStatus> TURNOVER_AMOUNT_STATUSES = List.of(TransactionStatus.PENDING, TransactionStatus.SUCCESS);
+
     private final PaymentTransactionRepository paymentTransactionRepository;
 
     private final PaymentTransactionMapper paymentTransactionMapper;
@@ -247,7 +253,13 @@ public class PaymentTransactionService {
             if (dailyAmountLimit.isLimitExceeded(paymentTransactionDTO.getAmount(), null, paymentDate) || 
                 dailyAmountLimit.isLimitExceeded(
                     paymentTransactionDTO.getAmount(),
-                    paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange(merchantId, environment, startOfDay, endOfDay),
+                    paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange(
+                        merchantId,
+                        environment,
+                        TURNOVER_AMOUNT_STATUSES,
+                        startOfDay,
+                        endOfDay
+                    ),
                     paymentDate
                 )) {
                 throw new BadRequestAlertException("Daily amount limit exceeded", "PaymentTransaction", "dailyAmountLimitExceeded");

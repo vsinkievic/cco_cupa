@@ -2,11 +2,13 @@ package lt.creditco.cupa.repository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lt.creditco.cupa.domain.PaymentTransaction;
 import lt.creditco.cupa.domain.enumeration.MerchantMode;
+import lt.creditco.cupa.domain.enumeration.TransactionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
@@ -117,11 +119,12 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
 
     @Transactional(readOnly = true)
     @Query(
-        "select sum(p.amount) from PaymentTransaction p where p.merchantId = :merchantId and p.environment = :environment and p.createdDate >= :startDate and p.createdDate <= :endDate"
+        "select sum(p.amount) from PaymentTransaction p where p.merchantId = :merchantId and p.environment = :environment and p.status in :statuses and p.createdDate >= :startDate and p.createdDate <= :endDate"
     )
     BigDecimal getTotalAmountByMerchantIdAndEnvironmentAndDateRange(
         @Param("merchantId") String merchantId,
         @Param("environment") MerchantMode environment,
+        @Param("statuses") Collection<TransactionStatus> statuses,
         @Param("startDate") Instant startDate,
         @Param("endDate") Instant endDate
     );

@@ -315,8 +315,16 @@ class PaymentTransactionServiceTest {
         when(paymentTransactionMapper.toDto(validPaymentTransaction)).thenReturn(validPaymentTransactionDTO);
         when(paymentTransactionRepository.existsByMerchantIdAndOrderId("MERCH-00001", "test-order-123")).thenReturn(false);
         when(bodyInterceptor.getLastTrace()).thenReturn(null);
-        when(paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange("MERCH-00001", MerchantMode.TEST, startDate, endDate))
-                                    .thenReturn(BigDecimal.valueOf(80.00));
+        when(
+            paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange(
+                "MERCH-00001",
+                MerchantMode.TEST,
+                PaymentTransactionService.TURNOVER_AMOUNT_STATUSES,
+                startDate,
+                endDate
+            )
+        )
+            .thenReturn(BigDecimal.valueOf(80.00));
 
         // Mock client lookup for placePayment
         Client testClient = new Client();
@@ -372,8 +380,16 @@ class PaymentTransactionServiceTest {
         // Given
         when(clientRepository.existsById("CLN-00001")).thenReturn(true);
         when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
-        when(paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange("MERCH-00001", MerchantMode.TEST, startDate, endDate))
-                            .thenReturn(BigDecimal.valueOf(1000.00));
+        when(
+            paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange(
+                "MERCH-00001",
+                MerchantMode.TEST,
+                PaymentTransactionService.TURNOVER_AMOUNT_STATUSES,
+                startDate,
+                endDate
+            )
+        )
+            .thenReturn(BigDecimal.valueOf(1000.00));
 
         // Mock client lookup for placePayment
         Client testClient = new Client();
@@ -404,8 +420,16 @@ class PaymentTransactionServiceTest {
         // Given
         when(clientRepository.existsById("CLN-00001")).thenReturn(true);
         when(merchantRepository.existsById("MERCH-00001")).thenReturn(true);
-        when(paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange("MERCH-00001", MerchantMode.TEST, startDate, endDate))
-                            .thenReturn(BigDecimal.valueOf(401.00));
+        when(
+            paymentTransactionRepository.getTotalAmountByMerchantIdAndEnvironmentAndDateRange(
+                "MERCH-00001",
+                MerchantMode.TEST,
+                PaymentTransactionService.TURNOVER_AMOUNT_STATUSES,
+                startDate,
+                endDate
+            )
+        )
+            .thenReturn(BigDecimal.valueOf(401.00));
 
         // Mock client lookup for placePayment
         Client testClient = new Client();
